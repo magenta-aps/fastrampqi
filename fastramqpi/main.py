@@ -189,7 +189,19 @@ class FastRAMQPI:
         }
 
         # Setup FastAPI
-        app = FastAPI()
+        app = FastAPI(
+            title=application_name,
+            version=settings.commit_tag,
+            contact={
+                "name": "Magenta Aps",
+                "url": "https://www.magenta.dk/",
+                "email": "info@magenta.dk>",
+            },
+            license_info={
+                "name": "MPL-2.0",
+                "url": "https://www.mozilla.org/en-US/MPL/2.0/",
+            },
+        )
         app.include_router(fastapi_router)
         app.state.context = self._context
         app.router.lifespan_context = partial(_lifespan, context=self._context)
