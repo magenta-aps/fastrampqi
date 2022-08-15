@@ -67,3 +67,22 @@ Release to PyPI:
   script:
     - sed -i "s/^version = .*$/version = \"${CI_COMMIT_TAG}\"/g" pyproject.toml
     - poetry publish --build --no-interaction --username __token__ --password ${PYPI_TOKEN}
+
+
+release:check-semantic-commit:
+  stage: release
+  needs: []
+  image: node:18-alpine
+  before_script:
+    - apk add git
+    - npm install semantic-release
+    - npm install @semantic-release/gitlab
+    - npm install @semantic-release/changelog
+  script:
+    - npx semantic-release --dry-run
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_REF_NAME == "master"
+      when: never
+    - when: on_success
