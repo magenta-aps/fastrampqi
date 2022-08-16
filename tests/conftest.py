@@ -31,6 +31,7 @@ def set_settings(
 @pytest.fixture(autouse=True)
 def setup_client_secret(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
     """Set the CLIENT_SECRET environmental variable to hunter2 by default."""
+    monkeypatch.setenv("CLIENT_ID", "orggatekeeper")
     monkeypatch.setenv("CLIENT_SECRET", "hunter2")
     yield
 
