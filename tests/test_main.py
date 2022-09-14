@@ -27,10 +27,10 @@ from ramqp.mo import MOAMQPSystem
 
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
-from fastramqpi.main import build_information
+from fastramqpi.fastapi import build_information
+from fastramqpi.fastapi import update_build_information
 from fastramqpi.main import construct_clients
 from fastramqpi.main import FastRAMQPI
-from fastramqpi.main import update_build_information
 
 
 def get_metric_value(metric: Any, labels: Tuple[str]) -> float:
