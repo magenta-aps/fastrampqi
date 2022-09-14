@@ -4,7 +4,6 @@
 """FastAPI + RAMQP Framework."""
 from contextlib import asynccontextmanager
 from functools import partial
-from typing import Any
 from typing import AsyncContextManager
 from typing import AsyncGenerator
 from typing import cast
@@ -13,6 +12,7 @@ from raclients.graph.client import GraphQLClient
 from raclients.modelclient.mo import ModelClient
 from ramqp.mo import MOAMQPSystem
 
+from .config import ClientSettings
 from .config import Settings
 from .context import Context
 from .fastapi import FastAPIIntegrationSystem
@@ -21,7 +21,7 @@ from .healthcheck import healthcheck_model_client
 
 
 def construct_clients(
-    settings: Settings,
+    settings: ClientSettings,
 ) -> tuple[GraphQLClient, ModelClient]:
     """Construct clients froms settings.
 
@@ -57,11 +57,14 @@ class FastRAMQPI(FastAPIIntegrationSystem):
     Motivated by a lot a shared code between our AMQP integrations.
     """
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, application_name: str, settings: Settings | None = None) -> None:
+        if settings is None:
+            settings = Settings()
+        super().__init__(application_name, settings)
 
         # Setup AMQPSystem
-        amqp_settings = self.settings.amqp.copy(
+        amqp_settings = cast(Settings, self.settings).amqp
+        amqp_settings = amqp_settings.copy(
             update={"queue_prefix": self.get_context()["name"]}
         )
         self.amqpsystem = MOAMQPSystem(
@@ -86,7 +89,9 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self._context["amqpsystem"] = self.amqpsystem
 
         # Prepare clients
-        graphql_client, model_client = construct_clients(self.settings)
+        graphql_client, model_client = construct_clients(
+            cast(ClientSettings, self.settings)
+        )
         # Check and expose GraphQL connection (gql_client)
         self.add_healthcheck("GraphQL", healthcheck_gql)
         self._context["graphql_client"] = graphql_client

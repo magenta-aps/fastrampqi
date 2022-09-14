@@ -5,6 +5,7 @@
 """Test the FastAPIIntegrationSystem."""
 from typing import Any
 
+from fastramqpi.config import FastAPIIntegrationSystemSettings
 from fastramqpi.config import Settings
 from fastramqpi.fastapi import build_information
 from fastramqpi.fastapi import FastAPIIntegrationSystem
@@ -15,7 +16,7 @@ def test_settings_set() -> None:
     """Ensure that without override, we still get a settings object."""
     system = FastAPIIntegrationSystem("test")
     assert system.settings is not None
-    assert isinstance(system.settings, Settings)
+    assert isinstance(system.settings, FastAPIIntegrationSystemSettings)
 
 
 def test_settings_override() -> None:

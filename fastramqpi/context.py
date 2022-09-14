@@ -10,11 +10,10 @@ from typing import TypedDict
 
 from fastapi import FastAPI
 from gql.client import AsyncClientSession
+from pydantic import BaseSettings
 from raclients.graph.client import GraphQLClient
 from raclients.modelclient.mo import ModelClient
 from ramqp.mo import MOAMQPSystem
-
-from .config import Settings
 
 
 # The type is perfectly in order, but mypy cannot handle recursive types
@@ -25,7 +24,7 @@ class Context(TypedDict, total=False):
     """Execution context."""
 
     name: str
-    settings: Settings
+    settings: BaseSettings
     # The type is perfectly in order, but mypy cannot handle recursive types
     healthchecks: dict[str, HealthcheckFunction]  # type: ignore
     lifespan_managers: dict[int, set[AsyncContextManager]]
