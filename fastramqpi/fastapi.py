@@ -20,7 +20,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
-from .config import Settings
+from .config import FastAPIIntegrationSystemSettings
 from .context import Context
 from .context import HealthcheckFunction
 
@@ -131,9 +131,13 @@ class FastAPIIntegrationSystem:
     Motivated by a lot a shared code between our integrations.
     """
 
-    def __init__(self, application_name: str, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        application_name: str,
+        settings: FastAPIIntegrationSystemSettings | None = None,
+    ) -> None:
         super().__init__()
-        self.settings: Settings = Settings()
+        self.settings = FastAPIIntegrationSystemSettings()
         if settings is not None:
             self.settings = settings
 

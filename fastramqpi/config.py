@@ -10,18 +10,13 @@ from ramqp.config import ConnectionSettings
 
 
 # pylint: disable=too-few-public-methods
-class Settings(BaseSettings):
-    """Settings for the FastRAMQPI framework."""
+class FastAPIIntegrationSystemSettings(BaseSettings):
+    """Settings for the FastAPIIntegrationSystem framework."""
 
     class Config:
         """Settings are frozen."""
 
         frozen = True
-        env_nested_delimiter = "__"
-
-    amqp: ConnectionSettings = Field(
-        ConnectionSettings(), description="AMQP connection settings"
-    )
 
     # We assume these will be set by the docker build process,
     # and as such will contain release information at runtime.
@@ -31,6 +26,16 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", description="Log level to configure.")
 
     enable_metrics: bool = Field(True, description="Whether to enable metrics.")
+
+
+# pylint: disable=too-few-public-methods
+class ClientSettings(BaseSettings):
+    """Settings for the connection to OS2mo."""
+
+    class Config:
+        """Settings are frozen."""
+
+        frozen = True
 
     mo_url: AnyHttpUrl = Field(
         parse_obj_as(AnyHttpUrl, "http://mo-service:5000"),
@@ -44,3 +49,18 @@ class Settings(BaseSettings):
     )
     auth_realm: str = Field("mo", description="Realm to authenticate against")
     graphql_timeout: int = Field(120, description="Timeout for GraphQL queries")
+
+
+# pylint: disable=too-few-public-methods
+class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
+    """Settings for the FastRAMQPI framework."""
+
+    class Config:
+        """Settings are frozen."""
+
+        frozen = True
+        env_nested_delimiter = "__"
+
+    amqp: ConnectionSettings = Field(
+        ConnectionSettings(), description="AMQP connection settings"
+    )
