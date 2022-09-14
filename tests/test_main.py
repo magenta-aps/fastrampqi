@@ -8,12 +8,8 @@
 """Test the FastRAMQPI system."""
 from contextlib import asynccontextmanager
 from functools import partial
-from typing import Any
 from typing import AsyncIterator
 from typing import Callable
-from typing import cast
-from typing import Set
-from typing import Tuple
 from unittest.mock import AsyncMock
 from unittest.mock import call
 from unittest.mock import MagicMock
@@ -27,59 +23,8 @@ from ramqp.mo import MOAMQPSystem
 
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
-from fastramqpi.fastapi import build_information
-from fastramqpi.fastapi import update_build_information
 from fastramqpi.main import construct_clients
 from fastramqpi.main import FastRAMQPI
-
-
-def get_metric_value(metric: Any, labels: Tuple[str]) -> float:
-    """Get the value of a given metric with the given label-set.
-
-    Args:
-        metric: The metric to query.
-        labels: The label-set to query with.
-
-    Returns:
-        The metric value.
-    """
-    metric = metric.labels(*labels)._value
-    return cast(float, metric.get())
-
-
-def clear_metric_value(metric: Any) -> None:
-    """Get the value of a given metric with the given label-set.
-
-    Args:
-        metric: The metric to query.
-
-    Returns:
-        The metric value.
-    """
-    metric.clear()
-
-
-def get_metric_labels(metric: Any) -> Set[Tuple[str]]:
-    """Get the label-set for a given metric.
-
-    Args:
-        metric: The metric to query.
-
-    Returns:
-        The label-set.
-    """
-    return set(metric._metrics.keys())
-
-
-def test_build_information() -> None:
-    """Test that build metrics are updated as expected."""
-    clear_metric_value(build_information)
-    assert build_information._value == {}
-    update_build_information("1.0.0", "cafebabe")
-    assert build_information._value == {
-        "version": "1.0.0",
-        "hash": "cafebabe",
-    }
 
 
 def test_root_endpoint(test_client: TestClient) -> None:

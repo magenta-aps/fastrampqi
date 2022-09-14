@@ -139,11 +139,6 @@ class FastAPIIntegrationSystem:
 
         configure_logging(self.settings.log_level)
 
-        # Update metrics info
-        update_build_information(
-            version=self.settings.commit_tag, build_hash=self.settings.commit_sha
-        )
-
         # Setup shared context
         self._context: Context = {
             "name": application_name,
@@ -172,6 +167,11 @@ class FastAPIIntegrationSystem:
         app.router.lifespan_context = partial(_lifespan, context=self._context)
         # Expose Metrics
         if self.settings.enable_metrics:
+            # Update metrics info
+            update_build_information(
+                version=self.settings.commit_tag, build_hash=self.settings.commit_sha
+            )
+
             Instrumentator().instrument(app).expose(app)
         self.app = app
         self._context["app"] = self.app
