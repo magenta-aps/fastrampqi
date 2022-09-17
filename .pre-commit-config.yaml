@@ -52,11 +52,11 @@ repos:
         additional_dependencies: [pyproject-flake8]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.812
+    rev: v0.971
     hooks:
       - id: mypy
-        language: system
-        types: [file, python]
+        additional_dependencies:
+          - pydantic
 
   - repo: https://github.com/fsfe/reuse-tool
     rev: v0.12.1
