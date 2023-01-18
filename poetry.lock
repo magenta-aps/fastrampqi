@@ -781,11 +781,11 @@ python-dateutil = ">=2.8.2,<3.0.0"
 
 [[package]]
 name = "ramqp"
-version = "6.6.2"
+version = "6.7.1"
 description = "Rammearkitektur AMQP library (aio_pika wrapper)"
 category = "main"
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = ">=3.10,<4.0"
 
 [package.dependencies]
 aio-pika = ">=8.2.1,<9.0.0"
@@ -1526,8 +1526,8 @@ ramodels = [
     {file = "ramodels-11.3.0.tar.gz", hash = "sha256:6cfd8986e0a4c987d344fb9a600b43e152f8f19dfcb1059338a19636c6a2d163"},
 ]
 ramqp = [
-    {file = "ramqp-6.6.2-py3-none-any.whl", hash = "sha256:314602d7553303563437536db65eb331ef3f1a45a8e7fe76926411fbe6169ab0"},
-    {file = "ramqp-6.6.2.tar.gz", hash = "sha256:4b9d99756eac3eaca3cdcc6ae9036af9aca5b751304632797ac5a6d125eabfe7"},
+    {file = "ramqp-6.7.1-py3-none-any.whl", hash = "sha256:bbd76fdabe4ee2738359e07ffc76ec6dea6c94629931d54db4b6d867c3a614b7"},
+    {file = "ramqp-6.7.1.tar.gz", hash = "sha256:b1c8c00dc76ca74d99c585dc2fca8d0542b15737a636a22d39b14accb0828f4c"},
 ]
 requests = [
     {file = "requests-2.28.0-py3-none-any.whl", hash = "sha256:bc7861137fbce630f17b03d3ad02ad0bf978c844f3536d0edda6499dafce2b6f"},
