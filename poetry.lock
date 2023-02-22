@@ -718,7 +718,7 @@ pyyaml = "*"
 
 [[package]]
 name = "ra-utils"
-version = "1.11.12"
+version = "1.11.13"
 description = "Utilities for OS2mo/LoRa"
 category = "main"
 optional = false
@@ -1637,8 +1637,8 @@ pyyaml-env-tag = [
     {file = "pyyaml_env_tag-0.1.tar.gz", hash = "sha256:70092675bda14fdec33b31ba77e7543de9ddc88f2e5b99160396572d11525bdb"},
 ]
 ra-utils = [
-    {file = "ra_utils-1.11.12-py3-none-any.whl", hash = "sha256:7a5dda7756889755721f1917299601d5ad2cbfde8562a0dc9eb7165426f1b083"},
-    {file = "ra_utils-1.11.12.tar.gz", hash = "sha256:b5b05d4d90156ba2e83c4f4f667c4cd96d990b5e8fcc99ce0521b71a74fb88ae"},
+    {file = "ra_utils-1.11.13-py3-none-any.whl", hash = "sha256:bc037258104d79a2250ae2fe2ac29d49a94aa3c0fd9b430fddb0fb91ba14a856"},
+    {file = "ra_utils-1.11.13.tar.gz", hash = "sha256:4051eb7cce917440268efd003dec1b542629d79f9f800680cf1536f75df66e46"},
 ]
 raclients = [
     {file = "raclients-3.0.3-py3-none-any.whl", hash = "sha256:1430dd0d7555b624f138cd7a9e09c784b8e0b822b045a32d380c59947b0e3f12"},
