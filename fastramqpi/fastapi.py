@@ -5,10 +5,8 @@
 import logging
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
-from functools import partial
 from typing import Any
 from typing import AsyncContextManager
-from typing import AsyncGenerator
 
 import structlog
 from fastapi import APIRouter
@@ -23,7 +21,6 @@ from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 from .config import FastAPIIntegrationSystemSettings
 from .context import Context
 from .context import HealthcheckFunction
-
 
 logger = structlog.get_logger()
 fastapi_router = APIRouter()
@@ -108,7 +105,7 @@ async def readiness(request: Request, response: Response) -> Response:
 
 
 @asynccontextmanager
-async def _lifespan(_1: FastAPI, context: Context) -> AsyncGenerator[None, None]:
+async def _lifespan(app: FastAPI) -> AsyncContextManager:
     """ASGI lifespan context handler.
 
     Runs all the configured lifespan managers according to their priority.
@@ -117,7 +114,7 @@ async def _lifespan(_1: FastAPI, context: Context) -> AsyncGenerator[None, None]
         None
     """
     async with AsyncExitStack() as stack:
-        lifespan_managers = context["lifespan_managers"]
+        lifespan_managers = app.state.context["lifespan_managers"]
         for _, priority_set in sorted(lifespan_managers.items()):
             for lifespan_manager in priority_set:
                 await stack.enter_async_context(lifespan_manager)
@@ -165,10 +162,10 @@ class FastAPIIntegrationSystem:
                 "name": "MPL-2.0",
                 "url": "https://www.mozilla.org/en-US/MPL/2.0/",
             },
+            lifespan=_lifespan,
         )
         app.include_router(fastapi_router)
         app.state.context = self._context
-        app.router.lifespan_context = partial(_lifespan, context=self._context)
         # Expose Metrics
         if self.settings.enable_metrics:
             # Update metrics info
