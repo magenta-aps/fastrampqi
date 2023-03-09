@@ -53,7 +53,7 @@ async def healthcheck_model_client(context: Context) -> bool:
     model_client = context["model_client"]
 
     try:
-        response = await model_client.async_httpx_client("/service/o/")
+        response = await model_client.async_httpx_client.get("/service/o/")
         result = response.json()
         if one(result)["uuid"]:
             return True
