@@ -89,7 +89,7 @@ def test_readiness_endpoint(
         model_response.json.return_value = [{"uuid": "hello"}]
     else:
         model_response.json.return_value = []
-    model_client.async_httpx_client.return_value = model_response
+    model_client.async_httpx_client.get.return_value = model_response
 
     fastramqpi._context["amqpsystem"] = amqp_system
     fastramqpi._context["graphql_session"] = graphql_session
@@ -141,7 +141,7 @@ def test_readiness_endpoint_exception(
         model_response.json.return_value = [{"uuid": "hello"}]
     else:
         model_response.side_effect = ValueError("boom")
-    model_client.async_httpx_client.return_value = model_response
+    model_client.async_httpx_client.get.return_value = model_response
 
     fastramqpi._context["amqpsystem"] = amqp_system
     fastramqpi._context["graphql_session"] = graphql_session
