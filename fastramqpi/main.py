@@ -39,7 +39,7 @@ def construct_clients(
     )
 
     gql_client = GraphQLClient(
-        url=settings.mo_url + "/graphql",
+        url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
         execute_timeout=settings.graphql_timeout,
         httpx_client_kwargs={"timeout": settings.graphql_timeout},
         **client_kwargs,

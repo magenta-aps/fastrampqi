@@ -167,6 +167,32 @@ def test_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> None:
     assert 15 == mock_gql_client.call_args.kwargs["execute_timeout"]
 
 
+def test_graphql_version_defaults_to_3() -> None:
+    """Test that the default GraphQL version is 3"""
+
+    # Arrange
+    settings = Settings()
+
+    # Act
+    gql_client, _ = construct_clients(settings)
+
+    # Assert
+    assert gql_client.transport.url == "http://mo-service:5000/graphql/v3"
+
+
+def test_graphql_version_configurable() -> None:
+    """Test that the MO GraphQL version is configurable"""
+
+    # Arrange
+    settings = Settings(mo_graphql_version=2000)
+
+    # Act
+    gql_client, _ = construct_clients(settings)
+
+    # Assert
+    assert gql_client.transport.url == "http://mo-service:5000/graphql/v2000"
+
+
 def test_get_app(fastramqpi: FastRAMQPI) -> None:
     """Test that get_app returns a FastAPI application."""
     app = fastramqpi.get_app()

@@ -5,6 +5,7 @@ from pydantic import AnyHttpUrl
 from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
+from pydantic import PositiveInt
 from pydantic import SecretStr
 from ramqp.config import ConnectionSettings
 
@@ -41,6 +42,8 @@ class ClientSettings(BaseSettings):
         parse_obj_as(AnyHttpUrl, "http://mo-service:5000"),
         description="Base URL for OS2mo.",
     )
+    mo_graphql_version: PositiveInt = 3
+
     client_id: str = Field(..., description="Client ID for OIDC client.")
     client_secret: SecretStr = Field(..., description="Client Secret for OIDC client.")
     auth_server: AnyHttpUrl = Field(
