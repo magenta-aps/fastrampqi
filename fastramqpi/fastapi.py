@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from typing import Any
 from typing import AsyncContextManager
+from typing import AsyncIterator
 
 import structlog
 from fastapi import APIRouter
@@ -105,7 +106,7 @@ async def readiness(request: Request, response: Response) -> Response:
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncContextManager:
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     """ASGI lifespan context handler.
 
     Runs all the configured lifespan managers according to their priority.
