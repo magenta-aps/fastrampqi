@@ -22,7 +22,7 @@ raclients = "^3.0.5"
 gql = "^3.4.0"
 more-itertools = "^9.1.0"
 ra-utils = "^1.12.2"
-prometheus-fastapi-instrumentator = "^5.9.1"
+prometheus-fastapi-instrumentator = ">=5.9.1,<7.0.0"
 fastapi = ">=0.93, <1.0"
 
 [tool.poetry.group.dev.dependencies]
