@@ -772,7 +772,7 @@ python-dateutil = ">=2.8.2,<3.0.0"
 
 [[package]]
 name = "ramqp"
-version = "6.9.5"
+version = "8.0.0"
 description = "Rammearkitektur AMQP library (aio_pika wrapper)"
 category = "main"
 optional = false
@@ -781,11 +781,11 @@ python-versions = ">=3.10,<4.0"
 [package.dependencies]
 aio-pika = ">=8.3,<10.0"
 anyio = ">=3.6.2,<4.0.0"
-fastapi = ">=0.89.1,<1.0"
+fastapi = ">=0.95.0,<1.0"
 more-itertools = ">=9.1.0,<10.0.0"
 prometheus-client = ">=0.16.0,<0.17.0"
 pydantic = ">=1.10.5,<2.0.0"
-ra-utils = ">=1.12.2,<2.0.0"
+ra-utils = ">=1.12.4,<2.0.0"
 structlog = ">=22.3.0,<23.0.0"
 
 [[package]]
@@ -989,7 +989,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "20aa7a37aa18f8807c56b75d135eb367202ef444d9b430a1e6d6877870c401b5"
+content-hash = "21c7522119729b64863c43cc0311fcedd2988b7622c4127c9a8b49ffc10a6c86"
 
 [metadata.files]
 aio-pika = [
@@ -1634,8 +1634,8 @@ ramodels = [
     {file = "ramodels-18.8.0.tar.gz", hash = "sha256:a5106a91647be49784b8d7ab474a8af47f8a2ec59426b4b1eea57e240ba82e2f"},
 ]
 ramqp = [
-    {file = "ramqp-6.9.5-py3-none-any.whl", hash = "sha256:ef27eba64ff750989b6cdaeb007fabbf432d28005818af7668c521150620faf0"},
-    {file = "ramqp-6.9.5.tar.gz", hash = "sha256:2b9a22e9612030bcf6259fe74c67e18dd281dc2ee5c8be8ffdc1ee7f205314cc"},
+    {file = "ramqp-8.0.0-py3-none-any.whl", hash = "sha256:8926f1aa6269a98abc5090cf8769c1d8e8c19a2f1fe4eaa1f85f2b5b5d088ad9"},
+    {file = "ramqp-8.0.0.tar.gz", hash = "sha256:8da3e28cbdbc27769da7df2fa39c4104d023370fe19801814460cf11e060f52b"},
 ]
 requests = [
     {file = "requests-2.28.2-py3-none-any.whl", hash = "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa"},
