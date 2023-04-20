@@ -64,6 +64,4 @@ class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
         frozen = True
         env_nested_delimiter = "__"
 
-    amqp: AMQPConnectionSettings = Field(
-        AMQPConnectionSettings(), description="AMQP connection settings"
-    )
+    amqp: AMQPConnectionSettings
