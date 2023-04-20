@@ -7,7 +7,7 @@ from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import PositiveInt
 from pydantic import SecretStr
-from ramqp.config import ConnectionSettings
+from ramqp.config import AMQPConnectionSettings
 
 
 # pylint: disable=too-few-public-methods
@@ -64,6 +64,4 @@ class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
         frozen = True
         env_nested_delimiter = "__"
 
-    amqp: ConnectionSettings = Field(
-        ConnectionSettings(), description="AMQP connection settings"
-    )
+    amqp: AMQPConnectionSettings
