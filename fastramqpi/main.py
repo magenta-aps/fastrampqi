@@ -4,12 +4,17 @@
 """FastAPI + RAMQP Framework."""
 from contextlib import asynccontextmanager
 from functools import partial
+from typing import Any
 from typing import AsyncContextManager
 from typing import AsyncGenerator
 from typing import cast
+from typing import Protocol
+from typing import Type
 
-from raclients.graph.client import GraphQLClient
-from raclients.modelclient.mo import ModelClient
+import httpx
+from authlib.integrations.httpx_client import AsyncOAuth2Client
+from raclients.graph.client import GraphQLClient as LegacyGraphQLClient
+from raclients.modelclient.mo import ModelClient as LegacyModelClient
 from ramqp.mo import MOAMQPSystem
 
 from .config import ClientSettings
@@ -20,10 +25,10 @@ from .healthcheck import healthcheck_gql
 from .healthcheck import healthcheck_model_client
 
 
-def construct_clients(
+def construct_legacy_clients(
     settings: ClientSettings,
-) -> tuple[GraphQLClient, ModelClient]:
-    """Construct clients froms settings.
+) -> tuple[LegacyGraphQLClient, LegacyModelClient]:
+    """Construct legacy clients froms settings.
 
     Args:
         settings: Integration settings module.
@@ -31,24 +36,39 @@ def construct_clients(
     Returns:
         Tuple with PersistentGraphQLClient and ModelClient.
     """
-    client_kwargs = dict(
+    # DEPRECATED: ariadne-codegen is the preferred way to interface with GraphQL
+    gql_client = LegacyGraphQLClient(
+        url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
         client_id=settings.client_id,
         client_secret=settings.client_secret.get_secret_value(),
         auth_realm=settings.auth_realm,
         auth_server=settings.auth_server,
-    )
-
-    gql_client = GraphQLClient(
-        url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
         execute_timeout=settings.graphql_timeout,
         httpx_client_kwargs={"timeout": settings.graphql_timeout},
-        **client_kwargs,
     )
-    model_client = ModelClient(
+    # DEPRECATED: GraphQL is the preferred way to interface with OS2mo
+    model_client = LegacyModelClient(
+        client_id=settings.client_id,
+        client_secret=settings.client_secret.get_secret_value(),
+        auth_realm=settings.auth_realm,
+        auth_server=settings.auth_server,
         base_url=settings.mo_url,
-        **client_kwargs,
     )
     return gql_client, model_client
+
+
+class GraphQLClientProtocol(AsyncContextManager, Protocol):
+    def __init__(
+        self,
+        url: str = "",
+        headers: dict[str, str] | None = None,
+        http_client: httpx.AsyncClient | None = None,
+        ws_url: Any = None,
+        ws_headers: Any = None,
+        ws_origin: Any = None,
+        ws_connection_init_payload: Any = None,
+    ) -> None:
+        ...  # pragma: no cover
 
 
 class FastRAMQPI(FastAPIIntegrationSystem):
@@ -57,7 +77,12 @@ class FastRAMQPI(FastAPIIntegrationSystem):
     Motivated by a lot a shared code between our AMQP integrations.
     """
 
-    def __init__(self, application_name: str, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        application_name: str,
+        settings: Settings | None = None,
+        graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
+    ) -> None:
         if settings is None:
             settings = Settings()
         super().__init__(application_name, settings)
@@ -88,27 +113,75 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
         self._context["amqpsystem"] = self.amqpsystem
 
-        # Prepare clients
-        graphql_client, model_client = construct_clients(
-            cast(ClientSettings, self.settings)
+        # Authenticated HTTPX Client
+        mo_client = AsyncOAuth2Client(
+            client_id=settings.client_id,
+            client_secret=settings.client_secret.get_secret_value(),
+            grant_type="client_credentials",
+            # TODO: We should take a full token URL instead of hard-coding Keycloak's
+            # URL scheme. Let's wait until the legacy clients are removed.
+            token_endpoint=f"{settings.auth_server}/realms/{settings.auth_realm}/protocol/openid-connect/token",
+            # TODO (https://github.com/lepture/authlib/issues/531): Hack to enable
+            # automatic fetching of token on first call, instead of only refreshing.
+            token={"expires_at": -1, "access_token": ""},
+            timeout=settings.graphql_timeout,
         )
-        # Check and expose GraphQL connection (gql_client)
-        self.add_healthcheck("GraphQL", healthcheck_gql)
-        self._context["graphql_client"] = graphql_client
 
         @asynccontextmanager
-        async def graphql_session(context: Context) -> AsyncGenerator[None, None]:
+        async def mo_client_manager(context: Context) -> AsyncGenerator[None, None]:
+            async with mo_client as client:
+                context["mo_client"] = client
+                yield
+
+        self.add_lifespan_manager(
+            cast(AsyncContextManager, partial(mo_client_manager, self._context)())
+        )
+
+        # GraphQL Client
+        if graphql_client_cls is not None:
+
+            @asynccontextmanager
+            async def graphql_client_manager(
+                context: Context,
+            ) -> AsyncGenerator[None, None]:
+                graphql_client = graphql_client_cls(
+                    url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
+                    http_client=mo_client,
+                )
+                async with graphql_client as client:
+                    context["graphql_client"] = client
+                    yield
+
+            self.add_lifespan_manager(
+                cast(
+                    AsyncContextManager,
+                    partial(graphql_client_manager, self._context)(),
+                )
+            )
+
+        # Prepare legacy clients
+        legacy_graphql_client, legacy_model_client = construct_legacy_clients(
+            cast(ClientSettings, self.settings)
+        )
+        # Check and expose legacy GraphQL connection (gql_client)
+        self.add_healthcheck("GraphQL", healthcheck_gql)
+        self._context["graphql_client"] = legacy_graphql_client
+
+        @asynccontextmanager
+        async def legacy_graphql_session(
+            context: Context,
+        ) -> AsyncGenerator[None, None]:
             async with context["graphql_client"] as session:
                 context["graphql_session"] = session
                 yield
 
         self.add_lifespan_manager(
-            cast(AsyncContextManager, partial(graphql_session, self._context)())
+            cast(AsyncContextManager, partial(legacy_graphql_session, self._context)())
         )
-        # Check and expose Service API connection (model_client)
-        self.add_lifespan_manager(model_client)
+        # Check and expose legacy Service API connection (model_client)
+        self.add_lifespan_manager(legacy_model_client)
         self.add_healthcheck("Service API", healthcheck_model_client)
-        self._context["model_client"] = model_client
+        self._context["model_client"] = legacy_model_client
 
     def get_amqpsystem(self) -> MOAMQPSystem:
         """Return the contained MOAMQPSystem.
