@@ -68,22 +68,23 @@ async def index(request: Request) -> dict[str, str]:
     return {"name": context["name"]}
 
 
-@fastapi_router.get("/health/live", status_code=HTTP_204_NO_CONTENT)
-async def liveness() -> None:
-    """Endpoint to be used as a liveness probe for Kubernetes."""
+@fastapi_router.get("/health/ready", status_code=HTTP_204_NO_CONTENT)
+async def readiness() -> None:
+    """Endpoint to be used as a readiness probe for Kubernetes."""
+    # TODO: Remove once everyone is using v1.4.3+
     return None
 
 
 @fastapi_router.get(
-    "/health/ready",
+    "/health/live",
     status_code=HTTP_204_NO_CONTENT,
     responses={
         "204": {"description": "Ready"},
         "503": {"description": "Not ready"},
     },
 )
-async def readiness(request: Request, response: Response) -> Response:
-    """Endpoint to be used as a readiness probe for Kubernetes."""
+async def liveness(request: Request, response: Response) -> Response:
+    """Endpoint to be used as a liveness probe for Kubernetes."""
     response.status_code = HTTP_204_NO_CONTENT
 
     context: dict[str, Any] = request.app.state.context

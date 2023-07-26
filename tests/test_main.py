@@ -51,9 +51,9 @@ def test_metrics_endpoint(
     assert "# TYPE build_information_info gauge" in response.text
 
 
-def test_liveness_endpoint(test_client: TestClient) -> None:
-    """Test the liveness endpoint on our app."""
-    response = test_client.get("/health/live")
+def test_readiness_endpoint(test_client: TestClient) -> None:
+    """Test the readiness endpoint on our app."""
+    response = test_client.get("/health/ready")
     assert response.status_code == 204
 
 
@@ -70,7 +70,7 @@ def test_liveness_endpoint(test_client: TestClient) -> None:
         (False, False, False, 503),
     ],
 )
-def test_readiness_endpoint(
+def test_liveness_endpoint(
     fastramqpi: FastRAMQPI,
     graphql_session: AsyncMock,
     model_client: AsyncMock,
@@ -80,7 +80,7 @@ def test_readiness_endpoint(
     model_ok: bool,
     expected: int,
 ) -> None:
-    """Test the readiness endpoint handles errors."""
+    """Test the liveness endpoint handles errors."""
     amqp_system = MagicMock()
     amqp_system.healthcheck.return_value = amqp_ok
 
@@ -103,7 +103,7 @@ def test_readiness_endpoint(
     fastramqpi._context["model_client"] = model_client
     test_client = test_client_builder(fastramqpi)
 
-    response = test_client.get("/health/ready")
+    response = test_client.get("/health/live")
     assert response.status_code == expected
     assert amqp_system.mock_calls == [call.healthcheck()]
 
@@ -121,7 +121,7 @@ def test_readiness_endpoint(
         (False, False, False, 503),
     ],
 )
-def test_readiness_endpoint_exception(
+def test_liveness_endpoint_exception(
     fastramqpi: FastRAMQPI,
     graphql_session: AsyncMock,
     model_client: MagicMock,
@@ -131,7 +131,7 @@ def test_readiness_endpoint_exception(
     model_ok: bool,
     expected: int,
 ) -> None:
-    """Test the readiness endpoint handled exceptions nicely."""
+    """Test the liveness endpoint handled exceptions nicely."""
     amqp_system = MagicMock()
     if amqp_ok:
         amqp_system.healthcheck.return_value = True
@@ -155,7 +155,7 @@ def test_readiness_endpoint_exception(
     fastramqpi._context["model_client"] = model_client
     test_client = test_client_builder(fastramqpi)
 
-    response = test_client.get("/health/ready")
+    response = test_client.get("/health/live")
     assert response.status_code == expected
 
 
