@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from functools import partial
 from typing import AsyncIterator
 from typing import Callable
+from unittest.mock import ANY
 from unittest.mock import AsyncMock
 from unittest.mock import call
 from unittest.mock import MagicMock
@@ -17,13 +18,19 @@ from unittest.mock import patch
 
 import pytest
 from asgi_lifespan import LifespanManager
+from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pydantic import AnyHttpUrl
+from pydantic import parse_obj_as
+from pydantic import SecretStr
+from pytest import MonkeyPatch
 from ramqp.mo import MOAMQPSystem
 
+import fastramqpi
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
-from fastramqpi.main import construct_clients
+from fastramqpi.main import construct_legacy_clients
 from fastramqpi.main import FastRAMQPI
 
 
@@ -152,19 +159,63 @@ def test_readiness_endpoint_exception(
     assert response.status_code == expected
 
 
-@patch("fastramqpi.main.GraphQLClient")
-def test_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> None:
-    """Test that GraphQLClient is called with timeout setting"""
+@patch("fastramqpi.main.LegacyGraphQLClient")
+def test_legacy_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> None:
+    """Test that the LegacyGraphQLClient is called with timeout setting"""
 
     # Arrange
     settings = Settings(graphql_timeout=15)
 
     # Act
-    construct_clients(settings)
+    construct_legacy_clients(settings)
 
     # Assert
     assert 15 == mock_gql_client.call_args.kwargs["httpx_client_kwargs"]["timeout"]
     assert 15 == mock_gql_client.call_args.kwargs["execute_timeout"]
+
+
+def test_mo_client(monkeypatch: MonkeyPatch) -> None:
+    """Test that the MO client is called with the correct settings."""
+    mock_client = MagicMock()
+    monkeypatch.setattr(fastramqpi.main, "AsyncOAuth2Client", mock_client)
+
+    settings = Settings(
+        client_id="foo",
+        client_secret=SecretStr("bar"),
+        auth_server=parse_obj_as(AnyHttpUrl, "https://keycloak.example.org"),
+        auth_realm="os2mo",
+        graphql_timeout=15,
+    )
+
+    FastRAMQPI(application_name="test", settings=settings)
+
+    mock_client.assert_called_once_with(
+        client_id="foo",
+        client_secret="bar",
+        grant_type="client_credentials",
+        token_endpoint="https://keycloak.example.org/realms/os2mo/protocol/openid-connect/token",
+        token={"expires_at": -1, "access_token": ""},
+        timeout=15,
+    )
+
+
+async def test_graphql_client(monkeypatch: MonkeyPatch) -> None:
+    """Test that the GraphQL client is initialised correctly."""
+    monkeypatch.setattr(fastramqpi.main, "MOAMQPSystem", MagicMock())
+    cls = MagicMock()
+
+    app = FastRAMQPI(
+        application_name="test",
+        graphql_client_cls=cls,
+    ).get_app()
+    async with LifespanManager(app):
+        pass
+
+    cls.assert_called_once_with(
+        url="http://mo-service:5000/graphql/v3",
+        http_client=ANY,
+    )
+    assert isinstance(cls.call_args.kwargs["http_client"], AsyncOAuth2Client)
 
 
 def test_graphql_version_defaults_to_3() -> None:
@@ -174,7 +225,7 @@ def test_graphql_version_defaults_to_3() -> None:
     settings = Settings()
 
     # Act
-    gql_client, _ = construct_clients(settings)
+    gql_client, _ = construct_legacy_clients(settings)
 
     # Assert
     assert gql_client.transport.url == "http://mo-service:5000/graphql/v3"
@@ -187,7 +238,7 @@ def test_graphql_version_configurable() -> None:
     settings = Settings(mo_graphql_version=2000)
 
     # Act
-    gql_client, _ = construct_clients(settings)
+    gql_client, _ = construct_legacy_clients(settings)
 
     # Assert
     assert gql_client.transport.url == "http://mo-service:5000/graphql/v2000"
@@ -279,15 +330,16 @@ async def dummy_lifespan_manager() -> AsyncIterator[None]:
 def test_add_lifespan_manager(fastramqpi: FastRAMQPI) -> None:
     """Test that add_lifespan_manager adds to the lifespan manager list."""
     assert fastramqpi._context["lifespan_managers"].keys() == {1000}
-    # We expect GQL, ModelClient and RAMQP to be present
-    assert len(fastramqpi._context["lifespan_managers"][1000]) == 3
+    # We expect LegacyGraphQLClient, LegacyModelClient, AsyncOAuth2Client MO client and
+    # RAMQP to be present.
+    assert len(fastramqpi._context["lifespan_managers"][1000]) == 4
 
     context_manager = dummy_lifespan_manager()
 
     fastramqpi.add_lifespan_manager(context_manager)
     assert fastramqpi._context["lifespan_managers"].keys() == {1000}
     # We expect our manager to have been added
-    assert len(fastramqpi._context["lifespan_managers"][1000]) == 4
+    assert len(fastramqpi._context["lifespan_managers"][1000]) == 5
 
     fastramqpi.add_lifespan_manager(context_manager, priority=1)
     assert fastramqpi._context["lifespan_managers"].keys() == {1, 1000}

@@ -8,6 +8,7 @@ from typing import Awaitable
 from typing import Callable
 from typing import TypedDict
 
+from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from gql.client import AsyncClientSession
 from pydantic import BaseSettings
@@ -30,7 +31,13 @@ class Context(TypedDict, total=False):
     lifespan_managers: dict[int, set[AsyncContextManager]]
     app: FastAPI
     amqpsystem: MOAMQPSystem
+
+    # Legacy clients
     graphql_client: GraphQLClient
     graphql_session: AsyncClientSession
     model_client: ModelClient
+
+    # Authenticated HTTPX Client
+    mo_client: AsyncOAuth2Client
+
     user_context: dict[str, Any]

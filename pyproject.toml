@@ -49,8 +49,13 @@ check_untyped_defs = "True"
 disallow_untyped_defs = "True"
 plugins = "pydantic.mypy"
 
+[[tool.mypy.overrides]]
+# The module seems to be missing library stubs or py.typed marker
+module = "authlib.integrations.httpx_client"
+ignore_missing_imports = true
+
 [tool.flake8]
-max-line-length = 88
+max-line-length = 999  # let black worry about that
 exclude = [
 ".git", "__pycache__", ".mypy_cache", ".pytest_cache", ".venv", ".gitlab"
 ]
