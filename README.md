@@ -120,6 +120,8 @@ type = "datetime.datetime"
 [tool.ariadne-codegen.scalars.UUID]
 type = "uuid.UUID"
 ```
+Where you replace `"my_integration/"` with the path to your integration.
+
 Grab OS2mo's GraphQL schema:
 ```bash
 curl -O http://localhost:5000/graphql/v8/schema.graphql
