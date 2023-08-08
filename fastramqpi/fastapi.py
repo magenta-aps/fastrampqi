@@ -158,7 +158,7 @@ class FastAPIIntegrationSystem:
             contact={
                 "name": "Magenta Aps",
                 "url": "https://www.magenta.dk/",
-                "email": "info@magenta.dk>",
+                "email": "info@magenta.dk",
             },
             license_info={
                 "name": "MPL-2.0",
