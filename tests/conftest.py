@@ -15,6 +15,13 @@ from fastapi.testclient import TestClient
 from fastramqpi.main import FastRAMQPI
 
 
+@pytest.fixture(scope="session")
+def monkeysession() -> Generator[MonkeyPatch, None, None]:
+    mpatch = MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
+
+
 @pytest.fixture()
 def set_settings(
     monkeypatch: MonkeyPatch,
@@ -44,17 +51,17 @@ def teardown_client_secret(monkeypatch: MonkeyPatch) -> Generator[None, None, No
     yield
 
 
-@pytest.fixture(autouse=True)
-def disable_metrics(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
+@pytest.fixture(autouse=True, scope="session")
+def disable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
     """Disable metrics by setting ENABLE_METRICS to false by default."""
-    monkeypatch.setenv("ENABLE_METRICS", "false")
+    monkeysession.setenv("ENABLE_METRICS", "false")
     yield
 
 
-@pytest.fixture
-def enable_metrics(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
+@pytest.fixture(scope="session")
+def enable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
     """Enable metrics by setting ENABLE_METRICS to true on demand."""
-    monkeypatch.setenv("ENABLE_METRICS", "true")
+    monkeysession.setenv("ENABLE_METRICS", "true")
     yield
 
 
@@ -74,15 +81,22 @@ def fastramqpi(
 
 
 @pytest.fixture
+def disable_amqp_lifespan(fastramqpi: FastRAMQPI) -> Generator[None, None, None]:
+    fastramqpi._context["lifespan_managers"][1000].remove(fastramqpi.amqpsystem)
+    yield
+
+
+@pytest.fixture
 def test_client_builder(
-    fastramqpi_builder: Callable[[], FastRAMQPI]
-) -> Generator[Callable[[], TestClient], None, None]:
+    fastramqpi: FastRAMQPI,
+) -> Generator[Callable[[FastRAMQPI | None], TestClient], None, None]:
     """Fixture for generating FastRAMQPI / FastAPI test clients."""
 
-    def create_test_client(fastramqpi: FastRAMQPI | None = None) -> TestClient:
-        if fastramqpi is None:
-            fastramqpi = fastramqpi_builder()
-        return TestClient(fastramqpi.get_app())
+    def create_test_client(override: FastRAMQPI | None = None) -> TestClient:
+        app = fastramqpi.get_app()
+        if override is not None:
+            app = override.get_app()
+        return TestClient(app)
 
     yield create_test_client
 
@@ -92,7 +106,9 @@ def test_client(
     test_client_builder: Callable[[], TestClient]
 ) -> Generator[TestClient, None, None]:
     """Fixture for the FastAPI test client."""
-    yield test_client_builder()
+    test_client = test_client_builder()
+    with test_client:
+        yield test_client
 
 
 @pytest.fixture

@@ -17,7 +17,6 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
-from asgi_lifespan import LifespanManager
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -28,12 +27,14 @@ from pytest import MonkeyPatch
 from ramqp.mo import MOAMQPSystem
 
 import fastramqpi
+from fastramqpi import depends
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
 from fastramqpi.main import construct_legacy_clients
 from fastramqpi.main import FastRAMQPI
 
 
+@pytest.mark.usefixtures("disable_amqp_lifespan")
 def test_root_endpoint(test_client: TestClient) -> None:
     """Test the root endpoint on our app."""
     response = test_client.get("/")
@@ -41,16 +42,17 @@ def test_root_endpoint(test_client: TestClient) -> None:
     assert response.json() == {"name": "test"}
 
 
-def test_metrics_endpoint(
-    enable_metrics: None, test_client_builder: Callable[[], TestClient]
-) -> None:
+@pytest.mark.usefixtures("disable_amqp_lifespan", "enable_metrics")
+def test_metrics_endpoint(fastramqpi: FastRAMQPI, test_client: TestClient) -> None:
     """Test the metrics endpoint on our app."""
-    test_client = test_client_builder()
+    fastramqpi._context["healthchecks"] = {}
+
     response = test_client.get("/metrics")
     assert response.status_code == 200
     assert "# TYPE build_information_info gauge" in response.text
 
 
+@pytest.mark.usefixtures("disable_amqp_lifespan")
 def test_readiness_endpoint(test_client: TestClient) -> None:
     """Test the readiness endpoint on our app."""
     response = test_client.get("/health/ready")
@@ -101,11 +103,19 @@ def test_liveness_endpoint(
     fastramqpi._context["amqpsystem"] = amqp_system
     fastramqpi._context["graphql_session"] = graphql_session
     fastramqpi._context["model_client"] = model_client
+    fastramqpi._context["lifespan_managers"] = {}
+
     test_client = test_client_builder(fastramqpi)
 
-    response = test_client.get("/health/live")
-    assert response.status_code == expected
-    assert amqp_system.mock_calls == [call.healthcheck()]
+    with test_client:
+        response = test_client.get("/health/live")
+        assert response.status_code == expected
+        assert amqp_system.mock_calls == [call.healthcheck()]
+        assert response.json() == {
+            "AMQP": amqp_ok,
+            "GraphQL": gql_ok,
+            "Service API": model_ok,
+        }
 
 
 @pytest.mark.parametrize(
@@ -153,10 +163,13 @@ def test_liveness_endpoint_exception(
     fastramqpi._context["amqpsystem"] = amqp_system
     fastramqpi._context["graphql_session"] = graphql_session
     fastramqpi._context["model_client"] = model_client
+    fastramqpi._context["lifespan_managers"] = {}
+
     test_client = test_client_builder(fastramqpi)
 
-    response = test_client.get("/health/live")
-    assert response.status_code == expected
+    with test_client:
+        response = test_client.get("/health/live")
+        assert response.status_code == expected
 
 
 @patch("fastramqpi.main.LegacyGraphQLClient")
@@ -208,7 +221,7 @@ async def test_graphql_client(monkeypatch: MonkeyPatch) -> None:
         application_name="test",
         graphql_client_cls=cls,
     ).get_app()
-    async with LifespanManager(app):
+    with TestClient(app):
         pass
 
     cls.assert_called_once_with(
@@ -375,7 +388,7 @@ async def test_lifespan_manager_execution(fastramqpi: FastRAMQPI) -> None:
 
     app = fastramqpi.get_app()
 
-    async with LifespanManager(app):
+    with TestClient(app):
         assert events == [
             (0, "entered"),
             (1, "entered"),
@@ -396,13 +409,36 @@ async def test_lifespan_manager_execution(fastramqpi: FastRAMQPI) -> None:
 async def test_default_lifespan_manager(
     MOAMQPSystem: MagicMock,  # pylint: disable=invalid-name
     fastramqpi_builder: Callable[[], FastRAMQPI],
+    test_client_builder: Callable[[FastRAMQPI | None], TestClient],
 ) -> None:
     """Test the default FastRAMQPI lifespan managers."""
 
     fastramqpi = fastramqpi_builder()
-    fastramqpi._context["graphql_client"] = AsyncMock()
-    # fastramqpi._context["model_client"] = AsyncMock()
+    mock = AsyncMock()
+    fastramqpi._context["graphql_client"] = mock
 
+    mock.__aenter__.assert_not_called()
+    with test_client_builder(fastramqpi):
+        mock.__aenter__.assert_called_once()
+        mock.__aexit__.assert_not_called()
+    mock.__aexit__.assert_called_once()
+
+
+@patch("fastramqpi.main.MOAMQPSystem")
+async def test_context(
+    MOAMQPSystem: MagicMock,  # pylint: disable=invalid-name
+    fastramqpi_builder: Callable[[], FastRAMQPI],
+    test_client_builder: Callable[[FastRAMQPI | None], TestClient],
+) -> None:
+    """Test the default FastRAMQPI lifespan managers."""
+
+    fastramqpi = fastramqpi_builder()
+    fastramqpi.add_context(a=1)
     app = fastramqpi.get_app()
-    async with LifespanManager(app):
-        pass
+
+    @app.get("/test")
+    async def test(user_context: depends.UserContext) -> dict:
+        return user_context
+
+    with test_client_builder(fastramqpi) as client:
+        assert client.get("/test").json() == {"a": 1}

@@ -5,6 +5,7 @@
 import logging
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
+from functools import partial
 from typing import Any
 from typing import AsyncContextManager
 from typing import AsyncIterator
@@ -13,7 +14,7 @@ import structlog
 from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
-from fastapi import Response
+from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.status import HTTP_204_NO_CONTENT
@@ -64,7 +65,7 @@ def configure_logging(log_level_name: str) -> None:
 @fastapi_router.get("/")
 async def index(request: Request) -> dict[str, str]:
     """Endpoint to return name of integration."""
-    context: dict[str, Any] = request.app.state.context
+    context: dict[str, Any] = request.state.context
     return {"name": context["name"]}
 
 
@@ -83,31 +84,29 @@ async def readiness() -> None:
         "503": {"description": "Not ready"},
     },
 )
-async def liveness(request: Request, response: Response) -> Response:
+async def liveness(request: Request) -> JSONResponse:
     """Endpoint to be used as a liveness probe for Kubernetes."""
-    response.status_code = HTTP_204_NO_CONTENT
+    status_code = HTTP_204_NO_CONTENT
 
-    context: dict[str, Any] = request.app.state.context
+    context: dict[str, Any] = request.state.context
     healthchecks = context["healthchecks"]
-    all_ready = True
+    healthstatus = {}
     try:
         for name, healthcheck in healthchecks.items():
             ready = await healthcheck(context)
-            if not ready:
-                logger.warn(f"{name} is not ready")
-                all_ready = False
+            healthstatus[name] = ready
     except Exception:  # pylint: disable=broad-except
         logger.exception("Exception occured during readiness probe")
-        response.status_code = HTTP_503_SERVICE_UNAVAILABLE
+        status_code = HTTP_503_SERVICE_UNAVAILABLE
 
-    if not all_ready:
-        response.status_code = HTTP_503_SERVICE_UNAVAILABLE
+    if not all(healthstatus.values()):
+        status_code = HTTP_503_SERVICE_UNAVAILABLE
 
-    return response
+    return JSONResponse(content=healthstatus, status_code=status_code)
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
     """ASGI lifespan context handler.
 
     Runs all the configured lifespan managers according to their priority.
@@ -116,12 +115,13 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         None
     """
     async with AsyncExitStack() as stack:
-        lifespan_managers = app.state.context["lifespan_managers"]
+        lifespan_managers = context["lifespan_managers"]
         for _, priority_set in sorted(lifespan_managers.items()):
             for lifespan_manager in priority_set:
                 await stack.enter_async_context(lifespan_manager)
-        # Yield to keep lifespan managers open until the ASGI application is shutdown.
-        yield
+        yield {
+            "context": context,
+        }
 
 
 class FastAPIIntegrationSystem:
@@ -164,10 +164,9 @@ class FastAPIIntegrationSystem:
                 "name": "MPL-2.0",
                 "url": "https://www.mozilla.org/en-US/MPL/2.0/",
             },
-            lifespan=_lifespan,
+            lifespan=partial(_lifespan, context=self._context),
         )
         app.include_router(fastapi_router)
-        app.state.context = self._context
         # Expose Metrics
         if self.settings.enable_metrics:
             # Update metrics info
