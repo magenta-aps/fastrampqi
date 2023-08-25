@@ -35,7 +35,7 @@ fastapi_router = APIRouter()
 
 @fastapi_router.post("/trigger/all")
 async def update_all(request: Request) -> dict[str, str]:
-    context: dict[str, Any] = request.app.state.context
+    context: dict[str, Any] = request.state.context
     graphql_session = context["grapqh_session"]
     program_settings = context["user_context"]["settings"]
     ...
