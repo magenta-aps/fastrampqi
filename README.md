@@ -13,49 +13,39 @@ It is very MO specific.
 ## Usage
 
 ```python
-from pydantic import BaseSettings
-from fastramqpi import FastRAMQPI
-from fastramqpi import FastRAMQPISettings
+from typing import Any
+
+from fastapi import APIRouter
+from fastapi import FastAPI
+from fastramqpi.config import Settings as FastRAMQPISettings
+from fastramqpi.main import FastRAMQPI
+from gql.client import AsyncClientSession
+from ramqp.depends import Context
+from ramqp.depends import RateLimit
+from ramqp.mo import MORouter
+from ramqp.mo import PayloadUUID
 
 
-class Settings(BaseSettings):
+class Settings(FastRAMQPISettings):
     class Config:
         frozen = True
         env_nested_delimiter = "__"
 
-    fastramqpi: FastRAMQPISettings = Field(
-        default_factory=FastRAMQPISettings,
-        description="FastRAMQPI settings"
-    )
-
-    # All your program settings hereunder...
-
 
 fastapi_router = APIRouter()
-
-@fastapi_router.post("/trigger/all")
-async def update_all(request: Request) -> dict[str, str]:
-    context: dict[str, Any] = request.state.context
-    graphql_session = context["grapqh_session"]
-    program_settings = context["user_context"]["settings"]
-    ...
-    return {"status": "OK"}
-
-
 amqp_router = MORouter()
 
-@amqp_router.register("*.*.*")
-async def listen_to_all(context: dict, payload: PayloadType) -> None:
-    graphql_session = context["grapqh_session"]
+
+@amqp_router.register("engagement")
+async def listen_to_all(context: Context, uuid: PayloadUUID, _: RateLimit) -> None:
+    graphql_session: AsyncClientSession = context["graphql_session"]
     program_settings = context["user_context"]["settings"]
-    ...
+    print(uuid)
 
 
 def create_fastramqpi(**kwargs: Any) -> FastRAMQPI:
     settings = Settings(**kwargs)
-    fastramqpi = FastRAMQPI(
-        application_name="orggatekeeper", settings=settings.fastramqpi
-    )
+    fastramqpi = FastRAMQPI(application_name="os2mo-example-integration", settings=settings)
     fastramqpi.add_context(settings=settings)
 
     # Add our AMQP router(s)
