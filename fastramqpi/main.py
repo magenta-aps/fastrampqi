@@ -21,8 +21,6 @@ from .config import ClientSettings
 from .config import Settings
 from .context import Context
 from .fastapi import FastAPIIntegrationSystem
-from .healthcheck import healthcheck_gql
-from .healthcheck import healthcheck_model_client
 
 
 def construct_legacy_clients(
@@ -163,8 +161,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         legacy_graphql_client, legacy_model_client = construct_legacy_clients(
             cast(ClientSettings, self.settings)
         )
-        # Check and expose legacy GraphQL connection (gql_client)
-        self.add_healthcheck("GraphQL", healthcheck_gql)
+        # Xxpose legacy GraphQL connection (gql_client)
         self._context["graphql_client"] = legacy_graphql_client
 
         @asynccontextmanager
@@ -178,9 +175,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self.add_lifespan_manager(
             cast(AsyncContextManager, partial(legacy_graphql_session, self._context)())
         )
-        # Check and expose legacy Service API connection (model_client)
+        # Expose legacy Service API connection (model_client)
         self.add_lifespan_manager(legacy_model_client)
-        self.add_healthcheck("Service API", healthcheck_model_client)
         self._context["model_client"] = legacy_model_client
 
     def get_amqpsystem(self) -> MOAMQPSystem:
