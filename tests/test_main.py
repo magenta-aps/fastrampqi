@@ -59,117 +59,48 @@ def test_readiness_endpoint(test_client: TestClient) -> None:
     assert response.status_code == 204
 
 
-@pytest.mark.parametrize(
-    "amqp_ok,gql_ok,model_ok,expected",
-    [
-        (True, True, True, 204),
-        (False, True, True, 503),
-        (True, False, True, 503),
-        (True, True, False, 503),
-        (True, False, False, 503),
-        (False, True, False, 503),
-        (False, False, True, 503),
-        (False, False, False, 503),
-    ],
-)
-def test_liveness_endpoint(
+def test_liveness_endpoint_healthy(
     fastramqpi: FastRAMQPI,
-    graphql_session: AsyncMock,
-    model_client: AsyncMock,
     test_client_builder: Callable[..., TestClient],
-    amqp_ok: bool,
-    gql_ok: bool,
-    model_ok: bool,
-    expected: int,
 ) -> None:
-    """Test the liveness endpoint handles errors."""
+    """Test that the liveness endpoint returns 204 if everything is ok."""
     amqp_system = MagicMock()
-    amqp_system.healthcheck.return_value = amqp_ok
-
-    graphql_response = {}
-    if gql_ok:
-        graphql_response = {"org": {"uuid": "hello"}}
-    else:
-        graphql_response = {"org": {"uuid": False}}  # type: ignore
-    graphql_session.execute.return_value = graphql_response
-
-    model_response = MagicMock()
-    if model_ok:
-        model_response.json.return_value = [{"uuid": "hello"}]
-    else:
-        model_response.json.return_value = []
-    model_client.async_httpx_client.get.return_value = model_response
+    amqp_system.healthcheck.return_value = True
 
     fastramqpi._context["amqpsystem"] = amqp_system
-    fastramqpi._context["graphql_session"] = graphql_session
-    fastramqpi._context["model_client"] = model_client
     fastramqpi._context["lifespan_managers"] = {}
 
     test_client = test_client_builder(fastramqpi)
 
     with test_client:
         response = test_client.get("/health/live")
-        assert response.status_code == expected
+        assert response.status_code == 204
         assert amqp_system.mock_calls == [call.healthcheck()]
         assert response.json() == {
-            "AMQP": amqp_ok,
-            "GraphQL": gql_ok,
-            "Service API": model_ok,
+            "AMQP": True,
         }
 
 
-@pytest.mark.parametrize(
-    "amqp_ok,gql_ok,model_ok,expected",
-    [
-        (True, True, True, 204),
-        (False, True, True, 503),
-        (True, False, True, 503),
-        (True, True, False, 503),
-        (True, False, False, 503),
-        (False, True, False, 503),
-        (False, False, True, 503),
-        (False, False, False, 503),
-    ],
-)
-def test_liveness_endpoint_exception(
+def test_liveness_endpoint_unhealthy(
     fastramqpi: FastRAMQPI,
-    graphql_session: AsyncMock,
-    model_client: MagicMock,
     test_client_builder: Callable[..., TestClient],
-    amqp_ok: bool,
-    gql_ok: bool,
-    model_ok: bool,
-    expected: int,
 ) -> None:
-    """Test the liveness endpoint handled exceptions nicely."""
+    """Test that the liveness endpoint handles exceptions nicely."""
     amqp_system = MagicMock()
-    if amqp_ok:
-        amqp_system.healthcheck.return_value = True
-    else:
-        amqp_system.healthcheck.side_effect = ValueError("BOOM")
-
-    graphql_response = {}
-    if gql_ok:
-        graphql_response = {"org": {"uuid": "hello"}}
-    graphql_session.execute.return_value = graphql_response
-
-    model_response = MagicMock()
-    if model_ok:
-        model_response.json.return_value = [{"uuid": "hello"}]
-    else:
-        model_response.side_effect = ValueError("boom")
-    model_client.async_httpx_client.get.return_value = model_response
+    amqp_system.healthcheck.side_effect = ValueError("BOOM")
 
     fastramqpi._context["amqpsystem"] = amqp_system
-    fastramqpi._context["graphql_session"] = graphql_session
-    fastramqpi._context["model_client"] = model_client
     fastramqpi._context["lifespan_managers"] = {}
 
     test_client = test_client_builder(fastramqpi)
 
     with test_client:
         response = test_client.get("/health/live")
-        assert response.status_code == expected
+        assert response.status_code == 503
+        assert amqp_system.mock_calls == [call.healthcheck()]
+        assert response.json() == {
+            "AMQP": False,
+        }
 
 
 @patch("fastramqpi.main.LegacyGraphQLClient")
@@ -183,8 +114,8 @@ def test_legacy_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> N
     construct_legacy_clients(settings)
 
     # Assert
-    assert 15 == mock_gql_client.call_args.kwargs["httpx_client_kwargs"]["timeout"]
-    assert 15 == mock_gql_client.call_args.kwargs["execute_timeout"]
+    assert mock_gql_client.call_args.kwargs["httpx_client_kwargs"]["timeout"] == 15
+    assert mock_gql_client.call_args.kwargs["execute_timeout"] == 15
 
 
 def test_mo_client(monkeypatch: MonkeyPatch) -> None:
@@ -306,8 +237,6 @@ def test_add_healthcheck(fastramqpi: FastRAMQPI) -> None:
     """Test that add_healthcheck adds to the healthcheck list."""
     assert fastramqpi._context["healthchecks"].keys() == {
         "AMQP",
-        "GraphQL",
-        "Service API",
     }
 
     fastramqpi.add_healthcheck(
@@ -318,8 +247,6 @@ def test_add_healthcheck(fastramqpi: FastRAMQPI) -> None:
 
     assert fastramqpi._context["healthchecks"].keys() == {
         "AMQP",
-        "GraphQL",
-        "Service API",
         "Test",
     }
     # pylint: disable=comparison-with-callable

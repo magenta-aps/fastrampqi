@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
 import logging
+from collections.abc import Awaitable
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
+from contextlib import suppress
 from functools import partial
 from typing import Any
 from typing import AsyncContextManager
@@ -90,14 +93,15 @@ async def liveness(request: Request) -> JSONResponse:
 
     context: dict[str, Any] = request.state.context
     healthchecks = context["healthchecks"]
+
+    async def check(healthcheck: Callable[[dict], Awaitable[bool]]) -> bool:
+        with suppress(Exception):
+            return await healthcheck(context)
+        return False
+
     healthstatus = {}
-    try:
-        for name, healthcheck in healthchecks.items():
-            ready = await healthcheck(context)
-            healthstatus[name] = ready
-    except Exception:  # pylint: disable=broad-except
-        logger.exception("Exception occured during readiness probe")
-        status_code = HTTP_503_SERVICE_UNAVAILABLE
+    for name, healthcheck in healthchecks.items():
+        healthstatus[name] = await check(healthcheck)
 
     if not all(healthstatus.values()):
         status_code = HTTP_503_SERVICE_UNAVAILABLE
