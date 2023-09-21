@@ -20,16 +20,22 @@ from fastapi import FastAPI
 from fastramqpi.config import Settings as FastRAMQPISettings
 from fastramqpi.main import FastRAMQPI
 from gql.client import AsyncClientSession
+from pydantic import BaseSettings
+from pydantic import Field
 from ramqp.depends import Context
 from ramqp.depends import RateLimit
 from ramqp.mo import MORouter
 from ramqp.mo import PayloadUUID
 
 
-class Settings(FastRAMQPISettings):
+class Settings(BaseSettings):
     class Config:
         frozen = True
         env_nested_delimiter = "__"
+
+    fastramqpi: FastRAMQPISettings = Field(
+        default_factory=FastRAMQPISettings, description="FastRAMQPI settings"
+    )
 
 
 fastapi_router = APIRouter()
@@ -45,7 +51,9 @@ async def listen_to_all(context: Context, uuid: PayloadUUID, _: RateLimit) -> No
 
 def create_fastramqpi(**kwargs: Any) -> FastRAMQPI:
     settings = Settings(**kwargs)
-    fastramqpi = FastRAMQPI(application_name="os2mo-example-integration", settings=settings)
+    fastramqpi = FastRAMQPI(
+        application_name="os2mo-example-integration", settings=settings
+    )
     fastramqpi.add_context(settings=settings)
 
     # Add our AMQP router(s)
