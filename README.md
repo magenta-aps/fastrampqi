@@ -43,7 +43,7 @@ amqp_router = MORouter()
 
 
 @amqp_router.register("engagement")
-async def listen_to_all(context: Context, uuid: PayloadUUID, _: RateLimit) -> None:
+async def listen_to_engagements(context: Context, uuid: PayloadUUID, _: RateLimit) -> None:
     graphql_session: AsyncClientSession = context["graphql_session"]
     program_settings = context["user_context"]["settings"]
     print(uuid)
