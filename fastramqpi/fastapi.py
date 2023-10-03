@@ -20,6 +20,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
@@ -81,15 +82,15 @@ async def readiness() -> None:
 
 @fastapi_router.get(
     "/health/live",
-    status_code=HTTP_204_NO_CONTENT,
+    status_code=HTTP_200_OK,
     responses={
-        "204": {"description": "Ready"},
+        "200": {"description": "Ready"},
         "503": {"description": "Not ready"},
     },
 )
 async def liveness(request: Request) -> JSONResponse:
     """Endpoint to be used as a liveness probe for Kubernetes."""
-    status_code = HTTP_204_NO_CONTENT
+    status_code = HTTP_200_OK
 
     context: dict[str, Any] = request.state.context
     healthchecks = context["healthchecks"]
