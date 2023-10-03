@@ -74,7 +74,7 @@ def test_liveness_endpoint_healthy(
 
     with test_client:
         response = test_client.get("/health/live")
-        assert response.status_code == 204
+        assert response.status_code == 200
         assert amqp_system.mock_calls == [call.healthcheck()]
         assert response.json() == {
             "AMQP": True,
