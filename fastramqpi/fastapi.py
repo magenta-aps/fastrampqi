@@ -132,7 +132,7 @@ async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
 class FastAPIIntegrationSystem:
     """FastAPI-based integration framework.
 
-    Motivated by a lot a shared code between our integrations.
+    Motivated by a lot of shared code between our integrations.
     """
 
     def __init__(
