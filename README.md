@@ -52,7 +52,7 @@ async def listen_to_engagements(context: Context, uuid: PayloadUUID, _: RateLimi
 def create_fastramqpi(**kwargs: Any) -> FastRAMQPI:
     settings = Settings(**kwargs)
     fastramqpi = FastRAMQPI(
-        application_name="os2mo-example-integration", settings=settings
+        application_name="os2mo-example-integration", settings=settings.fastramqpi
     )
     fastramqpi.add_context(settings=settings)
 
