@@ -32,6 +32,7 @@ from fastramqpi.config import Settings
 from fastramqpi.context import Context
 from fastramqpi.main import construct_legacy_clients
 from fastramqpi.main import FastRAMQPI
+from fastramqpi.metrics import dipex_last_success_timestamp
 
 
 @pytest.mark.usefixtures("disable_amqp_lifespan")
@@ -50,6 +51,21 @@ def test_metrics_endpoint(fastramqpi: FastRAMQPI, test_client: TestClient) -> No
     response = test_client.get("/metrics")
     assert response.status_code == 200
     assert "# TYPE build_information_info gauge" in response.text
+
+
+@pytest.mark.usefixtures("disable_amqp_lifespan", "enable_metrics")
+def test_metrics_dipex_last_success_timestamp(
+    fastramqpi: FastRAMQPI, test_client: TestClient
+) -> None:
+    """Test that dipex_last_success_timestamp can be set."""
+    response = test_client.get("/metrics")
+    assert "dipex_last_success_timestamp_seconds 0.0" in response.text
+
+    dipex_last_success_timestamp.set_to_current_time()
+
+    response = test_client.get("/metrics")
+    # Stops working 2033-05-18T03:33:20+00:00. Apologies from the past!
+    assert "dipex_last_success_timestamp_seconds 1" in response.text
 
 
 @pytest.mark.usefixtures("disable_amqp_lifespan")
