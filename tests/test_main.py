@@ -64,7 +64,7 @@ def test_metrics_dipex_last_success_timestamp(
     dipex_last_success_timestamp.set_to_current_time()
 
     response = test_client.get("/metrics")
-    # Stops working 2023-10-05T13:15:00+00:00. Apologies from the past!
+    # Stops working 2033-05-18T03:33:20+00:00. Apologies from the past!
     assert "dipex_last_success_timestamp_seconds 1" in response.text
 
 
