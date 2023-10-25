@@ -358,7 +358,7 @@ async def test_default_lifespan_manager(
 
     fastramqpi = fastramqpi_builder()
     mock = AsyncMock()
-    fastramqpi._context["graphql_client"] = mock
+    fastramqpi._context["legacy_graphql_client"] = mock
 
     mock.__aenter__.assert_not_called()
     with test_client_builder(fastramqpi):

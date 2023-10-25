@@ -32,9 +32,9 @@ async def test_depends() -> None:
 
     context: Context = {
         "amqpsystem": sentinel.amqpsystem,
-        "graphql_client": sentinel.graphql_client,
-        "graphql_session": sentinel.graphql_session,
-        "model_client": sentinel.model_client,
+        "legacy_graphql_client": sentinel.graphql_client,
+        "legacy_graphql_session": sentinel.graphql_session,
+        "legacy_model_client": sentinel.model_client,
         "mo_client": sentinel.mo_client,
         "user_context": {
             "a": 1,

@@ -32,11 +32,15 @@ def from_user_context(field: str) -> Callable[..., Any]:
 
 MOAMQPSystem = Annotated[_MOAMQPSystem, Depends(from_context("amqpsystem"))]
 
-LegacyGraphQLClient = Annotated[_GraphQLClient, Depends(from_context("graphql_client"))]
-LegacyGraphQLSession = Annotated[
-    AsyncClientSession, Depends(from_context("graphql_session"))
+LegacyGraphQLClient = Annotated[
+    _GraphQLClient, Depends(from_context("legacy_graphql_client"))
 ]
-LegacyModelClient = Annotated[_ModelClient, Depends(from_context("model_client"))]
+LegacyGraphQLSession = Annotated[
+    AsyncClientSession, Depends(from_context("legacy_graphql_session"))
+]
+LegacyModelClient = Annotated[
+    _ModelClient, Depends(from_context("legacy_model_client"))
+]
 
 MOClient = Annotated[AsyncOAuth2Client, Depends(from_context("mo_client"))]
 

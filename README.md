@@ -17,8 +17,6 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import FastAPI
-from fastramqpi.config import Settings as FastRAMQPISettings
-from fastramqpi.main import FastRAMQPI
 from gql.client import AsyncClientSession
 from pydantic import BaseSettings
 from pydantic import Field
@@ -26,6 +24,10 @@ from ramqp.depends import Context
 from ramqp.depends import RateLimit
 from ramqp.mo import MORouter
 from ramqp.mo import PayloadUUID
+
+from fastramqpi import depends
+from fastramqpi.config import Settings as FastRAMQPISettings
+from fastramqpi.main import FastRAMQPI
 
 
 class Settings(BaseSettings):
@@ -43,9 +45,12 @@ amqp_router = MORouter()
 
 
 @amqp_router.register("engagement")
-async def listen_to_engagements(context: Context, uuid: PayloadUUID, _: RateLimit) -> None:
-    graphql_session: AsyncClientSession = context["graphql_session"]
-    program_settings = context["user_context"]["settings"]
+async def listen_to_engagements(
+        context: Context,
+        graphql_session: depends.LegacyGraphQLSession,
+        uuid: PayloadUUID,
+        _: RateLimit
+) -> None:
     print(uuid)
 
 
