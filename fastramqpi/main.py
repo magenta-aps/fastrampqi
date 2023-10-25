@@ -161,15 +161,15 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         legacy_graphql_client, legacy_model_client = construct_legacy_clients(
             cast(ClientSettings, self.settings)
         )
-        # Xxpose legacy GraphQL connection (gql_client)
-        self._context["graphql_client"] = legacy_graphql_client
+        # Expose legacy GraphQL connection (gql_client)
+        self._context["legacy_graphql_client"] = legacy_graphql_client
 
         @asynccontextmanager
         async def legacy_graphql_session(
             context: Context,
         ) -> AsyncGenerator[None, None]:
-            async with context["graphql_client"] as session:
-                context["graphql_session"] = session
+            async with context["legacy_graphql_client"] as session:
+                context["legacy_graphql_session"] = session
                 yield
 
         self.add_lifespan_manager(
@@ -177,7 +177,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         )
         # Expose legacy Service API connection (model_client)
         self.add_lifespan_manager(legacy_model_client)
-        self._context["model_client"] = legacy_model_client
+        self._context["legacy_model_client"] = legacy_model_client
 
     def get_amqpsystem(self) -> MOAMQPSystem:
         """Return the contained MOAMQPSystem.
