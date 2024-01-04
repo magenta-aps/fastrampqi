@@ -49,13 +49,6 @@ def settings() -> Settings:
     )
 
 
-@pytest.fixture
-def teardown_client_secret(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
-    """Set the CLIENT_SECRET environmental variable to hunter2 by default."""
-    monkeypatch.delenv("CLIENT_SECRET")
-    yield
-
-
 @pytest.fixture(autouse=True, scope="session")
 def disable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
     """Disable metrics by setting ENABLE_METRICS to false by default."""

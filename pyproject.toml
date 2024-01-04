@@ -64,3 +64,9 @@ max-line-length = 999  # let black worry about that
 exclude = [
 ".git", "__pycache__", ".mypy_cache", ".pytest_cache", ".venv", ".gitlab"
 ]
+
+[tool.coverage.run]
+omit = [
+    # The pytest plugin is tested implictly through the integration tests
+    "fastramqpi/pytest_plugin.py",
+]
