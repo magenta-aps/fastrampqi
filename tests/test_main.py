@@ -120,11 +120,17 @@ def test_liveness_endpoint_unhealthy(
 
 
 @patch("fastramqpi.main.LegacyGraphQLClient")
-def test_legacy_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> None:
+def test_legacy_gql_client_created_with_timeout(
+    mock_gql_client: MagicMock, settings: Settings
+) -> None:
     """Test that the LegacyGraphQLClient is called with timeout setting"""
 
     # Arrange
-    settings = Settings(graphql_timeout=15)
+    settings = settings.copy(
+        update=dict(
+            graphql_timeout=15,
+        )
+    )
 
     # Act
     construct_legacy_clients(settings)
@@ -134,17 +140,19 @@ def test_legacy_gql_client_created_with_timeout(mock_gql_client: MagicMock) -> N
     assert mock_gql_client.call_args.kwargs["execute_timeout"] == 15
 
 
-def test_mo_client(monkeypatch: MonkeyPatch) -> None:
+def test_mo_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
     """Test that the MO client is called with the correct settings."""
     mock_client = MagicMock()
     monkeypatch.setattr(fastramqpi.main, "AsyncOAuth2Client", mock_client)
 
-    settings = Settings(
-        client_id="foo",
-        client_secret=SecretStr("bar"),
-        auth_server=parse_obj_as(AnyHttpUrl, "https://keycloak.example.org"),
-        auth_realm="os2mo",
-        graphql_timeout=15,
+    settings = settings.copy(
+        update=dict(
+            client_id="foo",
+            client_secret=SecretStr("bar"),
+            auth_server=parse_obj_as(AnyHttpUrl, "https://keycloak.example.org"),
+            auth_realm="os2mo",
+            graphql_timeout=15,
+        )
     )
 
     FastRAMQPI(application_name="test", settings=settings)
@@ -160,13 +168,14 @@ def test_mo_client(monkeypatch: MonkeyPatch) -> None:
     )
 
 
-async def test_graphql_client(monkeypatch: MonkeyPatch) -> None:
+async def test_graphql_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
     """Test that the GraphQL client is initialised correctly."""
     monkeypatch.setattr(fastramqpi.main, "MOAMQPSystem", MagicMock())
     cls = MagicMock()
 
     app = FastRAMQPI(
         application_name="test",
+        settings=settings,
         graphql_client_cls=cls,
     ).get_app()
     with TestClient(app):
@@ -179,12 +188,8 @@ async def test_graphql_client(monkeypatch: MonkeyPatch) -> None:
     assert isinstance(cls.call_args.kwargs["http_client"], AsyncOAuth2Client)
 
 
-def test_graphql_version_defaults_to_3() -> None:
+def test_graphql_version_defaults_to_3(settings: Settings) -> None:
     """Test that the default GraphQL version is 3"""
-
-    # Arrange
-    settings = Settings()
-
     # Act
     gql_client, _ = construct_legacy_clients(settings)
 
@@ -192,11 +197,15 @@ def test_graphql_version_defaults_to_3() -> None:
     assert gql_client.transport.url == "http://mo-service:5000/graphql/v3"
 
 
-def test_graphql_version_configurable() -> None:
+def test_graphql_version_configurable(settings: Settings) -> None:
     """Test that the MO GraphQL version is configurable"""
 
     # Arrange
-    settings = Settings(mo_graphql_version=2000)
+    settings = settings.copy(
+        update=dict(
+            mo_graphql_version=2000,
+        )
+    )
 
     # Act
     gql_client, _ = construct_legacy_clients(settings)
