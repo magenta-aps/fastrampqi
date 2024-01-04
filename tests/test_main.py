@@ -150,6 +150,7 @@ def test_mo_client(monkeypatch: MonkeyPatch) -> None:
     FastRAMQPI(application_name="test", settings=settings)
 
     mock_client.assert_called_once_with(
+        base_url="http://mo-service:5000",
         client_id="foo",
         client_secret="bar",
         grant_type="client_credentials",

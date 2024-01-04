@@ -113,6 +113,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         # Authenticated HTTPX Client
         mo_client = AsyncOAuth2Client(
+            base_url=settings.mo_url,
             client_id=settings.client_id,
             client_secret=settings.client_secret.get_secret_value(),
             grant_type="client_credentials",
