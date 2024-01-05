@@ -136,14 +136,10 @@ class FastAPIIntegrationSystem:
     """
 
     def __init__(
-        self,
-        application_name: str,
-        settings: FastAPIIntegrationSystemSettings | None = None,
+        self, application_name: str, settings: FastAPIIntegrationSystemSettings
     ) -> None:
         super().__init__()
-        self.settings = FastAPIIntegrationSystemSettings()
-        if settings is not None:
-            self.settings = settings
+        self.settings = settings
 
         configure_logging(self.settings.log_level)
 

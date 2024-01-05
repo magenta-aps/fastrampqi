@@ -78,11 +78,9 @@ class FastRAMQPI(FastAPIIntegrationSystem):
     def __init__(
         self,
         application_name: str,
-        settings: Settings | None = None,
+        settings: Settings,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
     ) -> None:
-        if settings is None:
-            settings = Settings()
         super().__init__(application_name, settings)
 
         # Setup AMQPSystem
