@@ -78,11 +78,9 @@ class FastRAMQPI(FastAPIIntegrationSystem):
     def __init__(
         self,
         application_name: str,
-        settings: Settings | None = None,
+        settings: Settings,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
     ) -> None:
-        if settings is None:
-            settings = Settings()
         super().__init__(application_name, settings)
 
         # Setup AMQPSystem
@@ -113,6 +111,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         # Authenticated HTTPX Client
         mo_client = AsyncOAuth2Client(
+            base_url=settings.mo_url,
             client_id=settings.client_id,
             client_secret=settings.client_secret.get_secret_value(),
             grant_type="client_credentials",

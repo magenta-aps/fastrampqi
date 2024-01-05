@@ -9,9 +9,11 @@ from typing import Generator
 from unittest.mock import AsyncMock
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
+from ramqp.config import AMQPConnectionSettings
 
+from fastramqpi.config import Settings
 from fastramqpi.main import FastRAMQPI
 
 
@@ -22,7 +24,7 @@ def monkeysession() -> Generator[MonkeyPatch, None, None]:
     mpatch.undo()
 
 
-@pytest.fixture()
+@pytest.fixture
 def set_settings(
     monkeypatch: MonkeyPatch,
 ) -> Generator[Callable[..., None], None, None]:
@@ -35,20 +37,16 @@ def set_settings(
     yield _inner
 
 
-@pytest.fixture(autouse=True)
-def setup_client_secret(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
-    """Set the CLIENT_SECRET environmental variable to hunter2 by default."""
-    monkeypatch.setenv("CLIENT_ID", "orggatekeeper")
-    monkeypatch.setenv("CLIENT_SECRET", "hunter2")
-    monkeypatch.setenv("AMQP__URL", "amqp://guest:guest@msg_broker:5672/os2mo")
-    yield
-
-
 @pytest.fixture
-def teardown_client_secret(monkeypatch: MonkeyPatch) -> Generator[None, None, None]:
-    """Set the CLIENT_SECRET environmental variable to hunter2 by default."""
-    monkeypatch.delenv("CLIENT_SECRET")
-    yield
+def settings() -> Settings:
+    """Settings object with the required variables set to dummy values.."""
+    return Settings(
+        client_id="orggatekeeper",
+        client_secret="hunter2",
+        amqp=AMQPConnectionSettings(
+            url="amqp://guest:guest@msg_broker:5672/os2mo",
+        ),
+    )
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -66,10 +64,12 @@ def enable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def fastramqpi_builder() -> Generator[Callable[[], FastRAMQPI], None, None]:
+def fastramqpi_builder(
+    settings: Settings,
+) -> Generator[Callable[[], FastRAMQPI], None, None]:
     """Fixture for generating FastRAMQPI instances."""
     # pylint: disable=unnecessary-lambda
-    yield lambda: FastRAMQPI("test")
+    yield lambda: FastRAMQPI("test", settings=settings)
 
 
 @pytest.fixture

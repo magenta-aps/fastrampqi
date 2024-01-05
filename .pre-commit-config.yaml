@@ -35,6 +35,7 @@ repos:
           - pytest
           - raclients
           - ramqp
+          - respx
 
   - repo: https://github.com/fsfe/reuse-tool
     rev: v2.0.0
