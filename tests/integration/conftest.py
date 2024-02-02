@@ -48,7 +48,9 @@ def test_app() -> FastAPI:
     def create_fastramqpi(**kwargs: Any) -> FastRAMQPI:
         settings = Settings(**kwargs)
         fastramqpi = FastRAMQPI(
-            application_name="os2mo-test-integration", settings=settings.fastramqpi
+            application_name="os2mo-test-integration",
+            settings=settings.fastramqpi,
+            graphql_version=20,
         )
         fastramqpi.add_context(settings=settings)
 

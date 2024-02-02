@@ -69,7 +69,7 @@ def fastramqpi_builder(
 ) -> Generator[Callable[[], FastRAMQPI], None, None]:
     """Fixture for generating FastRAMQPI instances."""
     # pylint: disable=unnecessary-lambda
-    yield lambda: FastRAMQPI("test", settings=settings)
+    yield lambda: FastRAMQPI("test", settings=settings, graphql_version=20)
 
 
 @pytest.fixture
