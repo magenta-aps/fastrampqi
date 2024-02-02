@@ -133,7 +133,7 @@ def test_legacy_gql_client_created_with_timeout(
     )
 
     # Act
-    construct_legacy_clients(settings)
+    construct_legacy_clients(graphql_version=20, settings=settings)
 
     # Assert
     assert mock_gql_client.call_args.kwargs["httpx_client_kwargs"]["timeout"] == 15
@@ -155,7 +155,7 @@ def test_mo_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
         )
     )
 
-    FastRAMQPI(application_name="test", settings=settings)
+    FastRAMQPI(application_name="test", settings=settings, graphql_version=20)
 
     mock_client.assert_called_once_with(
         base_url="http://mo-service:5000",
@@ -176,42 +176,17 @@ async def test_graphql_client(settings: Settings, monkeypatch: MonkeyPatch) -> N
     app = FastRAMQPI(
         application_name="test",
         settings=settings,
+        graphql_version=2000,
         graphql_client_cls=cls,
     ).get_app()
     with TestClient(app):
         pass
 
     cls.assert_called_once_with(
-        url="http://mo-service:5000/graphql/v3",
+        url="http://mo-service:5000/graphql/v2000",
         http_client=ANY,
     )
     assert isinstance(cls.call_args.kwargs["http_client"], AsyncOAuth2Client)
-
-
-def test_graphql_version_defaults_to_3(settings: Settings) -> None:
-    """Test that the default GraphQL version is 3"""
-    # Act
-    gql_client, _ = construct_legacy_clients(settings)
-
-    # Assert
-    assert gql_client.transport.url == "http://mo-service:5000/graphql/v3"
-
-
-def test_graphql_version_configurable(settings: Settings) -> None:
-    """Test that the MO GraphQL version is configurable"""
-
-    # Arrange
-    settings = settings.copy(
-        update=dict(
-            mo_graphql_version=2000,
-        )
-    )
-
-    # Act
-    gql_client, _ = construct_legacy_clients(settings)
-
-    # Assert
-    assert gql_client.transport.url == "http://mo-service:5000/graphql/v2000"
 
 
 def test_get_app(fastramqpi: FastRAMQPI) -> None:

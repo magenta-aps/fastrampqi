@@ -24,6 +24,7 @@ from .fastapi import FastAPIIntegrationSystem
 
 
 def construct_legacy_clients(
+    graphql_version: int,
     settings: ClientSettings,
 ) -> tuple[LegacyGraphQLClient, LegacyModelClient]:
     """Construct legacy clients froms settings.
@@ -36,7 +37,7 @@ def construct_legacy_clients(
     """
     # DEPRECATED: ariadne-codegen is the preferred way to interface with GraphQL
     gql_client = LegacyGraphQLClient(
-        url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
+        url=f"{settings.mo_url}/graphql/v{graphql_version}",
         client_id=settings.client_id,
         client_secret=settings.client_secret.get_secret_value(),
         auth_realm=settings.auth_realm,
@@ -79,6 +80,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self,
         application_name: str,
         settings: Settings,
+        graphql_version: int,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
     ) -> None:
         super().__init__(application_name, settings)
@@ -142,7 +144,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 context: Context,
             ) -> AsyncGenerator[None, None]:
                 graphql_client = graphql_client_cls(
-                    url=f"{settings.mo_url}/graphql/v{settings.mo_graphql_version}",
+                    url=f"{settings.mo_url}/graphql/v{graphql_version}",
                     http_client=mo_client,
                 )
                 async with graphql_client as client:
@@ -158,7 +160,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         # Prepare legacy clients
         legacy_graphql_client, legacy_model_client = construct_legacy_clients(
-            cast(ClientSettings, self.settings)
+            graphql_version=graphql_version,
+            settings=cast(ClientSettings, self.settings),
         )
         # Expose legacy GraphQL connection (gql_client)
         self._context["legacy_graphql_client"] = legacy_graphql_client
