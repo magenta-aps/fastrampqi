@@ -87,9 +87,6 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         # Setup AMQPSystem
         amqp_settings = cast(Settings, self.settings).amqp
-        amqp_settings = amqp_settings.copy(
-            update={"queue_prefix": self.get_context()["name"]}
-        )
         self.amqpsystem = MOAMQPSystem(
             settings=amqp_settings, context=self.get_context()
         )
