@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
+# SPDX-License-Identifier: MPL-2.0
+
+include:
+  - FastRAMQPI/.gitlab-ci.yml
+  - RAMQP/.gitlab-ci.yml
