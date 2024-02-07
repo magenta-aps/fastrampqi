@@ -8,11 +8,31 @@ from contextlib import suppress
 from typing import NoReturn
 
 import httpx
-import pytest
 from httpx import AsyncClient
-from pytest import Config
-from pytest import Item
-from respx import MockRouter
+
+
+try:
+    import pytest
+    from pytest import Config
+    from pytest import Item
+except ImportError:  # pragma: no cover
+    _has_pytest = False
+    Config = Any  # type: ignore
+    Item = Any  # type: ignore
+    pytest = object()
+    pytest.fixture = lambda func: func
+else:
+    _has_pytest = True
+
+
+try:
+    from respx import MockRouter
+except ImportError:  # pragma: no cover
+    _has_respx = False
+    MockRouter = Any  # type: ignore
+else:
+    _has_respx = True
+
 
 
 def pytest_configure(config: Config) -> None:
