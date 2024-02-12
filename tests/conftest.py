@@ -49,20 +49,6 @@ def settings() -> Settings:
     )
 
 
-@pytest.fixture(autouse=True, scope="session")
-def disable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
-    """Disable metrics by setting ENABLE_METRICS to false by default."""
-    monkeysession.setenv("ENABLE_METRICS", "false")
-    yield
-
-
-@pytest.fixture(scope="session")
-def enable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
-    """Enable metrics by setting ENABLE_METRICS to true on demand."""
-    monkeysession.setenv("ENABLE_METRICS", "true")
-    yield
-
-
 @pytest.fixture
 def fastramqpi_builder(
     settings: Settings,

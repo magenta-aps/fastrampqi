@@ -42,7 +42,7 @@ def test_root_endpoint(test_client: TestClient) -> None:
     assert response.json() == {"name": "test"}
 
 
-@pytest.mark.usefixtures("disable_amqp_lifespan", "enable_metrics")
+@pytest.mark.usefixtures("disable_amqp_lifespan")
 def test_metrics_endpoint(fastramqpi: FastRAMQPI, test_client: TestClient) -> None:
     """Test the metrics endpoint on our app."""
     fastramqpi._context["healthchecks"] = {}

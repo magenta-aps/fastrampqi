@@ -176,20 +176,19 @@ class FastAPIIntegrationSystem:
             lifespan=partial(_lifespan, context=self._context),
         )
         app.include_router(fastapi_router)
-        # Expose Metrics
-        if self.settings.enable_metrics:
-            # Update metrics info
-            instrumentator = Instrumentator()
-            instrumentator.add(
-                update_build_information(
-                    version=self.settings.commit_tag,
-                    build_hash=self.settings.commit_sha,
-                )
-            )
-            self._context["instrumentator"] = instrumentator
-            instrumentator.instrument(app).expose(app)
         self.app = app
         self._context["app"] = self.app
+
+        # Expose Metrics
+        instrumentator = Instrumentator()
+        instrumentator.add(
+            update_build_information(
+                version=self.settings.commit_tag,
+                build_hash=self.settings.commit_sha,
+            )
+        )
+        self._context["instrumentator"] = instrumentator
+        instrumentator.instrument(app).expose(app)
 
     def add_lifespan_manager(
         self, manager: AsyncContextManager, priority: int = 1000

@@ -25,8 +25,6 @@ class FastAPIIntegrationSystemSettings(BaseSettings):
 
     log_level: str = Field("INFO", description="Log level to configure.")
 
-    enable_metrics: bool = Field(True, description="Whether to enable metrics.")
-
 
 # pylint: disable=too-few-public-methods
 class ClientSettings(BaseSettings):
