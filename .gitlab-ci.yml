@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 stages:
+  - sync
   - lint
   - build
   - test
@@ -41,6 +42,7 @@ workflow:
 include:
   - project: labs/salt-automation
     file:
+      - gitlab-ci-templates/common/no-interrupt.v1.yml
       - gitlab-ci-templates/common/conventional-commits.v1.yml
       - gitlab-ci-templates/common/pre-commit.v1.yml
       - gitlab-ci-templates/python/pytest.v1.yml
