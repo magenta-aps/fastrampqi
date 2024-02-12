@@ -175,7 +175,9 @@ class FastAPIIntegrationSystem:
                 version=self.settings.commit_tag, build_hash=self.settings.commit_sha
             )
 
-            Instrumentator().instrument(app).expose(app)
+            instrumentator = Instrumentator()
+            self._context["instrumentator"] = instrumentator
+            instrumentator.instrument(app).expose(app)
         self.app = app
         self._context["app"] = self.app
 
