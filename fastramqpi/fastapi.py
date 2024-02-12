@@ -20,6 +20,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator.metrics import Info as CallbackInfo
 from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
@@ -30,10 +31,11 @@ from .context import HealthcheckFunction
 
 logger = structlog.get_logger()
 fastapi_router = APIRouter()
-build_information = Info("build_information", "Build information")
 
 
-def update_build_information(version: str, build_hash: str) -> None:
+def update_build_information(
+    version: str, build_hash: str
+) -> Callable[[CallbackInfo], None]:
     """Update build information.
 
     Args:
@@ -43,12 +45,18 @@ def update_build_information(version: str, build_hash: str) -> None:
     Returns:
         None.
     """
+    build_information = Info("build_information", "Build information")
     build_information.info(
         {
             "version": version,
             "hash": build_hash,
         }
     )
+
+    def instrumentation(info: CallbackInfo) -> None:
+        pass
+
+    return instrumentation
 
 
 def configure_logging(log_level_name: str) -> None:
@@ -171,11 +179,13 @@ class FastAPIIntegrationSystem:
         # Expose Metrics
         if self.settings.enable_metrics:
             # Update metrics info
-            update_build_information(
-                version=self.settings.commit_tag, build_hash=self.settings.commit_sha
-            )
-
             instrumentator = Instrumentator()
+            instrumentator.add(
+                update_build_information(
+                    version=self.settings.commit_tag,
+                    build_hash=self.settings.commit_sha,
+                )
+            )
             self._context["instrumentator"] = instrumentator
             instrumentator.instrument(app).expose(app)
         self.app = app
