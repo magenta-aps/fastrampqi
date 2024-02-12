@@ -11,6 +11,7 @@ from typing import TypedDict
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from gql.client import AsyncClientSession
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseSettings
 from raclients.graph.client import GraphQLClient
 from raclients.modelclient.mo import ModelClient
@@ -30,6 +31,7 @@ class Context(TypedDict, total=False):
     healthchecks: dict[str, HealthcheckFunction]  # type: ignore
     lifespan_managers: dict[int, set[AsyncContextManager]]
     app: FastAPI
+    instrumentator: Instrumentator
     amqpsystem: MOAMQPSystem
 
     # Legacy clients
