@@ -129,6 +129,13 @@ async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
         }
 
 
+def enable_debugging() -> None:  # pragma: no cover
+    import debugpy  # type: ignore
+
+    logger.debug("Enabling debugging", port=5678)
+    debugpy.listen(("0.0.0.0", 5678))
+
+
 class FastAPIIntegrationSystem:
     """FastAPI-based integration framework.
 
@@ -142,6 +149,9 @@ class FastAPIIntegrationSystem:
         self.settings = settings
 
         configure_logging(self.settings.log_level)
+
+        if self.settings.dap:  # pragma: no cover
+            enable_debugging()
 
         # Setup shared context
         self._context: Context = {
