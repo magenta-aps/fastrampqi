@@ -24,6 +24,7 @@ class FastAPIIntegrationSystemSettings(BaseSettings):
     commit_sha: str = Field("HEAD", description="Git commit SHA.")
 
     log_level: str = Field("INFO", description="Log level to configure.")
+    dap: bool = Field(False, description="Whether to enable debugging")
 
     enable_metrics: bool = Field(True, description="Whether to enable metrics.")
 
