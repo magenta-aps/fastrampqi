@@ -9,10 +9,11 @@ from typing import Callable
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import Depends
 from gql.client import AsyncClientSession
-from raclients.graph.client import GraphQLClient as _GraphQLClient
-from raclients.modelclient.mo import ModelClient as _ModelClient
 from ramqp.depends import from_context
 from ramqp.mo import MOAMQPSystem as _MOAMQPSystem
+
+from .raclients.graph.client import GraphQLClient as _GraphQLClient
+from .raclients.modelclient.mo import ModelClient as _ModelClient
 
 
 @cache
