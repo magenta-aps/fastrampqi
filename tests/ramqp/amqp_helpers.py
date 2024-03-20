@@ -49,7 +49,7 @@ def message2delivered(message: Message) -> DeliveredMessage:
     return DeliveredMessage(
         # channel should be an AbstractChannel
         channel=None,  # type: ignore
-        header=attrdict(
+        header=attrdict(  # type: ignore[arg-type]
             {
                 "properties": attrdict(
                     {

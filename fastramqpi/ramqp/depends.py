@@ -161,7 +161,7 @@ def get_message(state: State) -> IncomingMessage:
     Returns:
         The AMQP message for this request.
     """
-    return state.message
+    return cast(IncomingMessage, state.message)
 
 
 Message = Annotated[IncomingMessage, Depends(get_message)]
@@ -328,6 +328,7 @@ def rate_limit(
     tasks: dict[tuple[str, int], Task] = {}
 
     async def inner(message: Message, callback: Callback) -> AsyncGenerator[None, None]:
+        assert message.message_id is not None
         key = (message.message_id, id(callback))
 
         with suppress(KeyError):
