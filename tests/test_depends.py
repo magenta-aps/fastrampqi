@@ -51,3 +51,14 @@ async def test_depends() -> None:
         user_context={"a": 1},
         user_context_a=1,
     )
+
+
+async def test_from_user_context_caching() -> None:
+    """Test that from_user_context always returns the exact same inner function."""
+    assert from_user_context("a") == from_user_context("a")
+    assert from_user_context("a") != from_user_context("b")
+    assert from_user_context("b") == from_user_context("b")
+
+    assert id(from_user_context("a")) == id(from_user_context("a"))
+    assert id(from_user_context("a")) != id(from_user_context("b"))
+    assert id(from_user_context("b")) == id(from_user_context("b"))

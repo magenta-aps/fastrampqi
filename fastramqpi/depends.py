@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2019-2020 Magenta ApS
 #
 # SPDX-License-Identifier: MPL-2.0
+from functools import cache
 from typing import Annotated
 from typing import Any
 from typing import Callable
@@ -14,6 +15,7 @@ from ramqp.depends import from_context
 from ramqp.mo import MOAMQPSystem as _MOAMQPSystem
 
 
+@cache
 def from_user_context(field: str) -> Callable[..., Any]:
     """Construct a Callable which extracts 'field' from the FastRAMQPI user context.
 
