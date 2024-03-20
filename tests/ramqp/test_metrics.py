@@ -10,8 +10,8 @@ import pytest
 
 from .common import callback_func1
 from .common import callback_func2
-from ramqp import AMQPSystem
-from ramqp.metrics import callbacks_registered
+from fastramqpi.ramqp import AMQPSystem
+from fastramqpi.ramqp.metrics import callbacks_registered
 
 
 @pytest.fixture(autouse=True)

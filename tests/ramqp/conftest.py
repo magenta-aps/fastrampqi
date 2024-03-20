@@ -20,19 +20,19 @@ from pydantic import AmqpDsn
 from pydantic import parse_obj_as
 from structlog.testing import LogCapture
 
+from .amqp_helpers import delivered2incoming
+from .amqp_helpers import json2raw
+from .amqp_helpers import message2delivered
+from .amqp_helpers import raw2message
 from .common import random_string
-from ramqp import AMQPSystem
-from ramqp import Router
-from ramqp.config import AMQPConnectionSettings
-from ramqp.mo import MOAMQPSystem
-from ramqp.mo import MORouter
-from ramqp.mo import MORoutingKey
-from ramqp.mo import PayloadType
-from ramqp.utils import CallbackType
-from tests.amqp_helpers import delivered2incoming
-from tests.amqp_helpers import json2raw
-from tests.amqp_helpers import message2delivered
-from tests.amqp_helpers import raw2message
+from fastramqpi.ramqp import AMQPSystem
+from fastramqpi.ramqp import Router
+from fastramqpi.ramqp.config import AMQPConnectionSettings
+from fastramqpi.ramqp.mo import MOAMQPSystem
+from fastramqpi.ramqp.mo import MORouter
+from fastramqpi.ramqp.mo import MORoutingKey
+from fastramqpi.ramqp.mo import PayloadType
+from fastramqpi.ramqp.utils import CallbackType
 
 
 @pytest.fixture

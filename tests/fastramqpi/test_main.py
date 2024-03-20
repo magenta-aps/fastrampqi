@@ -24,7 +24,6 @@ from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 from pydantic import SecretStr
 from pytest import MonkeyPatch
-from ramqp.mo import MOAMQPSystem
 
 import fastramqpi
 from fastramqpi import depends
@@ -33,6 +32,7 @@ from fastramqpi.context import Context
 from fastramqpi.main import construct_legacy_clients
 from fastramqpi.main import FastRAMQPI
 from fastramqpi.metrics import dipex_last_success_timestamp
+from fastramqpi.ramqp.mo import MOAMQPSystem
 
 
 @pytest.mark.usefixtures("disable_amqp_lifespan")

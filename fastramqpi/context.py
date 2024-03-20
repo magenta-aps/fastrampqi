@@ -13,10 +13,10 @@ from fastapi import FastAPI
 from gql.client import AsyncClientSession
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseSettings
-from ramqp.mo import MOAMQPSystem
 
 from .raclients.graph.client import GraphQLClient
 from .raclients.modelclient.mo import ModelClient
+from .ramqp.mo import MOAMQPSystem
 
 
 # The type is perfectly in order, but mypy cannot handle recursive types

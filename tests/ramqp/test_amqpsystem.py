@@ -7,7 +7,7 @@ from ra_utils.attrdict import attrdict
 
 from .common import _test_context_manager
 from .common import _test_run_forever_worker
-from ramqp import AMQPSystem
+from fastramqpi.ramqp import AMQPSystem
 
 
 async def test_run_forever(amqp_system: AMQPSystem) -> None:

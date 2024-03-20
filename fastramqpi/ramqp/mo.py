@@ -12,12 +12,12 @@ from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 
-from ramqp.abstract import AbstractAMQPSystem
-from ramqp.abstract import AbstractPublishMixin
-from ramqp.abstract import AbstractRouter
-from ramqp.depends import get_payload_as_type
-from ramqp.depends import get_routing_key
-from ramqp.utils import CallbackType
+from .abstract import AbstractAMQPSystem
+from .abstract import AbstractPublishMixin
+from .abstract import AbstractRouter
+from .depends import get_payload_as_type
+from .depends import get_routing_key
+from .utils import CallbackType
 
 # >>> print("\n".join(((f"\"{'.'.join(x)}\"," for x in itertools.product(["employee", "org_unit", "*"], ["address", "association", "employee", "engagement", "it", "kle", "leave", "manager", "owner", "org_unit", "related_unit", "role", "*"], ["create", "edit", "terminate", "refresh", "*"])))))  # noqa: E501
 _MORoutingKeyOld = Literal[

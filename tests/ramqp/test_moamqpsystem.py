@@ -9,11 +9,11 @@ import pytest
 
 from .common import _test_context_manager
 from .common import _test_run_forever_worker
-from ramqp.mo import _PayloadType
-from ramqp.mo import MOAMQPSystem
-from ramqp.mo import MORoutingKey
-from ramqp.mo import PayloadType
-from ramqp.utils import CallbackType
+from fastramqpi.ramqp.mo import _PayloadType
+from fastramqpi.ramqp.mo import MOAMQPSystem
+from fastramqpi.ramqp.mo import MORoutingKey
+from fastramqpi.ramqp.mo import PayloadType
+from fastramqpi.ramqp.utils import CallbackType
 
 
 def get_registry(moamqp_system: MOAMQPSystem) -> dict[CallbackType, set[str]]:

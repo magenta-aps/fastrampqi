@@ -10,10 +10,10 @@ import pytest
 from aio_pika import IncomingMessage
 from more_itertools import one
 
-from ramqp.depends import Message
-from ramqp.utils import AcknowledgeMessage
-from ramqp.utils import RejectMessage
-from ramqp.utils import RequeueMessage
+from fastramqpi.ramqp.depends import Message
+from fastramqpi.ramqp.utils import AcknowledgeMessage
+from fastramqpi.ramqp.utils import RejectMessage
+from fastramqpi.ramqp.utils import RequeueMessage
 
 
 @pytest.mark.integrationtest

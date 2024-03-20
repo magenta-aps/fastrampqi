@@ -9,9 +9,9 @@ from structlog.testing import LogCapture
 
 from .common import callback_func1
 from .common import callback_func2
-from ramqp import AMQPSystem
-from ramqp.utils import CallbackType
-from ramqp.utils import function_to_name
+from fastramqpi.ramqp import AMQPSystem
+from fastramqpi.ramqp.utils import CallbackType
+from fastramqpi.ramqp.utils import function_to_name
 
 
 def get_registry(amqp_system: AMQPSystem) -> dict[CallbackType, set[str]]:

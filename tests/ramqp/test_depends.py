@@ -16,20 +16,20 @@ import pytest
 from fastapi import Depends
 from pydantic import BaseModel
 
-from ramqp import AMQPSystem
-from ramqp.depends import Context
-from ramqp.depends import dependency_injected
-from ramqp.depends import from_context
-from ramqp.depends import get_context
-from ramqp.depends import get_message
-from ramqp.depends import get_payload_as_type
-from ramqp.depends import get_payload_bytes
-from ramqp.depends import handle_exclusively
-from ramqp.depends import handle_exclusively_decorator
-from ramqp.depends import Message
-from ramqp.depends import rate_limit
-from ramqp.depends import RoutingKey
-from tests.amqp_helpers import payload2incoming
+from .amqp_helpers import payload2incoming
+from fastramqpi.ramqp import AMQPSystem
+from fastramqpi.ramqp.depends import Context
+from fastramqpi.ramqp.depends import dependency_injected
+from fastramqpi.ramqp.depends import from_context
+from fastramqpi.ramqp.depends import get_context
+from fastramqpi.ramqp.depends import get_message
+from fastramqpi.ramqp.depends import get_payload_as_type
+from fastramqpi.ramqp.depends import get_payload_bytes
+from fastramqpi.ramqp.depends import handle_exclusively
+from fastramqpi.ramqp.depends import handle_exclusively_decorator
+from fastramqpi.ramqp.depends import Message
+from fastramqpi.ramqp.depends import rate_limit
+from fastramqpi.ramqp.depends import RoutingKey
 
 
 # pylint: disable=too-few-public-methods

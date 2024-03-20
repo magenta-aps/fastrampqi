@@ -8,8 +8,8 @@ from pydantic import BaseSettings
 from pydantic import parse_obj_as
 from pytest import MonkeyPatch
 
-from ramqp.config import AMQPConnectionSettings
-from ramqp.config import StructuredAmqpDsn
+from fastramqpi.ramqp.config import AMQPConnectionSettings
+from fastramqpi.ramqp.config import StructuredAmqpDsn
 
 
 def test_amqp_connection_settings_url() -> None:
