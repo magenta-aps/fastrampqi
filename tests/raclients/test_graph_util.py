@@ -15,7 +15,7 @@ from fastramqpi.raclients.graph.util import graphql_error_from_dict
 url = parse_obj_as(AnyHttpUrl, "https://os2mo.example.org/gql")
 
 
-def test_graphql_error_from_dict():
+def test_graphql_error_from_dict() -> None:
     query = """
         query Query {
           a {
@@ -39,7 +39,7 @@ def test_graphql_error_from_dict():
 @pytest.mark.asyncio
 async def test_execute_paged(
     client_params: dict, token_mock: str, respx_mock: MockRouter
-):
+) -> None:
     def mock(limit: int, offset: int, page: list[int], out_of_range: bool) -> None:
         respx_mock.post(
             url=url,

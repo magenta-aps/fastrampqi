@@ -30,7 +30,7 @@ async def mo_model_client(
 
 
 @pytest.mark.asyncio
-async def test_request(mo_model_client: MOModelClient, respx_mock: MockRouter):
+async def test_request(mo_model_client: MOModelClient, respx_mock: MockRouter) -> None:
     ok_response = {"any": "thing"}
 
     respx_mock.post("http://mo.example.org/service/e/create?force=0").mock(
@@ -56,7 +56,9 @@ async def test_request(mo_model_client: MOModelClient, respx_mock: MockRouter):
 
 
 @pytest.mark.asyncio
-async def test_uuid_request(mo_model_client: MOModelClient, respx_mock: MockRouter):
+async def test_uuid_request(
+    mo_model_client: MOModelClient, respx_mock: MockRouter
+) -> None:
     ok_response = {"good": "job"}
 
     respx_mock.post(
@@ -84,7 +86,9 @@ async def test_uuid_request(mo_model_client: MOModelClient, respx_mock: MockRout
 
 
 @pytest.mark.asyncio
-async def test_edit_request(mo_model_client: MOModelClient, respx_mock: MockRouter):
+async def test_edit_request(
+    mo_model_client: MOModelClient, respx_mock: MockRouter
+) -> None:
     uuid = uuid4()
     respx_mock.post(
         "http://mo.example.org/service/details/edit?force=0",
@@ -112,9 +116,13 @@ async def test_edit_request(mo_model_client: MOModelClient, respx_mock: MockRout
 
 
 @pytest.mark.asyncio
-async def test_fail_request(mo_model_client: MOModelClient, respx_mock: MockRouter):
+async def test_fail_request(
+    mo_model_client: MOModelClient, respx_mock: MockRouter
+) -> None:
     err_response = {"description": "big error"}
-    respx_mock.post("http://mo.example.org/service/e/create?force=0",).mock(
+    respx_mock.post(
+        "http://mo.example.org/service/e/create?force=0",
+    ).mock(
         return_value=httpx.Response(
             404,
             json=err_response,
@@ -133,7 +141,9 @@ async def test_fail_request(mo_model_client: MOModelClient, respx_mock: MockRout
             ]
         )
 
-    respx_mock.post("http://mo.example.org/service/e/create?force=0",).mock(
+    respx_mock.post(
+        "http://mo.example.org/service/e/create?force=0",
+    ).mock(
         return_value=httpx.Response(
             404,
             json={"oh": "no"},
@@ -154,7 +164,7 @@ async def test_fail_request(mo_model_client: MOModelClient, respx_mock: MockRout
 
 
 @pytest.mark.asyncio
-async def test_lora_model_client_does_not_use_auth(respx_mock: MockRouter):
+async def test_lora_model_client_does_not_use_auth(respx_mock: MockRouter) -> None:
     lora_model_client = LoRaModelClient(base_url="http://lora.example.org")
 
     facet_uuid = uuid4()

@@ -55,28 +55,28 @@ def async_transport() -> AsyncHTTPXTransport:
     return AsyncHTTPXTransport(url=url)
 
 
-def test_base_transport_init(base_transport: BaseHTTPXTransport):
+def test_base_transport_init(base_transport: BaseHTTPXTransport) -> None:
     assert base_transport.url == url
     assert base_transport.client_cls == httpx.Client
     assert base_transport.client_args is None
     assert base_transport.client is None
 
 
-def test_transport_init(transport: HTTPXTransport):
+def test_transport_init(transport: HTTPXTransport) -> None:
     assert transport.url == url
     assert transport.client_cls == httpx.Client
     assert transport.client_args is None
     assert transport.client is None
 
 
-def test_async_transport_init(async_transport: AsyncHTTPXTransport):
+def test_async_transport_init(async_transport: AsyncHTTPXTransport) -> None:
     assert async_transport.url == url
     assert async_transport.client_cls == httpx.AsyncClient
     assert async_transport.client_args is None
     assert async_transport.client is None
 
 
-def test_base_transport_connect():
+def test_base_transport_connect() -> None:
     base_transport = BaseHTTPXTransport(
         url=url,
         client_cls=httpx.Client,
@@ -90,7 +90,7 @@ def test_base_transport_connect():
     assert base_transport.client.timeout == httpx.Timeout(timeout=42)
 
 
-def test_transport_connect_close(transport: HTTPXTransport):
+def test_transport_connect_close(transport: HTTPXTransport) -> None:
     transport.connect()
     assert isinstance(transport.client, httpx.Client)
     transport.close()
@@ -98,20 +98,24 @@ def test_transport_connect_close(transport: HTTPXTransport):
 
 
 @pytest.mark.asyncio
-async def test_async_transport_connect_close(async_transport: AsyncHTTPXTransport):
+async def test_async_transport_connect_close(
+    async_transport: AsyncHTTPXTransport,
+) -> None:
     await async_transport.connect()
     assert isinstance(async_transport.client, httpx.AsyncClient)
     await async_transport.close()
     assert async_transport.client is None
 
 
-def test_base_transport_multiple_connect_fails(base_transport: BaseHTTPXTransport):
+def test_base_transport_multiple_connect_fails(
+    base_transport: BaseHTTPXTransport,
+) -> None:
     base_transport._connect()
     with pytest.raises(TransportAlreadyConnected):
         base_transport._connect()
 
 
-def test_construct_payload(document: DocumentNode):
+def test_construct_payload(document: DocumentNode) -> None:
     actual = BaseHTTPXTransport._construct_payload(
         document=document,
     )
@@ -119,7 +123,7 @@ def test_construct_payload(document: DocumentNode):
     assert actual == expected
 
 
-def test_construct_payload_variable_values(document: DocumentNode):
+def test_construct_payload_variable_values(document: DocumentNode) -> None:
     actual = BaseHTTPXTransport._construct_payload(
         document=document,
         variable_values=dict(
@@ -137,7 +141,7 @@ def test_construct_payload_variable_values(document: DocumentNode):
     assert actual == expected
 
 
-def test_construct_payload_operation_name(document: DocumentNode):
+def test_construct_payload_operation_name(document: DocumentNode) -> None:
     actual = BaseHTTPXTransport._construct_payload(
         document=document,
         operation_name="please, thank you",
@@ -149,7 +153,7 @@ def test_construct_payload_operation_name(document: DocumentNode):
     assert actual == expected
 
 
-def test_decode_response(base_transport: BaseHTTPXTransport):
+def test_decode_response(base_transport: BaseHTTPXTransport) -> None:
     response = httpx.Response(
         200,
         json={
@@ -165,7 +169,7 @@ def test_decode_response(base_transport: BaseHTTPXTransport):
     assert actual == expected
 
 
-def test_decode_error_response(base_transport: BaseHTTPXTransport):
+def test_decode_error_response(base_transport: BaseHTTPXTransport) -> None:
     response = httpx.Response(
         200,
         json={
@@ -183,13 +187,13 @@ def test_decode_error_response(base_transport: BaseHTTPXTransport):
     assert actual == expected
 
 
-def test_decode_400(base_transport: BaseHTTPXTransport):
+def test_decode_400(base_transport: BaseHTTPXTransport) -> None:
     response = httpx.Response(400, request=httpx.Request("GET", url))
     with pytest.raises(TransportServerError, match="Client error '400 Bad Request"):
         base_transport._decode_response(response)
 
 
-def test_decode_non_json(base_transport: BaseHTTPXTransport):
+def test_decode_non_json(base_transport: BaseHTTPXTransport) -> None:
     response = httpx.Response(
         200,
         text="wait a minute, this isn't json",
@@ -199,7 +203,7 @@ def test_decode_non_json(base_transport: BaseHTTPXTransport):
         base_transport._decode_response(response)
 
 
-def test_decode_no_data(base_transport: BaseHTTPXTransport):
+def test_decode_no_data(base_transport: BaseHTTPXTransport) -> None:
     response = httpx.Response(
         200,
         json={
@@ -215,7 +219,7 @@ def test_decode_no_data(base_transport: BaseHTTPXTransport):
 
 def test_transport_execute_fails_disconnected(
     transport: HTTPXTransport, document: DocumentNode
-):
+) -> None:
     with pytest.raises(TransportClosed):
         transport.execute(document)
 
@@ -223,14 +227,14 @@ def test_transport_execute_fails_disconnected(
 @pytest.mark.asyncio
 async def test_async_transport_execute_fails_disconnected(
     async_transport: AsyncHTTPXTransport, document: DocumentNode
-):
+) -> None:
     with pytest.raises(TransportClosed):
         await async_transport.execute(document)
 
 
 def test_integration_transport_execute(
     transport: HTTPXTransport, document: DocumentNode, respx_mock: MockRouter
-):
+) -> None:
     respx_mock.post(
         url=url,
         json={"query": "query MOQuery {\n  users {\n    id\n  }\n}"},
@@ -257,7 +261,7 @@ def test_integration_transport_execute(
 @pytest.mark.asyncio
 async def test_integration_async_transport_execute(
     async_transport: AsyncHTTPXTransport, document: DocumentNode, respx_mock: MockRouter
-):
+) -> None:
     respx_mock.post(
         url=url,
         json={"query": "query MOQuery {\n  users {\n    id\n  }\n}"},
@@ -283,7 +287,7 @@ async def test_integration_async_transport_execute(
 
 def test_integration_transport_execute_error(
     transport: HTTPXTransport, document: DocumentNode, respx_mock: MockRouter
-):
+) -> None:
     respx_mock.post(
         url=url,
         json={"query": "query MOQuery {\n  users {\n    id\n  }\n}"},

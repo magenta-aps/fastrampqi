@@ -43,7 +43,7 @@ def query_mock(token_mock: str, respx_mock: MockRouter) -> dict:
     return data
 
 
-def test_init_client(client_params: dict):
+def test_init_client(client_params: dict) -> None:
     httpx_client_kwargs = dict(timeout=123)
     with GraphQLClient(
         url=url, sync=True, **client_params, httpx_client_kwargs=httpx_client_kwargs
@@ -57,7 +57,7 @@ def test_init_client(client_params: dict):
 
 
 @pytest.mark.asyncio
-async def test_init_async_client(client_params: dict):
+async def test_init_async_client(client_params: dict) -> None:
     httpx_client_kwargs = dict(timeout=123)
     async with GraphQLClient(
         url=url, **client_params, httpx_client_kwargs=httpx_client_kwargs
@@ -72,7 +72,7 @@ async def test_init_async_client(client_params: dict):
 
 def test_integration_client(
     client_params: dict, token_mock: str, query: DocumentNode, query_mock: dict
-):
+) -> None:
     with GraphQLClient(url=url, sync=True, **client_params) as session:
         result = session.execute(query)
         assert result == query_mock
@@ -81,7 +81,7 @@ def test_integration_client(
 @pytest.mark.asyncio
 async def test_integration_async_client(
     client_params: dict, token_mock: str, query: DocumentNode, query_mock: dict
-):
+) -> None:
     async with GraphQLClient(url=url, **client_params) as session:
         result = await session.execute(query)
         assert result == query_mock
@@ -89,7 +89,7 @@ async def test_integration_async_client(
 
 def test_integration_persistent_client(
     client_params: dict, token_mock: str, query: DocumentNode, query_mock: dict
-):
+) -> None:
     persistent_client = PersistentGraphQLClient(url=url, **client_params, sync=True)
     result_1 = persistent_client.execute(query)
     result_2 = persistent_client.execute(query)
@@ -101,7 +101,7 @@ def test_integration_persistent_client(
 @pytest.mark.asyncio
 async def test_integration_async_persistent_client(
     client_params: dict, token_mock: str, query: DocumentNode, query_mock: dict
-):
+) -> None:
     persistent_client = PersistentGraphQLClient(url=url, **client_params)
     result_1 = await persistent_client.execute(query)
     result_2 = await persistent_client.execute(query)

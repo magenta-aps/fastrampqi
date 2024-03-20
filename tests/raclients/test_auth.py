@@ -36,7 +36,7 @@ async def async_client(
         yield client
 
 
-def test_authenticated_httpx_client_init(client: AuthenticatedHTTPXClient):
+def test_authenticated_httpx_client_init(client: AuthenticatedHTTPXClient) -> None:
     assert client.client_id == "AzureDiamond"
     assert client.client_secret == "hunter2"
     assert client.token_endpoint == "https://oidc.example.org/oauth2/v2.0/token"
@@ -45,22 +45,26 @@ def test_authenticated_httpx_client_init(client: AuthenticatedHTTPXClient):
     assert client.metadata["grant_type"] == "client_credentials"
 
 
-def test_should_fetch_token_if_not_set(base_client: BaseAuthenticatedClient):
+def test_should_fetch_token_if_not_set(base_client: BaseAuthenticatedClient) -> None:
     base_client.token = None
     assert base_client.should_fetch_token("http://www.example.org") is True
 
 
-def test_should_not_fetch_token_if_set(base_client: BaseAuthenticatedClient):
+def test_should_not_fetch_token_if_set(base_client: BaseAuthenticatedClient) -> None:
     base_client.token = True
     assert base_client.should_fetch_token("http://www.example.org") is False
 
 
-def test_should_not_fetch_token_if_token_endpoint(base_client: BaseAuthenticatedClient):
+def test_should_not_fetch_token_if_token_endpoint(
+    base_client: BaseAuthenticatedClient,
+) -> None:
     base_client.token = None
     assert base_client.should_fetch_token(str(base_client.token_endpoint)) is False
 
 
-def test_should_not_fetch_token_if_withhold_token(base_client: BaseAuthenticatedClient):
+def test_should_not_fetch_token_if_withhold_token(
+    base_client: BaseAuthenticatedClient,
+) -> None:
     base_client.token = None
     assert (
         base_client.should_fetch_token("http://www.example.org", withhold_token=True)
@@ -68,12 +72,16 @@ def test_should_not_fetch_token_if_withhold_token(base_client: BaseAuthenticated
     )
 
 
-def test_should_not_fetch_token_if_no_auth(base_client: BaseAuthenticatedClient):
+def test_should_not_fetch_token_if_no_auth(
+    base_client: BaseAuthenticatedClient,
+) -> None:
     base_client.token = None
     assert base_client.should_fetch_token("http://www.example.org", auth=None) is False
 
 
-def test_authenticated_httpx_client_decorates_request(client: AuthenticatedHTTPXClient):
+def test_authenticated_httpx_client_decorates_request(
+    client: AuthenticatedHTTPXClient,
+) -> None:
     with patch(
         "authlib.integrations.httpx_client.oauth2_client.OAuth2Client.request"
     ) as request_mock:
@@ -90,7 +98,7 @@ def test_authenticated_httpx_client_decorates_request(client: AuthenticatedHTTPX
 @pytest.mark.asyncio
 async def test_async_authenticated_httpx_client_decorates_request(
     async_client: AuthenticatedAsyncHTTPXClient,
-):
+) -> None:
     with patch(
         "authlib.integrations.httpx_client.oauth2_client.AsyncOAuth2Client.request"
     ) as request_mock:
@@ -104,8 +112,10 @@ async def test_async_authenticated_httpx_client_decorates_request(
         request_mock.assert_called_once_with("1", "2", True, ("4", "5"), some_kwarg=5)
 
 
-def test_authenticated_httpx_client_fetches_token(client: AuthenticatedHTTPXClient):
-    def set_token():
+def test_authenticated_httpx_client_fetches_token(
+    client: AuthenticatedHTTPXClient,
+) -> None:
+    def set_token() -> None:
         client.token = True
 
     client.fetch_token = Mock(side_effect=set_token)
@@ -122,8 +132,8 @@ def test_authenticated_httpx_client_fetches_token(client: AuthenticatedHTTPXClie
 @pytest.mark.asyncio
 async def test_async_authenticated_httpx_client_fetches_token(
     async_client: AuthenticatedAsyncHTTPXClient,
-):
-    def set_token():
+) -> None:
+    def set_token() -> None:
         async_client.token = True
 
     async_client.fetch_token = AsyncMock(side_effect=set_token)
@@ -141,7 +151,7 @@ def test_integration_sends_token_in_request(
     client: AuthenticatedHTTPXClient,
     respx_mock: MockRouter,
     oidc_token_mock: str,
-):
+) -> None:
     respx_mock.get(
         "http://www.example.org",
         headers={
@@ -158,7 +168,7 @@ async def test_integration_async_sends_token_in_request(
     async_client: AuthenticatedAsyncHTTPXClient,
     respx_mock: MockRouter,
     oidc_token_mock: str,
-):
+) -> None:
     respx_mock.get(
         "http://www.example.org",
         headers={
@@ -170,7 +180,7 @@ async def test_integration_async_sends_token_in_request(
     assert response.status_code == 200
 
 
-def test_keycloak_token_endpoint():
+def test_keycloak_token_endpoint() -> None:
     token_endpoint = keycloak_token_endpoint(
         auth_server=parse_obj_as(AnyHttpUrl, "https://keycloak.example.org/auth"),
         auth_realm="mordor",
