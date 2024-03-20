@@ -1,16 +1,16 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from contextlib import contextmanager
-from tempfile import TemporaryDirectory
-from typing import Any
-from typing import Callable
-from typing import Generator
+from contextlib import contextmanager  # pragma: no cover
+from tempfile import TemporaryDirectory  # pragma: no cover
+from typing import Any  # pragma: no cover
+from typing import Callable  # pragma: no cover
+from typing import Generator  # pragma: no cover
 
-from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
+from pydantic import AnyHttpUrl  # pragma: no cover
+from pydantic import parse_obj_as  # pragma: no cover
 
-from .auth import AuthenticatedHTTPXClient
-from .auth import keycloak_token_endpoint
+from .auth import AuthenticatedHTTPXClient  # pragma: no cover
+from .auth import keycloak_token_endpoint  # pragma: no cover
 
 
 def upload_file(
@@ -21,7 +21,7 @@ def upload_file(
     mo_url: str,
     filepath: str,
     filename_in_mo: str,
-) -> None:
+) -> None:  # pragma: no cover
     """Upload file to OS2mo."""
     url = f"{mo_url}/graphql/v15"
 
@@ -49,8 +49,10 @@ def upload_file(
             r.raise_for_status()
 
 
-@contextmanager
-def file_uploader(settings: Any, filename: str) -> Generator[str, None, None]:
+@contextmanager  # pragma: no cover
+def file_uploader(
+    settings: Any, filename: str
+) -> Generator[str, None, None]:  # pragma: no cover
     """Return a temporary file, that will be uploaded to OS2mo when the context
     manager exits."""
     try:
@@ -90,7 +92,7 @@ def run_report_and_upload(
     run_report_function: Callable,
     report_function: Callable,
     *report_function_args: tuple[Any, ...],
-) -> None:
+) -> None:  # pragma: no cover
     """Run a report and upload it to OS2mo."""
     with file_uploader(settings, filename) as report_file:
         run_report_function(

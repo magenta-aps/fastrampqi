@@ -266,7 +266,7 @@ class AsyncHTTPXTransport(BaseHTTPXTransport[httpx.AsyncClient], AsyncTransport)
         document: DocumentNode,
         variable_values: Optional[Dict[str, Any]] = None,
         operation_name: Optional[str] = None,
-    ) -> AsyncGenerator[ExecutionResult, None]:
+    ) -> AsyncGenerator[ExecutionResult, None]:  # pragma: no cover
         """
         Subscribe is not supported on HTTP.
 

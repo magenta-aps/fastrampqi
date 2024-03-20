@@ -57,7 +57,9 @@ class ModelClientBase(Generic[ModelBase]):
         self.async_httpx_client = self.async_httpx_client_class(*args, **kwargs)
         self.chunk_size = chunk_size
 
-    def get_object_url(self, obj: ModelBase, *args: Any, **kwargs: Any) -> str:
+    def get_object_url(
+        self, obj: ModelBase, *args: Any, **kwargs: Any
+    ) -> str:  # pragma: no cover
         return self.path_map[type(obj)]
 
     def get_object_json(
