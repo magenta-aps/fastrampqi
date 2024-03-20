@@ -22,7 +22,7 @@ from graphql import ExecutionResult
 from graphql import print_ast
 from structlog import get_logger
 
-from raclients.graph.util import graphql_error_from_dict
+from ..graph.util import graphql_error_from_dict
 
 logger = get_logger()
 

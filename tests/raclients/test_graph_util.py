@@ -8,9 +8,9 @@ from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 from respx import MockRouter
 
-from raclients.graph.client import GraphQLClient
-from raclients.graph.util import execute_paged
-from raclients.graph.util import graphql_error_from_dict
+from fastramqpi.raclients.graph.client import GraphQLClient
+from fastramqpi.raclients.graph.util import execute_paged
+from fastramqpi.raclients.graph.util import graphql_error_from_dict
 
 url = parse_obj_as(AnyHttpUrl, "https://os2mo.example.org/gql")
 

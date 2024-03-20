@@ -17,9 +17,9 @@ from graphql import Source
 from graphql import SourceLocation
 from respx import MockRouter
 
-from raclients.graph.transport import AsyncHTTPXTransport
-from raclients.graph.transport import BaseHTTPXTransport
-from raclients.graph.transport import HTTPXTransport
+from fastramqpi.raclients.graph.transport import AsyncHTTPXTransport
+from fastramqpi.raclients.graph.transport import BaseHTTPXTransport
+from fastramqpi.raclients.graph.transport import HTTPXTransport
 
 url = "https://example.org/gql"
 

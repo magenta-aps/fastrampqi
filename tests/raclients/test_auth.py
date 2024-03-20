@@ -11,10 +11,10 @@ from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 from respx import MockRouter
 
-from raclients.auth import AuthenticatedAsyncHTTPXClient
-from raclients.auth import AuthenticatedHTTPXClient
-from raclients.auth import BaseAuthenticatedClient
-from raclients.auth import keycloak_token_endpoint
+from fastramqpi.raclients.auth import AuthenticatedAsyncHTTPXClient
+from fastramqpi.raclients.auth import AuthenticatedHTTPXClient
+from fastramqpi.raclients.auth import BaseAuthenticatedClient
+from fastramqpi.raclients.auth import keycloak_token_endpoint
 
 
 @pytest.fixture

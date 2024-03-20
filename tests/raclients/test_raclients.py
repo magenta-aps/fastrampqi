@@ -16,8 +16,8 @@ from ramodels.mo import ClassWrite
 from ramodels.mo import Employee
 from respx import MockRouter
 
-from raclients.modelclient.lora import ModelClient as LoRaModelClient
-from raclients.modelclient.mo import ModelClient as MOModelClient
+from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient
+from fastramqpi.raclients.modelclient.mo import ModelClient as MOModelClient
 
 
 @pytest.fixture

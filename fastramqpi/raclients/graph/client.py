@@ -16,11 +16,11 @@ from gql.transport import AsyncTransport
 from graphql import DocumentNode
 from pydantic import AnyHttpUrl
 
-from raclients.auth import AuthenticatedAsyncHTTPXClient
-from raclients.auth import AuthenticatedHTTPXClient
-from raclients.auth import keycloak_token_endpoint
-from raclients.graph.transport import AsyncHTTPXTransport
-from raclients.graph.transport import HTTPXTransport
+from ..auth import AuthenticatedAsyncHTTPXClient
+from ..auth import AuthenticatedHTTPXClient
+from ..auth import keycloak_token_endpoint
+from ..graph.transport import AsyncHTTPXTransport
+from ..graph.transport import HTTPXTransport
 
 
 class GraphQLClient(GQLClient):

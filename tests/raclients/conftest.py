@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from typing import Callable
-from typing import cast
 
 import httpx
 import pytest
@@ -9,7 +8,7 @@ from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 from respx import MockRouter
 
-from raclients.auth import keycloak_token_endpoint
+from fastramqpi.raclients.auth import keycloak_token_endpoint
 
 pytestmark = pytest.mark.respx(assert_all_called=True)
 

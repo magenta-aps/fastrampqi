@@ -26,9 +26,9 @@ from ramodels.mo.details import Leave
 from ramodels.mo.details import Manager
 from ramodels.mo.details import Role
 
-from raclients.auth import AuthenticatedAsyncHTTPXClient
-from raclients.auth import keycloak_token_endpoint
-from raclients.modelclient.base import ModelClientBase
+from ..auth import AuthenticatedAsyncHTTPXClient
+from ..auth import keycloak_token_endpoint
+from ..modelclient.base import ModelClientBase
 
 
 class ModelClient(ModelClientBase[MOBase]):

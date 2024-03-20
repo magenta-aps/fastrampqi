@@ -15,7 +15,7 @@ from ramodels.lora import Klasse
 from ramodels.lora import Organisation
 from ramodels.lora._shared import LoraBase
 
-from raclients.modelclient.base import ModelClientBase
+from .base import ModelClientBase
 
 
 class ModelClient(ModelClientBase[LoraBase]):

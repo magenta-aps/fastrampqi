@@ -10,7 +10,6 @@ from graphql import DocumentNode
 from graphql import GraphQLError
 from graphql import Source
 from graphql import SourceLocation
-from tenacity import retry
 from tenacity import Retrying
 from tenacity import stop_after_attempt
 from tenacity import wait_random_exponential

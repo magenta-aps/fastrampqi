@@ -9,8 +9,8 @@ from typing import Generator
 from pydantic import AnyHttpUrl
 from pydantic import parse_obj_as
 
-from raclients.auth import AuthenticatedHTTPXClient
-from raclients.auth import keycloak_token_endpoint
+from .auth import AuthenticatedHTTPXClient
+from .auth import keycloak_token_endpoint
 
 
 def upload_file(
