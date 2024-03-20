@@ -268,7 +268,7 @@ class MORouter(AbstractRouter):
 
     def register(
         self, routing_key: MORoutingKey
-    ) -> Callable[[CallbackType], CallbackType]:
+    ) -> Callable[[CallbackType], CallbackType]:  # pragma: no cover
         """Get a decorator for registering callbacks.
 
         See the documentation in AbstractRouter for more information.

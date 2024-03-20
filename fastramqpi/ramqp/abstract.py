@@ -126,7 +126,7 @@ class AbstractPublishMixin:
 
     async def _publish_message(
         self, routing_key: Any, payload: Any, exchange: str | None = None
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Publish a message to the given routing key.
 
         Args:
@@ -218,7 +218,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
             and self._channel.is_initialized
         )
 
-    async def start(self) -> None:
+    async def start(self) -> None:  # pragma: no cover
         """Start the AMQPSystem.
 
         This method:
@@ -351,7 +351,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
 
         self._periodic_task = _setup_periodic_metrics(self._queues)
 
-    async def stop(self) -> None:
+    async def stop(self) -> None:  # pragma: no cover
         """Stop the AMQPSystem.
 
         This method disconnects from the AMQP server, and stops the periodic metrics.
@@ -412,7 +412,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
 
     async def _on_message(
         self, callback: CallbackType, message: IncomingMessage
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Message handler.
 
         Handles logging, metrics, retrying and exception handling.

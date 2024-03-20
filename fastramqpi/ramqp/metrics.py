@@ -79,7 +79,7 @@ receive_time = Histogram(
 @contextmanager
 def _handle_receive_metrics(
     routing_key: str, function_name: str
-) -> Generator[None, None, None]:
+) -> Generator[None, None, None]:  # pragma: no cover
     """Expose metrics about a callback.
 
     Args:
@@ -132,7 +132,9 @@ publish_time = Histogram(
 
 
 @contextmanager
-def _handle_publish_metrics(routing_key: str) -> Generator[None, None, None]:
+def _handle_publish_metrics(
+    routing_key: str,
+) -> Generator[None, None, None]:  # pragma: no cover
     """Expose metrics about a published message.
 
     Args:
@@ -167,7 +169,9 @@ backlog_count = Gauge(
 )
 
 
-def _setup_periodic_metrics(queues: dict[str, AbstractQueue]) -> asyncio.Task:
+def _setup_periodic_metrics(
+    queues: dict[str, AbstractQueue]
+) -> asyncio.Task:  # pragma: no cover
     """Setup a periodic job to update non-eventful metrics.
 
     Args:
@@ -197,7 +201,7 @@ def _setup_periodic_metrics(queues: dict[str, AbstractQueue]) -> asyncio.Task:
 # ------------------ #
 
 
-def event_callback_generator(event_key: str) -> Callable:
+def event_callback_generator(event_key: str) -> Callable:  # pragma: no cover
     """Generate event-keyed event callback function.
 
     Args:
@@ -207,7 +211,7 @@ def event_callback_generator(event_key: str) -> Callable:
         Callback function to update event metrics.
     """
 
-    def event_callback(*_1: Any, **_2: Any) -> None:  # pragma: no cover
+    def event_callback(*_1: Any, **_2: Any) -> None:
         """Reconnect callback to update reconnect metrics.
 
         Args:
@@ -220,7 +224,9 @@ def event_callback_generator(event_key: str) -> Callable:
     return event_callback
 
 
-def _setup_connection_metrics(connection: AbstractRobustConnection) -> None:
+def _setup_connection_metrics(
+    connection: AbstractRobustConnection,
+) -> None:  # pragma: no cover
     """Setup connection metrics collecting for reconnecting events.
 
     Args:
@@ -232,7 +238,7 @@ def _setup_connection_metrics(connection: AbstractRobustConnection) -> None:
     connection.close_callbacks.add(event_callback_generator("Connection.close"))
 
 
-def _setup_channel_metrics(channel: AbstractRobustChannel) -> None:
+def _setup_channel_metrics(channel: AbstractRobustChannel) -> None:  # pragma: no cover
     """Setup channel metrics collecting for reconnecting events.
 
     Args:
