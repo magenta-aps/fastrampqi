@@ -33,7 +33,6 @@ repos:
           - prometheus_fastapi_instrumentator
           - pydantic
           - pytest
-          - raclients
           - ramqp
           - respx
 
