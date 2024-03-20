@@ -195,7 +195,7 @@ async def test_dependency_injected_message_and_context() -> None:
     assert args["model"].dict() == amqp_message_payload
 
 
-@pytest.mark.integrationtest
+@pytest.mark.integration_test
 async def test_context_amqp(amqp_test: Callable) -> None:
     """Test that AMQP handlers are passed the context object."""
     context = {"foo": "bar"}

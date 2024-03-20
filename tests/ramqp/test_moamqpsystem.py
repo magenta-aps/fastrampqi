@@ -28,7 +28,7 @@ def get_registry(moamqp_system: MOAMQPSystem) -> dict[CallbackType, set[str]]:
     return moamqp_system.router.registry
 
 
-@pytest.mark.integrationtest
+@pytest.mark.integration_test
 async def test_happy_path(moamqp_test: Callable) -> None:
     """Test that messages can flow through our AMQP system."""
     params: dict[str, Any] = {}

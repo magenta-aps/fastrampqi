@@ -16,7 +16,7 @@ from fastramqpi.ramqp.utils import RejectMessage
 from fastramqpi.ramqp.utils import RequeueMessage
 
 
-@pytest.mark.integrationtest
+@pytest.mark.integration_test
 async def test_happy_path(amqp_test: Callable) -> None:
     """Test that messages can flow through our AMQP system."""
     params: dict[str, Any] = {}
@@ -29,7 +29,7 @@ async def test_happy_path(amqp_test: Callable) -> None:
     assert isinstance(params["message"], IncomingMessage)
 
 
-@pytest.mark.integrationtest
+@pytest.mark.integration_test
 @pytest.mark.parametrize(
     "exception,count",
     [

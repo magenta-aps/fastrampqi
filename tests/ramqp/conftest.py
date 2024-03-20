@@ -213,11 +213,3 @@ def has_elements(iterator: Iterator) -> bool:
         Whether the iterator has any elements or not.
     """
     return any(True for _ in iterator)
-
-
-def pytest_collection_modifyitems(items: Any) -> None:
-    """Mark all non-integration tests with unittest."""
-    for item in items:
-        integration_test = has_elements(item.iter_markers("integrationtest"))
-        if not integration_test:
-            item.add_marker("unittest")

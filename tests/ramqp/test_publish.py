@@ -14,7 +14,7 @@ from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.config import AMQPConnectionSettings
 
 
-@pytest.mark.integrationtest
+@pytest.mark.integration_test
 async def test_publish_exchange(amqp_test: Callable) -> None:
     """Test that messages can be published to a specific exchange."""
     test_id = random_string()
