@@ -29,7 +29,7 @@ respx = "^0.21.0"
 tenacity = "^8.2.3"
 tqdm = "^4.65.0"
 Authlib = "^1.2.0"
-ramodels = ">=18.5.2,<23.0.0"
+ramodels = ">=18.5.2,<34.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
