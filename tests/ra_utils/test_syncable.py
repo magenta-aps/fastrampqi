@@ -9,7 +9,7 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from ra_utils.syncable import Syncable
+from fastramqpi.ra_utils.syncable import Syncable
 
 
 class AsyncAdder:

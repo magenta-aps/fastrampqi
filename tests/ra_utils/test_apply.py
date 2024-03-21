@@ -6,8 +6,8 @@ from unittest import TestCase
 import hypothesis.strategies as st
 from hypothesis import given
 
-from ra_utils.apply import apply
-from ra_utils.apply import has_self_arg
+from fastramqpi.ra_utils.apply import apply
+from fastramqpi.ra_utils.apply import has_self_arg
 
 
 class Classy:

@@ -4,7 +4,7 @@ from collections.abc import Hashable
 from decimal import Decimal
 from typing import Any
 
-from ra_utils.dict_map import dict_map
+from .dict_map import dict_map
 
 _has_frozendict = True
 try:

@@ -8,7 +8,7 @@ from unittest.mock import patch
 import prometheus_client.exposition
 from parameterized import parameterized
 
-import ra_utils.ensure_single_run as esr
+import fastramqpi.ra_utils.ensure_single_run as esr
 
 
 def is_lock_taken(lock_name: str):

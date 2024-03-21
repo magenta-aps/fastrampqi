@@ -6,10 +6,10 @@ from unittest import TestCase
 import hypothesis.strategies as st
 from hypothesis import given
 
-from ra_utils.lazy_dict import LazyDict
-from ra_utils.lazy_dict import LazyEval
-from ra_utils.lazy_dict import LazyEvalBare
-from ra_utils.lazy_dict import LazyEvalDerived
+from fastramqpi.ra_utils.lazy_dict import LazyDict
+from fastramqpi.ra_utils.lazy_dict import LazyEval
+from fastramqpi.ra_utils.lazy_dict import LazyEvalBare
+from fastramqpi.ra_utils.lazy_dict import LazyEvalDerived
 
 
 def exception_func():

@@ -3,7 +3,7 @@
 import pytest
 from frozendict import frozendict
 
-from ra_utils.transpose_dict import transpose_dict
+from fastramqpi.ra_utils.transpose_dict import transpose_dict
 
 
 @pytest.mark.parametrize(

@@ -9,8 +9,8 @@ from uuid import uuid4
 import pytest
 import structlog
 
-from ra_utils.job_settings import JobSettings
-from ra_utils.job_settings import LogLevel
+from fastramqpi.ra_utils.job_settings import JobSettings
+from fastramqpi.ra_utils.job_settings import LogLevel
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ class _ExamplePrefixSettings(_ExampleSettings):
 
 
 def _mock_settings(**kwargs: Any) -> ContextManager:
-    return patch("ra_utils.job_settings.load_settings", **kwargs)
+    return patch("fastramqpi.ra_utils.job_settings.load_settings", **kwargs)
 
 
 def test_log_level_uses_default(mock_env):
@@ -80,7 +80,7 @@ def test_python_logging_respects_log_level(caplog, mock_env):
 def test_structlog_logging_respects_log_level(capsys, mocker, mock_env, isatty):
     # Arrange
     logger = structlog.get_logger()
-    stderr_mock = mocker.patch("ra_utils.job_settings.sys.stderr")
+    stderr_mock = mocker.patch("fastramqpi.ra_utils.job_settings.sys.stderr")
     stderr_mock.isatty.return_value = isatty
     # Act
     _make_log_output(logger)

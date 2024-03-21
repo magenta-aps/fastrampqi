@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from ra_utils.sentry_init import sentry_init
-from ra_utils.sentry_init import Settings
+from fastramqpi.ra_utils.sentry_init import sentry_init
+from fastramqpi.ra_utils.sentry_init import Settings
 
 env_dsn = "http://test.sentry.nope/env"
 init_dsn = "http://test.sentry.nope/init"

@@ -11,7 +11,7 @@ from hypothesis import example
 from hypothesis import given
 from hypothesis import target
 
-from ra_utils.multiple_replace import multiple_replace
+from fastramqpi.ra_utils.multiple_replace import multiple_replace
 
 
 def similar(a: str, b: str) -> float:
@@ -30,7 +30,7 @@ def draw_text_and_substring(draw, substring_max_size: int):
     assume(len(text) - substring_length > 0)
 
     idx = draw(st.integers(min_value=0, max_value=len(text) - substring_length))
-    return (text, text[idx : idx + substring_length])
+    return (text, text[idx : idx + substring_length])  # noqa: E203
 
 
 class MultipleReplaceTests(TestCase):

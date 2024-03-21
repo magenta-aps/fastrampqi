@@ -15,8 +15,8 @@ from pytest import MonkeyPatch
 
 no_deps = False
 try:
-    from ra_utils.headers import AuthError
-    from ra_utils.headers import TokenSettings
+    from fastramqpi.ra_utils.headers import AuthError
+    from fastramqpi.ra_utils.headers import TokenSettings
 except ImportError:
     no_deps = True
 

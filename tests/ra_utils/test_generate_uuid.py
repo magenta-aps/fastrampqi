@@ -6,9 +6,9 @@ from uuid import UUID
 from hypothesis import given
 from hypothesis.strategies import text
 
-from ra_utils.generate_uuid import _generate_uuid
-from ra_utils.generate_uuid import generate_uuid
-from ra_utils.generate_uuid import uuid_generator
+from fastramqpi.ra_utils.generate_uuid import _generate_uuid
+from fastramqpi.ra_utils.generate_uuid import generate_uuid
+from fastramqpi.ra_utils.generate_uuid import uuid_generator
 
 
 class test_generate_uuid(TestCase):

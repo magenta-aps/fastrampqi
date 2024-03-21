@@ -5,7 +5,7 @@ from typing import Type
 
 import pytest
 
-from ra_utils.asyncio_utils import gather_with_concurrency
+from fastramqpi.ra_utils.asyncio_utils import gather_with_concurrency
 
 
 @pytest.mark.parametrize(

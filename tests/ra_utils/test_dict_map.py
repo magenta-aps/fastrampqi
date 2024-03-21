@@ -8,9 +8,9 @@ from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
 
-from ra_utils.dict_map import dict_map
-from ra_utils.dict_map import dict_map_key
-from ra_utils.dict_map import dict_map_value
+from fastramqpi.ra_utils.dict_map import dict_map
+from fastramqpi.ra_utils.dict_map import dict_map_key
+from fastramqpi.ra_utils.dict_map import dict_map_value
 
 
 def swapcase(x):

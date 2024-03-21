@@ -5,7 +5,7 @@ import re
 from hypothesis import given
 from hypothesis import strategies as st
 
-from ra_utils.strategies import not_from_regex
+from fastramqpi.ra_utils.strategies import not_from_regex
 
 # Tests
 

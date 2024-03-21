@@ -71,7 +71,7 @@ def load_setting(
     Example:
         ```Python
         import click
-        from ra_utils.load_settings import load_setting
+        from fastramqpi.ra_utils.load_settings import load_setting
 
         @click.command()
         @click.option(

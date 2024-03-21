@@ -10,7 +10,8 @@ from aio_pika import IncomingMessage
 from aio_pika import Message
 from aiormq.abc import DeliveredMessage
 from pamqp.commands import Basic
-from ra_utils.attrdict import attrdict
+
+from fastramqpi.ra_utils.attrdict import attrdict
 
 
 def json2raw(payload: dict) -> bytes:

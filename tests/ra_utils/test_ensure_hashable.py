@@ -8,9 +8,9 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from .utils import any_strategy
-from ra_utils.ensure_hashable import ensure_hashable
-from ra_utils.ensure_hashable import is_hashable
-from ra_utils.ensure_hashable import is_probably_hashable
+from fastramqpi.ra_utils.ensure_hashable import ensure_hashable
+from fastramqpi.ra_utils.ensure_hashable import is_hashable
+from fastramqpi.ra_utils.ensure_hashable import is_probably_hashable
 
 
 class Unhashable:

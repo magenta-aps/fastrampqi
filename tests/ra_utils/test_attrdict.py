@@ -12,8 +12,8 @@ from hypothesis import assume
 from hypothesis import given
 
 from .utils import any_strategy
-from ra_utils.attrdict import AttrDict
-from ra_utils.attrdict import attrdict
+from fastramqpi.ra_utils.attrdict import AttrDict
+from fastramqpi.ra_utils.attrdict import attrdict
 
 
 def check_status_key(attr_dict: AttrDict, key: str, value: Any) -> None:

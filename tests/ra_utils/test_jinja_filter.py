@@ -5,10 +5,10 @@ from unittest import TestCase
 import pytest
 from parameterized import parameterized
 
-from ra_utils.jinja_filter import _has_jinja
-from ra_utils.jinja_filter import create_filter
-from ra_utils.jinja_filter import create_filters
-from ra_utils.jinja_filter import string_to_bool
+from fastramqpi.ra_utils.jinja_filter import _has_jinja
+from fastramqpi.ra_utils.jinja_filter import create_filter
+from fastramqpi.ra_utils.jinja_filter import create_filters
+from fastramqpi.ra_utils.jinja_filter import string_to_bool
 
 
 class StringToBoolTests(TestCase):

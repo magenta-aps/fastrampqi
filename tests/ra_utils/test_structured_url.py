@@ -11,7 +11,7 @@ try:
     from pydantic import BaseSettings
     from pydantic import Field
 
-    from ra_utils.structured_url import StructuredUrl
+    from fastramqpi.ra_utils.structured_url import StructuredUrl
 
     def skip_if_missing(func: Callable) -> Callable:
         return func

@@ -4,7 +4,7 @@ from typing import Dict
 from typing import List
 from typing import TypeVar
 
-from ra_utils.ensure_hashable import ensure_hashable
+from .ensure_hashable import ensure_hashable
 
 
 DictKeyType = TypeVar("DictKeyType")

@@ -7,10 +7,10 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from ra_utils.semantic_version_type import _has_pydantic
-from ra_utils.semantic_version_type import get_regex
-from ra_utils.semantic_version_type import SemanticVersion
-from ra_utils.semantic_version_type import SemanticVersionModel
+from fastramqpi.ra_utils.semantic_version_type import _has_pydantic
+from fastramqpi.ra_utils.semantic_version_type import get_regex
+from fastramqpi.ra_utils.semantic_version_type import SemanticVersion
+from fastramqpi.ra_utils.semantic_version_type import SemanticVersionModel
 
 
 @pytest.mark.parametrize(

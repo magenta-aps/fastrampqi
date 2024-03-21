@@ -33,7 +33,7 @@ class TokenSettings(BaseSettings):
     Example:
         ```Python
         import requests
-        from ra_utils.headers import TokenSettings
+        from fastramqpi.ra_utils.headers import TokenSettings
 
         session = requests.Session()
         session.headers = TokenSettings().get_headers()

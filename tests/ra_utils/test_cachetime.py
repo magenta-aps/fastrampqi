@@ -10,7 +10,7 @@ import hypothesis.strategies as st
 from hypothesis import given
 from hypothesis import settings
 
-from ra_utils.catchtime import catchtime
+from fastramqpi.ra_utils.catchtime import catchtime
 
 
 class CatchtimeTests(TestCase):

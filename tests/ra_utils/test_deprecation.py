@@ -3,7 +3,7 @@
 import warnings
 from unittest import TestCase
 
-from ra_utils.deprecation import deprecated
+from fastramqpi.ra_utils.deprecation import deprecated
 
 
 @deprecated
