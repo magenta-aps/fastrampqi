@@ -7,7 +7,6 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given
 
-from fastramqpi.ra_utils.semantic_version_type import _has_pydantic
 from fastramqpi.ra_utils.semantic_version_type import get_regex
 from fastramqpi.ra_utils.semantic_version_type import SemanticVersion
 from fastramqpi.ra_utils.semantic_version_type import SemanticVersionModel
@@ -91,14 +90,12 @@ from fastramqpi.ra_utils.semantic_version_type import SemanticVersionModel
         ("9.9.9----RC-SNAPSHOT.12.09.1------..12", False),
     ],
 )
-@pytest.mark.skipif(_has_pydantic is False, reason="pydantic not installed")
-def test_semantic_version_fixtures(version: str, valid: bool):
+def test_semantic_version_fixtures(version: str, valid: bool) -> None:
     _test_semantic_version(version, valid)
 
 
 @given(version=st.from_regex(get_regex(), fullmatch=True), valid=st.just(True))
-@pytest.mark.skipif(_has_pydantic is False, reason="pydantic not installed")
-def test_semantic_version_hypothesis_positive(version: Any, valid: bool):
+def test_semantic_version_hypothesis_positive(version: Any, valid: bool) -> None:
     _test_semantic_version(version, valid)
 
 
@@ -106,14 +103,12 @@ def test_semantic_version_hypothesis_positive(version: Any, valid: bool):
     version=st.text().filter(lambda string: bool(get_regex().match(string)) is False),
     valid=st.just(False),
 )
-@pytest.mark.skipif(_has_pydantic is False, reason="pydantic not installed")
-def test_semantic_version_hypothesis_negative(version: str, valid: bool):
+def test_semantic_version_hypothesis_negative(version: str, valid: bool) -> None:
     _test_semantic_version(version, valid)
 
 
-@pytest.mark.skipif(_has_pydantic is False, reason="pydantic not installed")
 @pytest.mark.parametrize("version", [2, 2.1, {}, [], (), object, type(object)])
-def test_semantic_version_invalid_types(version):
+def test_semantic_version_invalid_types(version: Any) -> None:
     from pydantic import ValidationError
 
     with pytest.raises(TypeError) as excinfo_1:
@@ -130,7 +125,7 @@ def test_semantic_version_invalid_types(version):
     assert "string required" in str(excinfo_3)
 
 
-def _test_semantic_version(version: Any, valid: bool):
+def _test_semantic_version(version: Any, valid: bool) -> None:
     from pydantic import ValidationError
 
     # Check regex itself

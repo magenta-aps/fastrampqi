@@ -32,7 +32,7 @@ def check_status(attr_dict: AttrDict, value: Any) -> None:
 
 
 @given(value=any_strategy)
-def test_getattr_static(value):
+def test_getattr_static(value: Any) -> None:
     dicty = {"status": value}
     assert dicty["status"] == value
     assert getitem(dicty, "status") == value
@@ -43,7 +43,7 @@ def test_getattr_static(value):
 
 
 @given(value=any_strategy)
-def test_setattr_static(value):
+def test_setattr_static(value: Any) -> None:
     dicty = {}
     dicty["status"] = value
     assert dicty["status"] == value
@@ -66,7 +66,7 @@ def test_setattr_static(value):
 
 
 @given(value=any_strategy)
-def test_delattr_static(value):
+def test_delattr_static(value: Any) -> None:
     dicty = {"status": value}
     del dicty["status"]
     assert dicty == {}
@@ -89,7 +89,7 @@ def test_delattr_static(value):
 
 
 @given(key=st.text(min_size=1), value=any_strategy)
-def test_getattr_dynamic(key, value):
+def test_getattr_dynamic(key: str, value: Any) -> None:
     assume("." not in key)
 
     dicty = {key: value}
@@ -102,7 +102,7 @@ def test_getattr_dynamic(key, value):
 
 
 @given(key=st.text(min_size=1), value=any_strategy)
-def test_setattr_dynamic(key, value):
+def test_setattr_dynamic(key: str, value: Any) -> None:
     assume("." not in key)
 
     dicty = {}
@@ -123,7 +123,7 @@ def test_setattr_dynamic(key, value):
 
 
 @given(key=st.text(min_size=1), value=any_strategy)
-def test_delattr_dynamic(key, value):
+def test_delattr_dynamic(key: str, value: Any) -> None:
     assume("." not in key)
 
     dicty = {key: value}
@@ -143,7 +143,7 @@ def test_delattr_dynamic(key, value):
     assert attr_dict == {}
 
 
-def test_constructor():
+def test_constructor() -> None:
     attr_dict1 = AttrDict({})
     attr_dict2 = attrdict({})
     assert attr_dict1 == attr_dict2

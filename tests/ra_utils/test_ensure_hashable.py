@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from decimal import Decimal
+from typing import Any
+from typing import Callable
 
 import pytest
 from hypothesis import assume
@@ -14,7 +16,7 @@ from fastramqpi.ra_utils.ensure_hashable import is_probably_hashable
 
 
 class Unhashable:
-    def __hash__(self):
+    def __hash__(self) -> int:
         raise TypeError("Not hashable")
 
 
@@ -43,32 +45,32 @@ class Unhashable:
         [is_hashable, Unhashable(), False],
     ],
 )
-def test_is_hashable(check_func, value, hashable):
+def test_is_hashable(check_func: Callable, value: int, hashable: bool) -> None:
     assert check_func(value) == hashable
 
 
 @given(value=any_strategy)
-def test_ensure_hashable(value):
+def test_ensure_hashable(value: Any) -> None:
     assume(not isinstance(value, slice))
     hashable = ensure_hashable(value)
     hash(hashable)
 
 
 @given(value=st.slices(1))
-def test_slice_unhashable(value):
+def test_slice_unhashable(value: Any) -> None:
     with pytest.raises(TypeError) as exc_info:
         ensure_hashable(value)
     assert "slice cannot be made hashable" in str(exc_info.value)
 
 
-def test_unhashable_class_unhashable():
+def test_unhashable_class_unhashable() -> None:
     value = Unhashable()
     with pytest.raises(TypeError) as exc_info:
         ensure_hashable(value)
     assert "is not hashable, please report this!" in str(exc_info.value)
 
 
-def test_signalling_nan_to_quiet_nan():
+def test_signalling_nan_to_quiet_nan() -> None:
     value = Decimal("sNaN")
     new_value = ensure_hashable(value)
     assert new_value.is_qnan()

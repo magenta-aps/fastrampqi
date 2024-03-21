@@ -8,15 +8,12 @@ from typing import Optional
 from typing import Tuple
 from warnings import warn
 
-
-try:
-    import requests
-    from pydantic import AnyHttpUrl
-    from pydantic import BaseSettings
-    from pydantic import Field
-    from pydantic import root_validator
-except ImportError as err:  # pragma: no cover
-    raise ImportError(f"{err.name} not found - token settings not imported")
+import requests
+from pydantic import AnyHttpUrl
+from pydantic import BaseSettings
+from pydantic import Field
+from pydantic import parse_obj_as
+from pydantic import root_validator
 
 
 # Exception
@@ -46,7 +43,9 @@ class TokenSettings(BaseSettings):
     client_id: str = "mo"
     client_secret: Optional[str]  # in the future, this should be required
     auth_realm: str = "mo"
-    auth_server: AnyHttpUrl = Field("http://localhost:8081/auth")
+    auth_server: AnyHttpUrl = Field(
+        parse_obj_as(AnyHttpUrl, "http://localhost:8081/auth")
+    )
     saml_token: Optional[str]  # deprecate when fully on keycloak?
 
     # Re-new token this many seconds before it actually expires

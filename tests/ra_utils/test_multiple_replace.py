@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 from difflib import SequenceMatcher
 from functools import reduce
+from typing import Any
 from unittest import TestCase
 
 import hypothesis.strategies as st
@@ -24,7 +25,7 @@ def similar(a: str, b: str) -> float:
 
 
 @st.composite
-def draw_text_and_substring(draw, substring_max_size: int):
+def draw_text_and_substring(draw: Any, substring_max_size: int) -> tuple:
     text = draw(st.text(min_size=1))
     substring_length = draw(st.integers(min_value=1, max_value=substring_max_size))
     assume(len(text) - substring_length > 0)
@@ -35,19 +36,21 @@ def draw_text_and_substring(draw, substring_max_size: int):
 
 class MultipleReplaceTests(TestCase):
     @given(st.text())
-    def test_no_replace(self, text):
+    def test_no_replace(self, text: str) -> None:
         """Test that no replace array yields noop."""
         self.assertEqual(multiple_replace({}, text), text)
 
     @given(st.text())
-    def test_empty_string_replace(self, text):
+    def test_empty_string_replace(self, text: str) -> None:
         """Test that no replace array yields noop."""
         with self.assertRaises(ValueError):
             multiple_replace({"": "spam"}, text)
 
     @given(draw_text_and_substring(5), st.text())
     @example(("I like tea", "tea"), "coffee")  # --> I like coffee
-    def test_replace_single_as_replace(self, text_and_before, after):
+    def test_replace_single_as_replace(
+        self, text_and_before: tuple, after: str
+    ) -> None:
         """Test that single replacement works as str.replace."""
         text, before = text_and_before
         new_text = text.replace(before, after)
@@ -56,7 +59,7 @@ class MultipleReplaceTests(TestCase):
 
         self.assertEqual(multiple_replace({before: after}, text), new_text)
 
-    def test_replace_multiple_interference(self):
+    def test_replace_multiple_interference(self) -> None:
         """Test that multiple replacement does not necessarily work as str.replace.
 
         I.e. chained invokations of str.replace may replace something that was
@@ -73,7 +76,9 @@ class MultipleReplaceTests(TestCase):
 
     @given(st.text(), st.dictionaries(st.text(min_size=1), st.text()))
     @example(text="1", changes={"0": "2", "1": "00"})
-    def test_replace_multiple_as_replace(self, text, changes):
+    def test_replace_multiple_as_replace(
+        self, text: str, changes: dict[str, str]
+    ) -> None:
         """Test that multiple replacement works as str.replace.
 
         This only applies when interference does not come into play.

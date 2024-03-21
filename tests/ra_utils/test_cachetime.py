@@ -18,7 +18,7 @@ class CatchtimeTests(TestCase):
 
     @settings(max_examples=15, deadline=timedelta(milliseconds=1100))
     @given(st.floats(min_value=0.2, max_value=1))
-    def test_catchtime(self, sleep_time: float):
+    def test_catchtime(self, sleep_time: float) -> None:
         """Test that catchtime returns the expected time."""
         with catchtime() as t:
             sleep(sleep_time)
@@ -28,7 +28,7 @@ class CatchtimeTests(TestCase):
 
     @settings(max_examples=15, deadline=timedelta(milliseconds=1100))
     @given(st.floats(min_value=0.2, max_value=1))
-    def test_catchtime_process(self, sleep_time: float):
+    def test_catchtime_process(self, sleep_time: float) -> None:
         """Test that catchtime returns the expected time and process time."""
         with catchtime(include_process_time=True) as t:
             sleep(sleep_time)

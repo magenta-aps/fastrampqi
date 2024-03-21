@@ -3,6 +3,7 @@
 import time
 from datetime import timedelta
 from logging import getLogger
+from typing import Any
 
 import pytest
 import requests
@@ -10,44 +11,37 @@ from hypothesis import example
 from hypothesis import given
 from hypothesis import strategies as st
 from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
-# Check if we should skip
-
-no_deps = False
-try:
-    from fastramqpi.ra_utils.headers import AuthError
-    from fastramqpi.ra_utils.headers import TokenSettings
-except ImportError:
-    no_deps = True
-
-pytestmark = pytest.mark.skipif(no_deps, reason="Header dependencies not installed")
+from fastramqpi.ra_utils.headers import AuthError
+from fastramqpi.ra_utils.headers import TokenSettings
 
 
 class MockFetchKeycloakToken:
-    def __init__(self, expires: int):
+    def __init__(self, expires: int) -> None:
         self.expires = expires
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> tuple:
         return self.expires, "dummy token"
 
-    def cache_clear(self):
+    def cache_clear(self) -> None:
         pass
 
 
 class MockResponse:
-    def __init__(self, response_dict, raise_msg="") -> None:
+    def __init__(self, response_dict: dict, raise_msg: str = "") -> None:
         self.response = response_dict
         self.raise_msg = raise_msg
 
-    def json(self):
+    def json(self) -> dict:
         return self.response
 
-    def raise_for_status(self):
+    def raise_for_status(self) -> None:
         if self.raise_msg:
             raise requests.RequestException(self.raise_msg)
 
 
-def test_init(monkeypatch):
+def test_init(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("SAML_TOKEN", "test token")
     with pytest.deprecated_call():
         assert TokenSettings()
@@ -56,7 +50,7 @@ def test_init(monkeypatch):
     assert TokenSettings()
 
 
-def test_validation(monkeypatch):
+def test_validation(monkeypatch: MonkeyPatch) -> None:
     # delete token/secret if they exist
     monkeypatch.delenv("SAML_TOKEN", raising=False)
     monkeypatch.delenv("CLIENT_SECRET", raising=False)
@@ -65,8 +59,8 @@ def test_validation(monkeypatch):
 
 
 @given(t_delta=st.timedeltas())
-def test_fetch_keycloak(t_delta: timedelta):
-    def mock_post(*args, **kwargs):
+def test_fetch_keycloak(t_delta: timedelta) -> None:
+    def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(
             {"expires_in": t_delta.total_seconds(), "access_token": "test_token"}
         )
@@ -79,10 +73,10 @@ def test_fetch_keycloak(t_delta: timedelta):
 
 
 @pytest.mark.filterwarnings("ignore: No secret or token given")
-def test_fetch_keycloak_errors(monkeypatch):
+def test_fetch_keycloak_errors(monkeypatch: MonkeyPatch) -> None:
     fail_msg = "Oh no"
 
-    def mock_post(*args, **kwargs):
+    def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(
             {"expires_in": time.time(), "access_token": "test_token"},
             raise_msg=fail_msg,
@@ -104,8 +98,8 @@ def test_fetch_keycloak_errors(monkeypatch):
 
 @given(t_delta=st.timedeltas())
 @example(t_delta=timedelta(seconds=-1))
-def test_fetch_bearer(t_delta: timedelta):
-    def mock_post(*args, **kwargs):
+def test_fetch_bearer(t_delta: timedelta) -> None:
+    def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(
             {"expires_in": t_delta.total_seconds(), "access_token": "test_token"}
         )
@@ -118,7 +112,7 @@ def test_fetch_bearer(t_delta: timedelta):
 
 
 @pytest.mark.filterwarnings("ignore: Using SAML tokens")
-def test_get_headers(monkeypatch):
+def test_get_headers(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         TokenSettings, "_fetch_bearer", lambda self, force, logger: "Bearer token"
     )
@@ -134,7 +128,7 @@ def test_get_headers(monkeypatch):
     assert "test token" in headers.values()
 
 
-def test_logger_called(monkeypatch, mocker):
+def test_logger_called(monkeypatch: MonkeyPatch, mocker: MockerFixture) -> None:
     monkeypatch.setenv("CLIENT_SECRET", "test secret")
     monkeypatch.setattr(
         TokenSettings, "_fetch_keycloak_token", MockFetchKeycloakToken(-1)
@@ -151,7 +145,12 @@ def test_logger_called(monkeypatch, mocker):
 # Test token renewal mechanism with respect to token expiration
 
 
-def _setup_token_lifespan_test(monkeypatch, mocker, monotonic_time, spy_function):
+def _setup_token_lifespan_test(
+    monkeypatch: MonkeyPatch,
+    mocker: MockerFixture,
+    monotonic_time: Any,
+    spy_function: Any,
+) -> None:
     monkeypatch.setattr(
         TokenSettings, "_fetch_keycloak_token", MockFetchKeycloakToken(400)
     )
@@ -167,19 +166,25 @@ def _setup_token_lifespan_test(monkeypatch, mocker, monotonic_time, spy_function
     spy_method()
 
 
-def test_renew_token_when_actual_expiration_time_passed(monkeypatch, mocker):
+def test_renew_token_when_actual_expiration_time_passed(
+    monkeypatch: MonkeyPatch, mocker: MockerFixture
+) -> None:
     _setup_token_lifespan_test(monkeypatch, mocker, 500.0, "assert_called_once")
 
 
-def test_renew_token_when_offset_expiration_time_passed(monkeypatch, mocker):
+def test_renew_token_when_offset_expiration_time_passed(
+    monkeypatch: MonkeyPatch, mocker: MockerFixture
+) -> None:
     _setup_token_lifespan_test(monkeypatch, mocker, 380.0, "assert_called_once")
 
 
-def test_do_not_renew_token_when_offset_expiration_time_not_passed(monkeypatch, mocker):
+def test_do_not_renew_token_when_offset_expiration_time_not_passed(
+    monkeypatch: MonkeyPatch, mocker: MockerFixture
+) -> None:
     _setup_token_lifespan_test(monkeypatch, mocker, 360.0, "assert_not_called")
 
 
-def test_force_token_renewal(monkeypatch, mocker):
+def test_force_token_renewal(monkeypatch: MonkeyPatch, mocker: MockerFixture) -> None:
     monkeypatch.setenv("CLIENT_SECRET", "test secret")
     monkeypatch.setattr(
         TokenSettings, "_fetch_keycloak_token", MockFetchKeycloakToken(-1)

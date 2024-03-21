@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
+from collections.abc import Callable
 from functools import partial
 from typing import Dict
 
@@ -13,11 +14,11 @@ from fastramqpi.ra_utils.dict_map import dict_map_key
 from fastramqpi.ra_utils.dict_map import dict_map_value
 
 
-def swapcase(x):
+def swapcase(x: str) -> str:
     return x.swapcase()
 
 
-def pow2(x):
+def pow2(x: int) -> int:
     return x**2
 
 
@@ -30,7 +31,7 @@ def pow2(x):
         partial(dict_map, key_func=swapcase, value_func=swapcase),
     ],
 )
-def test_dictmap_emptydict(dict_map_func):
+def test_dictmap_emptydict(dict_map_func: Callable) -> None:
     dicty: Dict[str, str] = {}
     mapped = dict_map_func(dicty)
     assert id(mapped) == id(dicty)
@@ -38,14 +39,14 @@ def test_dictmap_emptydict(dict_map_func):
 
 
 @given(st.dictionaries(st.text(), st.text(), min_size=1))
-def test_dictmap_identity(dicty):
+def test_dictmap_identity(dicty: dict) -> None:
     mapped = dict_map(dicty)
     assert id(mapped) == id(dicty)
     assert dict_map(mapped) == dicty
 
 
 @given(st.dictionaries(st.text(), st.text(), min_size=1))
-def test_dictmap_swapcase_key(dicty):
+def test_dictmap_swapcase_key(dicty: dict) -> None:
     mapped = dict_map(dicty, key_func=swapcase)
     assert id(mapped) != id(dicty)
     assert sorted(mapped.keys()) == sorted(map(swapcase, dicty.keys()))
@@ -56,7 +57,7 @@ def test_dictmap_swapcase_key(dicty):
 
 
 @given(st.dictionaries(st.text(), st.text(), min_size=1))
-def test_dictmap_swapcase_value(dicty):
+def test_dictmap_swapcase_value(dicty: dict) -> None:
     mapped = dict_map(dicty, value_func=swapcase)
     assert id(mapped) != id(dicty)
     assert sorted(mapped.keys()) == sorted(dicty.keys())
@@ -67,7 +68,7 @@ def test_dictmap_swapcase_value(dicty):
 
 
 @given(st.dictionaries(st.text(), st.text(), min_size=1))
-def test_dictmap_swapcase_key_value(dicty):
+def test_dictmap_swapcase_key_value(dicty: dict) -> None:
     mapped = dict_map(dicty, key_func=swapcase, value_func=swapcase)
     assert id(mapped) != id(dicty)
     assert sorted(mapped.keys()) == sorted(map(swapcase, dicty.keys()))
@@ -75,7 +76,7 @@ def test_dictmap_swapcase_key_value(dicty):
 
 
 @given(st.dictionaries(st.text(), st.integers(), min_size=1))
-def test_dictmap_pow2_key_value(dicty):
+def test_dictmap_pow2_key_value(dicty: dict) -> None:
     mapped = dict_map(dicty, key_func=swapcase, value_func=pow2)
     assert id(mapped) != id(dicty)
     assert sorted(mapped.keys()) == sorted(map(swapcase, dicty.keys()))
@@ -83,7 +84,7 @@ def test_dictmap_pow2_key_value(dicty):
 
 
 @given(st.dictionaries(st.text(), st.text(), min_size=1))
-def test_dictmap_invalid_operation(dicty):
+def test_dictmap_invalid_operation(dicty: dict) -> None:
     pow2_error = "unsupported operand type(s) for ** or pow()"
 
     with pytest.raises(TypeError) as exc_info:
@@ -100,9 +101,9 @@ def test_dictmap_invalid_operation(dicty):
 
 
 @given(st.text(min_size=1))
-def test_dict_map_destructive_key_interference(key):
+def test_dict_map_destructive_key_interference(key: str) -> None:
     # Any non-bijective function would work here
-    def to_upper(x):
+    def to_upper(x: str) -> str:
         return x.upper()
 
     assume(key != to_upper(key))

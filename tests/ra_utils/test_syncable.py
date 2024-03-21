@@ -3,6 +3,7 @@
 from asyncio import iscoroutinefunction
 from asyncio import run
 from inspect import isawaitable
+from typing import Any
 from typing import Awaitable
 
 import hypothesis.strategies as st
@@ -21,24 +22,24 @@ class Adder(Syncable, AsyncAdder):
     pass
 
 
-async def acall_adder(*args) -> int:
+async def acall_adder(*args: Any) -> int:
     return await Adder().add(*args)
 
 
-def call_adder(*args) -> int:
+def call_adder(*args: Any) -> int:
     return Adder().add(*args)  # type: ignore
 
 
-async def acall_asyncadder(*args) -> int:
+async def acall_asyncadder(*args: Any) -> int:
     return await AsyncAdder().add(*args)
 
 
-def call_asyncadder(*args) -> Awaitable[int]:
+def call_asyncadder(*args: Any) -> Awaitable[int]:
     return AsyncAdder().add(*args)
 
 
 @given(st.integers(), st.integers())
-def test_add(a: int, b: int):
+def test_add(a: int, b: int) -> None:
     assert iscoroutinefunction(AsyncAdder.add) is True
     assert iscoroutinefunction(Adder.add) is True
 
@@ -64,13 +65,13 @@ def test_add(a: int, b: int):
 
 
 class AsyncNoExitContext:
-    def foo(self):
+    def foo(self) -> str:
         return "bar"
 
-    def __init__(self):
-        self.inside = None
+    def __init__(self) -> None:
+        self.inside: bool | None = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "AsyncNoExitContext":
         self.inside = True
         return self
 
@@ -80,7 +81,7 @@ class ContextNoExit(Syncable, AsyncNoExitContext):
 
 
 class AsyncContext(AsyncNoExitContext):
-    async def __aexit__(self, *err):
+    async def __aexit__(self, *err: Any) -> None:
         self.inside = False
 
 
@@ -116,15 +117,15 @@ def call_asynccontext() -> None:
     context = AsyncContext()
     assert context.inside is None
     # No __enter__, but __aenter__ exists
-    with pytest.raises(AttributeError) as excinfo:
+    with pytest.raises(TypeError) as excinfo:
         with context:  # type: ignore
             assert context.inside is True
-    assert "__enter__" in str(excinfo)
+    assert "object does not support the context manager protocol" in str(excinfo)
     assert hasattr(context, "__aenter__") is True
     assert context.inside is None
 
 
-def test_context():
+def test_context() -> None:
     # Calls to Context
     run(acall_context())
     call_context()

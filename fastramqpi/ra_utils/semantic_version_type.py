@@ -8,12 +8,7 @@ from typing import Dict
 from typing import Iterator
 from typing import Pattern
 
-_has_pydantic = True
-try:
-    from pydantic import BaseModel
-except ImportError:  # pragma: no cover
-    _has_pydantic = False
-    BaseModel = object  # type: ignore
+from pydantic import BaseModel
 
 
 # Regex from https://semver.org/

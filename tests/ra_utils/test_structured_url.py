@@ -1,29 +1,12 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from typing import Any
-from typing import Callable
-
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from pydantic import BaseSettings
+from pydantic import Field
+from pydantic import ValidationError
 
-try:
-    from pydantic import ValidationError
-    from pydantic import BaseSettings
-    from pydantic import Field
-
-    from fastramqpi.ra_utils.structured_url import StructuredUrl
-
-    def skip_if_missing(func: Callable) -> Callable:
-        return func
-
-except:  # pragma: no cover  # noqa: E722
-    StructuredUrl = object  # type: ignore
-    BaseSettings = object  # type: ignore
-
-    def Field(*args: Any, **kwargs: Any) -> None:
-        return None
-
-    skip_if_missing = pytest.mark.skipif(True, reason="pydantic not installed")
+from fastramqpi.ra_utils.structured_url import StructuredUrl
 
 
 def _assert_parsed(structured_url: StructuredUrl) -> None:
@@ -50,7 +33,6 @@ def _assert_parsed(structured_url: StructuredUrl) -> None:
     assert structured_url.fragment == "here"
 
 
-@skip_if_missing
 def test_can_provide_url_directly() -> None:
     structured_url = StructuredUrl(
         url="https://username:password@example.com:1234/valid?a=b#here"
@@ -58,9 +40,8 @@ def test_can_provide_url_directly() -> None:
     _assert_parsed(structured_url)
 
 
-@skip_if_missing
 def test_can_provide_url_indirectly() -> None:
-    structured_url = StructuredUrl(
+    structured_url = StructuredUrl(  # type: ignore[call-arg]
         scheme="https",
         user="username",
         password="password",
@@ -73,9 +54,8 @@ def test_can_provide_url_indirectly() -> None:
     _assert_parsed(structured_url)
 
 
-@skip_if_missing
 def test_that_passwords_are_url_encoded() -> None:
-    structured_url = StructuredUrl(
+    structured_url = StructuredUrl(  # type: ignore[call-arg]
         scheme="https",
         user="user@domain.com",
         password="p@ssword",
@@ -84,13 +64,12 @@ def test_that_passwords_are_url_encoded() -> None:
     assert structured_url.url == "https://user%40domain.com:p%40ssword@example.com"
 
 
-@skip_if_missing
 def test_no_args_not_ok() -> None:
     with pytest.raises(ValidationError):
-        StructuredUrl()
+        StructuredUrl()  # type: ignore[call-arg]
     with pytest.raises(ValidationError):
-        StructuredUrl(scheme="http")
-    StructuredUrl(scheme="http", host="a")
+        StructuredUrl(scheme="http")  # type: ignore[call-arg]
+    StructuredUrl(scheme="http", host="a")  # type: ignore[call-arg]
 
 
 def _assert_parsed_minimal(structured_url: StructuredUrl) -> None:
@@ -107,26 +86,22 @@ def _assert_parsed_minimal(structured_url: StructuredUrl) -> None:
         assert getattr(structured_url, key) is None
 
 
-@skip_if_missing
 def test_minimal_url_directly_ok() -> None:
     structured_url = StructuredUrl(url="http://a")
     _assert_parsed_minimal(structured_url)
 
 
-@skip_if_missing
 def test_minimal_url_indirectly_ok() -> None:
-    structured_url = StructuredUrl(scheme="http", host="a")
+    structured_url = StructuredUrl(scheme="http", host="a")  # type: ignore[call-arg]
     _assert_parsed_minimal(structured_url)
 
 
-@skip_if_missing
 def test_url_is_conflicts_with_others() -> None:
     # Conflicting information here, url always wins
     with pytest.raises(ValidationError):
         StructuredUrl(url="https://b", scheme="http", host="a")
 
 
-@skip_if_missing
 @pytest.mark.parametrize(
     "url",
     [
@@ -140,7 +115,6 @@ def test_that_urls_are_ok(url: str) -> None:
     StructuredUrl(url=url)
 
 
-@skip_if_missing
 @pytest.mark.parametrize(
     "url",
     [
@@ -160,18 +134,16 @@ class Settings(BaseSettings):
     class Config:
         env_nested_delimiter = "__"
 
-    database: StructuredUrl = Field(default_factory=StructuredUrl)
+    database: StructuredUrl = Field(default_factory=StructuredUrl)  # type: ignore[arg-type]
 
 
-@skip_if_missing
-def test_settings_missing_scheme():
+def test_settings_missing_scheme() -> None:
     with pytest.raises(ValidationError) as exc_info:
         Settings()
     assert "scheme is required" in str(exc_info.value)
 
 
-@skip_if_missing
-def test_settings_bad_scheme(monkeypatch: MonkeyPatch):
+def test_settings_bad_scheme(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE__SCHEME", "postgresql://")
     monkeypatch.setenv("DATABASE__HOST", "database.example.org")
     with pytest.raises(ValidationError) as exc_info:
@@ -182,8 +154,7 @@ def test_settings_bad_scheme(monkeypatch: MonkeyPatch):
     )
 
 
-@skip_if_missing
-def test_settings_bad_path(monkeypatch: MonkeyPatch):
+def test_settings_bad_path(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE__SCHEME", "postgresql")
     monkeypatch.setenv("DATABASE__HOST", "database.example.org")
     monkeypatch.setenv("DATABASE__PORT", "5432")
@@ -195,8 +166,7 @@ def test_settings_bad_path(monkeypatch: MonkeyPatch):
     )
 
 
-@skip_if_missing
-def test_settings(monkeypatch: MonkeyPatch):
+def test_settings(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE__SCHEME", "postgresql")
     monkeypatch.setenv("DATABASE__USER", "AzureDiamond")
     monkeypatch.setenv("DATABASE__PASSWORD", "hunter2")

@@ -8,15 +8,12 @@ from urllib.parse import parse_qsl
 from urllib.parse import quote
 from urllib.parse import urlencode
 
-try:
-    from pydantic import AnyUrl
-    from pydantic import BaseModel
-    from pydantic import Field
-    from pydantic import SecretStr
-    from pydantic import parse_obj_as
-    from pydantic import root_validator
-except ImportError as err:  # pragma: no cover
-    raise ImportError(f"{err.name} not found - {__name__} not imported")
+from pydantic import AnyUrl
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import parse_obj_as
+from pydantic import root_validator
+from pydantic import SecretStr
 
 
 # pylint: disable=too-few-public-methods
@@ -91,7 +88,7 @@ class StructuredUrl(BaseModel):
             user=user,
             password=password,
             host=values.get("host"),
-            port=parse_obj_as(Optional[str], values.get("port")),
+            port=parse_obj_as(Optional[str], values.get("port")),  # type: ignore[arg-type]
             path=values.get("path"),
             query=urlencode(query),
             fragment=values.get("fragment"),
@@ -119,7 +116,7 @@ class StructuredUrl(BaseModel):
                 user=url.user,
                 password=url.password,
                 host=url.host,
-                port=parse_obj_as(Optional[int], url.port),
+                port=parse_obj_as(Optional[int], url.port),  # type: ignore[arg-type]
                 path=url.path,
                 query=dict(parse_qsl(url.query)),
                 fragment=url.fragment,

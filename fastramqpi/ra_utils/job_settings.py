@@ -10,14 +10,11 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-try:
-    import structlog
-    from structlog.processors import CallsiteParameter
-    from pydantic import BaseSettings
-    from pydantic import Extra
-    from pydantic.env_settings import SettingsSourceCallable
-except ImportError as err:  # pragma: no cover
-    raise ImportError(f"{err.name} not found - {__name__} not imported")
+import structlog
+from pydantic import BaseSettings
+from pydantic import Extra
+from pydantic.env_settings import SettingsSourceCallable
+from structlog.processors import CallsiteParameter
 
 from .load_settings import load_settings
 
@@ -88,7 +85,7 @@ def _dont_log_graphql_responses(_: Any, __: str, event_dict: dict) -> dict:
     """
     module: str | None = event_dict.get("module")
     func_name: str | None = event_dict.get("func_name")
-    if module == "transport" and func_name == "_decode_response":
+    if module == "transport" and func_name == "_decode_response":  # pragma: no cover
         raise structlog.DropEvent
     return event_dict
 
@@ -186,7 +183,7 @@ class JobSettings(BaseSettings):
             # Pretty printing when we run in a terminal session.
             # Automatically prints pretty tracebacks when "rich" is installed
             processors = shared_processors + [structlog.dev.ConsoleRenderer()]
-        else:
+        else:  # pragma: no cover
             # Print JSON when we run, e.g., in a Docker container.
             # Also print structured tracebacks.
             processors = shared_processors + [structlog.processors.JSONRenderer()]

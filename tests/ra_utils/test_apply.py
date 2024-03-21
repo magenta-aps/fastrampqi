@@ -11,23 +11,23 @@ from fastramqpi.ra_utils.apply import has_self_arg
 
 
 class Classy:
-    def method(self):
+    def method(self) -> None:
         pass
 
     @classmethod
-    def classmethod(cls):
+    def classmethod(cls) -> None:
         pass
 
     @staticmethod
-    def staticmethod():
+    def staticmethod() -> None:
         pass
 
 
-def function():
+def function() -> None:
     pass
 
 
-def test_has_self_arg():
+def test_has_self_arg() -> None:
     classy = Classy()
     assert has_self_arg(classy.method) is False
     assert has_self_arg(classy.classmethod) is False
@@ -60,21 +60,21 @@ class ApplyTests(TestCase):
     """Test the apply function works as expected."""
 
     @apply
-    def add2tup(self, a: int, b: int):
+    def add2tup(self, a: int, b: int) -> int:
         return a + b
 
     @apply
-    def add3tup(self, a: int, b: int, c: int):
+    def add3tup(self, a: int, b: int, c: int) -> int:
         return a + b + c
 
-    def add2(self, a: int, b: int):
+    def add2(self, a: int, b: int) -> int:
         return a + b
 
-    def add3(self, a: int, b: int, c: int):
+    def add3(self, a: int, b: int, c: int) -> int:
         return a + b + c
 
     @given(st.tuples(st.integers(), st.integers()))
-    def test_apply_add2(self, tup: Tuple[int, int]):
+    def test_apply_add2(self, tup: Tuple[int, int]) -> None:
         """Test that two tuples are applied correctly."""
         expected = tup[0] + tup[1]
 
@@ -91,7 +91,7 @@ class ApplyTests(TestCase):
         self.assertEqual(result, expected)
 
     @given(st.tuples(st.integers(), st.integers(), st.integers()))
-    def test_apply_add3(self, tup: Tuple[int, int, int]):
+    def test_apply_add3(self, tup: Tuple[int, int, int]) -> None:
         """Test that three tuples are applied correctly."""
         expected = tup[0] + tup[1] + tup[2]
 

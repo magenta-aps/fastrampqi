@@ -13,7 +13,7 @@ from fastramqpi.ra_utils.generate_uuid import uuid_generator
 
 class test_generate_uuid(TestCase):
     @given(text(), text())
-    def test_generate_uuid(self, base, value):
+    def test_generate_uuid(self, base: str, value: str) -> None:
         uuid1 = generate_uuid(base, value)
         _generate_uuid.cache_clear()
         uuid2 = generate_uuid(base, value)
@@ -24,7 +24,7 @@ class test_generate_uuid(TestCase):
         assert isinstance(uuid1, UUID)
 
     @given(text(), text())
-    def test_create_generator(self, base, value):
+    def test_create_generator(self, base: str, value: str) -> None:
         gen = uuid_generator(base)
         uuid1 = gen(value)
         uuid2 = gen(value)
@@ -33,10 +33,10 @@ class test_generate_uuid(TestCase):
         assert isinstance(uuid1, UUID)
 
     @given(text(), text())
-    def test_generator_output(self, base, value):
+    def test_generator_output(self, base: str, value: str) -> None:
         assert generate_uuid(base, value) == uuid_generator(base)(value)
 
-    def test_predictable_outputs(self):
+    def test_predictable_outputs(self) -> None:
         gen = uuid_generator("kommune")
         uuid1 = gen("key1")
         uuid2 = gen("key2")

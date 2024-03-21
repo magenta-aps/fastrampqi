@@ -4,13 +4,9 @@ from collections.abc import Hashable
 from decimal import Decimal
 from typing import Any
 
-from .dict_map import dict_map
+from frozendict import frozendict
 
-_has_frozendict = True
-try:
-    from frozendict import frozendict
-except ImportError:  # pragma: no cover
-    _has_frozendict = False
+from .dict_map import dict_map
 
 
 def is_hashable(value: Any) -> bool:
@@ -57,8 +53,6 @@ def ensure_hashable(value: Any) -> Any:
         Hashable equivalent of value, i.e. frozenset if value is a set.
     """
     if isinstance(value, dict):
-        if not _has_frozendict:  # pragma: no cover
-            raise ValueError("'frozendict' not installed!")
         value = frozendict(
             dict_map(
                 value,

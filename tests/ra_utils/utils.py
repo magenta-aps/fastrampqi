@@ -1,17 +1,12 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
+import zoneinfo  # noqa: F401
 from itertools import chain
 from typing import cast
 from typing import Sequence
 
 import hypothesis.strategies as st
 from hypothesis.strategies import SearchStrategy
-
-_has_zoneinfo = True
-try:
-    import zoneinfo  # noqa: F401
-except ImportError:  # pragma: no cover
-    _has_zoneinfo = False
 
 
 def deferred_hashable() -> SearchStrategy:
@@ -46,9 +41,7 @@ base_strategies: Sequence[SearchStrategy] = list(
         [
             st.timezone_keys(),
             st.timezones(),
-        ]
-        if _has_zoneinfo
-        else [],
+        ],
     )
 )
 non_hashable_strategies: Sequence[SearchStrategy] = [

@@ -5,12 +5,9 @@ import re
 from functools import lru_cache
 from typing import Pattern
 
-# Strategies
+from hypothesis import strategies as st
 
-try:
-    from hypothesis import strategies as st
-except ImportError:  # pragma: no cover
-    raise ImportError("hypothesis not found - strategies not imported")
+# Strategies
 
 
 def not_from_regex(str_pat: str) -> st.SearchStrategy:

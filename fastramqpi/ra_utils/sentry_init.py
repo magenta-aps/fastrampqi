@@ -4,19 +4,11 @@ from typing import Any
 from typing import List
 from typing import Optional
 
-try:
-    import structlog
-    from pydantic import BaseSettings
-    from pydantic import HttpUrl
-    from pydantic import ValidationError
-except ImportError as err:  # pragma: no cover
-    raise ImportError(f"{err.name} not found - {__name__} not imported")
-
-_has_sentry = True
-try:
-    import sentry_sdk
-except ImportError:  # pragma: no cover
-    _has_sentry = False
+import sentry_sdk
+import structlog
+from pydantic import BaseSettings
+from pydantic import HttpUrl
+from pydantic import ValidationError
 
 
 class Settings(BaseSettings):

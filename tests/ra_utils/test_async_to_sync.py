@@ -22,7 +22,7 @@ class AsyncToSyncTests(TestCase):
     """Test the async to sync decorator works as expected."""
 
     @given(st.integers(), st.integers())
-    def test_add(self, a: int, b: int):
+    def test_add(self, a: int, b: int) -> None:
         expected = a + b
 
         self.assertTrue(iscoroutinefunction(async_add))
