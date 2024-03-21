@@ -6,7 +6,8 @@ from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import SecretStr
-from ramqp.config import AMQPConnectionSettings
+
+from .ramqp.config import AMQPConnectionSettings
 
 
 # pylint: disable=too-few-public-methods

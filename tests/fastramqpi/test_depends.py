@@ -7,11 +7,11 @@ from unittest.mock import MagicMock
 from unittest.mock import sentinel
 
 from fastapi import Depends
-from ramqp.depends import dependency_injected
 
 from fastramqpi import depends
 from fastramqpi.context import Context
 from fastramqpi.depends import from_user_context
+from fastramqpi.ramqp.depends import dependency_injected
 
 
 async def test_depends() -> None:

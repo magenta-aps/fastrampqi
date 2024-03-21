@@ -10,13 +10,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import BaseSettings
 from pydantic import Field
-from ramqp.depends import RateLimit
-from ramqp.mo import MORouter
-from ramqp.mo import PayloadUUID
 
 from fastramqpi.config import Settings as FastRAMQPISettings
 from fastramqpi.depends import UserContext
 from fastramqpi.main import FastRAMQPI
+from fastramqpi.ramqp.depends import RateLimit
+from fastramqpi.ramqp.mo import MORouter
+from fastramqpi.ramqp.mo import PayloadUUID
 
 
 @pytest.fixture

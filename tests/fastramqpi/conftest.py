@@ -11,10 +11,10 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
-from ramqp.config import AMQPConnectionSettings
 
 from fastramqpi.config import Settings
 from fastramqpi.main import FastRAMQPI
+from fastramqpi.ramqp.config import AMQPConnectionSettings
 
 
 @pytest.fixture(scope="session")
