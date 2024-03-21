@@ -14,7 +14,7 @@ packages = [ { include = "fastramqpi" } ]
 include = ["fastramqpi/py.typed"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 structlog = "^23.1.0"
 pydantic = "^1.10.5"
 gql = "^3.4.0"
@@ -59,7 +59,7 @@ build-backend = "poetry.core.masonry.api"
 asyncio_mode="auto"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 warn_return_any = "True"
 warn_unused_configs = "True"
 check_untyped_defs = "True"

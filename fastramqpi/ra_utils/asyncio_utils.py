@@ -2,14 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 from asyncio import gather
 from asyncio import Semaphore
-from functools import wraps
-from typing import Any
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Awaitable
 from typing import Callable
 from typing import cast
 from typing import List
 from typing import TypeVar
-
 
 ReturnType = TypeVar("ReturnType")
 WithConcurrencyFunction = Callable[..., Awaitable[ReturnType]]
@@ -45,23 +44,12 @@ def with_concurrency(
     """
     semaphore = Semaphore(parallel)
 
-    #     # TODO: In Python 3.10+ the below wrapper can be replaced with:
-    #     @asynccontextmanager
-    #     async def limited_concurrency() -> AsyncGenerator[None, None]:
-    #         async with semaphore:
-    #             yield
-    #
-    #     return limited_concurrency()
+    @asynccontextmanager
+    async def limited_concurrency() -> AsyncGenerator[None, None]:
+        async with semaphore:
+            yield
 
-    def wrapper(func: WithConcurrencyFunction) -> WithConcurrencyFunction:
-        @wraps(func)
-        async def wrapped(*args: Any, **kwargs: Any) -> ReturnType:
-            async with semaphore:
-                return cast(ReturnType, await func(*args, **kwargs))
-
-        return wrapped
-
-    return wrapper
+    return limited_concurrency()
 
 
 async def gather_with_concurrency(
