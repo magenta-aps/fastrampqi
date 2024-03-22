@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the AMQPSystem.start, stop and run-forever methods."""
 import pytest
-from ra_utils.attrdict import attrdict
 
 from .common import _test_context_manager
 from .common import _test_run_forever_worker
+from fastramqpi.ra_utils.attrdict import attrdict
 from fastramqpi.ramqp import AMQPSystem
 
 
