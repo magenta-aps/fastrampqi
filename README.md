@@ -5,10 +5,8 @@ SPDX-License-Identifier: MPL-2.0
 
 # FastRAMQPI
 
-FastRAMQPI is an opinionated library for FastAPI and RAMQP.
+FastRAMQPI is an opinionated library for OS2mo integrations.
 
-It is implemented as a thin wrapper around `FastAPI` and `RAMQP`.
-It is very MO specific.
 
 ## Usage
 
