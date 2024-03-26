@@ -8,13 +8,13 @@ from tenacity import wait_fixed
 
 
 def retry(
-    stop: Any = stop_after_delay(30),
+    stop: Any = stop_after_delay(10),
     wait: Any = wait_fixed(2),
 ) -> Any:
     """Tenacity retry decorator, with defaults useful for testing.
 
     Args:
-        stop: Stop after 30 seconds so the test doesn't run forever.
+        stop: Stop after 10 seconds so the test doesn't run forever.
             The default duration is long since some integrations need multiple rounds
             of AMQP messages to complete, and therefore need a long time to get in a
             consistent state.
