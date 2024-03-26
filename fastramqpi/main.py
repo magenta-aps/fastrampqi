@@ -17,7 +17,7 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from .config import ClientSettings
 from .config import Settings
 from .context import Context
-from .fastapi import FastAPIIntegrationSystem
+from .app import FastAPIIntegrationSystem
 from .raclients.graph.client import GraphQLClient as LegacyGraphQLClient
 from .raclients.modelclient.mo import ModelClient as LegacyModelClient
 from .ramqp.mo import MOAMQPSystem
