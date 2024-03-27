@@ -1,15 +1,18 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import asyncio
+import urllib.parse
 from asyncio import CancelledError
 from asyncio import create_task
 from collections.abc import AsyncIterator
 from contextlib import suppress
+from typing import Any
 from typing import NoReturn
 
 import httpx
 import pytest
 from httpx import AsyncClient
+from httpx import BasicAuth
 from pytest import Config
 from pytest import Item
 from respx import MockRouter
@@ -30,14 +33,43 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
             item.fixturenames[:0] = [  # type: ignore[attr-defined]
                 "amqp_event_emitter",
                 "database_snapshot_and_restore",
+                "amqp_queue_isolation",
                 "passthrough_backing_services",
             ]
 
 
 @pytest.fixture
-async def mo_client() -> AsyncIterator[AsyncClient]:
+def _settings() -> Any:
+    """Access FastRAMQPI settings without coupling to the integration's settings."""
+    # We must defer importing from the FastRAMQPI module till run-time.
+    # https://github.com/pytest-dev/pytest-cov/issues/587
+    from fastramqpi.config import Settings
+
+    class _Settings(Settings):
+        class Config:
+            env_prefix = "FASTRAMQPI__"
+
+    return _Settings()
+
+
+@pytest.fixture
+async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL preconfigured."""
-    async with httpx.AsyncClient(base_url="http://mo:5000") as client:
+    async with httpx.AsyncClient(base_url=_settings.mo_url) as client:
+        yield client
+
+
+@pytest.fixture
+async def rabbitmq_management_client(_settings: Any) -> AsyncIterator[AsyncClient]:
+    """HTTPX client for the RabbitMQ management API."""
+    amqp = _settings.amqp.get_url()
+    async with httpx.AsyncClient(
+        base_url=f"http://{amqp.host}:15672/api/",
+        auth=BasicAuth(
+            username=amqp.user,
+            password=amqp.password,
+        ),
+    ) as client:
         yield client
 
 
@@ -82,11 +114,36 @@ async def database_snapshot_and_restore(mo_client: AsyncClient) -> AsyncIterator
 
 
 @pytest.fixture
-def passthrough_backing_services(respx_mock: MockRouter) -> None:
+async def amqp_queue_isolation(
+    rabbitmq_management_client: AsyncClient,
+) -> None:
+    """Ensure test isolation by deleting all AMQP queues before tests.
+
+    Automatically used on tests marked as integration_test.
+    """
+    queues = (await rabbitmq_management_client.get("queues")).json()
+    # vhost and name must be URL-encoded. This includes `/`, which is normally regarded
+    # as safe. This is particularly important for the default AMQP vhost `/`.
+    urls = (
+        "queues/{vhost}/{name}".format(
+            vhost=urllib.parse.quote(q["vhost"], safe=""),
+            name=urllib.parse.quote(q["name"], safe=""),
+        )
+        for q in queues
+    )
+    deletes = [rabbitmq_management_client.delete(url) for url in urls]
+    await asyncio.gather(*deletes)
+
+
+@pytest.fixture
+def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None:
     """Allow calls to the backing services to bypass the RESPX mocking.
 
     Automatically used on tests marked as integration_test.
     """
-    respx_mock.route(name="keycloak", host="keycloak").pass_through()
-    respx_mock.route(name="mo", host="mo").pass_through()
+    # mo and keycloak are named to allow tests to revert the passthrough if needed
+    respx_mock.route(name="keycloak", host=_settings.auth_server.host).pass_through()
+    respx_mock.route(name="mo", host=_settings.mo_url.host).pass_through()
+    # rabbitmq management
+    respx_mock.route(host=_settings.amqp.get_url().host).pass_through()
     respx_mock.route(host="localhost").pass_through()
