@@ -20,6 +20,7 @@ from .amqp_helpers import payload2incoming
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.depends import Context
 from fastramqpi.ramqp.depends import dependency_injected
+from fastramqpi.ramqp.depends import dependency_injected_with_deps
 from fastramqpi.ramqp.depends import from_context
 from fastramqpi.ramqp.depends import get_context
 from fastramqpi.ramqp.depends import get_message
@@ -94,7 +95,11 @@ async def test_payload_as_x() -> None:
 
 
 async def test_dependency_injected_awaitable() -> None:
-    """Test dependency_injected works as expected."""
+    """Test dependency_injected works as expected.
+
+    Note: This test-code is very similar to test_dependency_injected_deps.
+          If you change one, make sure to change the other as well.
+    """
 
     called = {
         "func": 0,
@@ -152,6 +157,14 @@ async def test_dependency_injected_awaitable() -> None:
         "generator_after": 0,
         "agenerator_before": 1,
         "agenerator_after": 0,
+    }
+    assert called == {
+        "func": 1,
+        "awaitable": 1,
+        "generator_before": 1,
+        "generator_after": 1,
+        "agenerator_before": 1,
+        "agenerator_after": 1,
     }
 
 
@@ -429,3 +442,71 @@ async def test_rate_limit_different_handlers_non_blocking() -> None:
     # Check that the calls finished less than the rate-limit delay time apart
     finish_1, finish_2, *_ = finish_times
     assert finish_2 - finish_1 < 2
+
+
+async def test_dependency_injected_deps() -> None:
+    """Test dependency_injected_deps works as expected.
+
+    Note: This test-code is very similar to test_dependency_injected_awaitable.
+          If you change one, make sure to change the other as well.
+    """
+
+    called = {
+        "func": 0,
+        "awaitable": 0,
+        "generator_before": 0,
+        "generator_after": 0,
+        "agenerator_before": 0,
+        "agenerator_after": 0,
+    }
+
+    def func() -> int:
+        called["func"] = 1
+        return 1
+
+    async def awaitable() -> int:
+        called["awaitable"] = 1
+        return 2
+
+    def generator() -> Iterator[int]:
+        called["generator_before"] = 1
+        yield 3
+        called["generator_after"] = 1
+
+    async def agenerator() -> AsyncIterator[int]:
+        called["agenerator_before"] = 1
+        yield 4
+        called["agenerator_after"] = 1
+
+    # pylint: disable=invalid-name
+    async def wrapped() -> dict[str, Any]:
+        return dict(called.items())
+
+    function = dependency_injected_with_deps(
+        wrapped,
+        dependencies=[
+            Depends(func),
+            Depends(awaitable),
+            Depends(generator),
+            Depends(agenerator),
+        ],
+    )
+
+    message = payload2incoming({"hello": "world"})
+    args = await function(message=message, context={})
+    assert args == {
+        "func": 1,
+        "awaitable": 1,
+        "generator_before": 1,
+        "generator_after": 0,
+        "agenerator_before": 1,
+        "agenerator_after": 0,
+    }
+    assert called == {
+        "func": 1,
+        "awaitable": 1,
+        "generator_before": 1,
+        "generator_after": 1,
+        "agenerator_before": 1,
+        "agenerator_after": 1,
+    }

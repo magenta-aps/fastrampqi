@@ -32,7 +32,7 @@ from more_itertools import all_unique
 from more_itertools import one
 
 from .config import AMQPConnectionSettings
-from .depends import dependency_injected
+from .depends import dependency_injected_with_deps
 from .metrics import _handle_publish_metrics
 from .metrics import _handle_receive_metrics
 from .metrics import _setup_channel_metrics
@@ -55,10 +55,13 @@ class AbstractRouter:
     Shared code used by both Router and MORouter.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, dependencies: list[Any] | None = None) -> None:
         self.registry: dict[CallbackType, set[str]] = {}
+        self.dependencies = dependencies or []
 
-    def _register(self, routing_key: Any) -> Callable[[CallbackType], CallbackType]:
+    def _register(
+        self, routing_key: Any, dependencies: list[Any] | None = None
+    ) -> Callable[[CallbackType], CallbackType]:
         """Get a decorator for registering callbacks.
 
         Examples:
@@ -83,9 +86,16 @@ class AbstractRouter:
             def callback2(message: IncomingMessage):
                 pass
             ```
+            Or with dependencies:
+            ```
+            @router.register("person", dependencies=[open_database_connection])
+            def callback1(message: IncomingMessage):
+                pass
+            ```
 
         Args:
             routing_key: The routing key to bind messages for.
+            dependencies: Additional dependencies to inject.
 
         Returns:
             A decorator for registering a function to receive callbacks.
@@ -110,6 +120,10 @@ class AbstractRouter:
 
             callbacks_registered.labels(routing_key).inc()
             self.registry.setdefault(function, set()).add(routing_key)
+
+            current_dependencies = getattr(function, "dependencies", self.dependencies)
+            current_dependencies.extend(dependencies or [])
+            setattr(function, "dependencies", current_dependencies)
             return function
 
         return decorator
@@ -176,8 +190,10 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         settings: AMQPConnectionSettings,
         router: TRouter | None = None,
         context: Mapping | None = None,
+        dependencies: list[Any] | None = None,
     ) -> None:
         self.settings = settings
+        self.dependencies = dependencies or []
 
         if router is None:
             router = self.router_cls()
@@ -440,8 +456,12 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
                 async with message.process(ignore_processed=True):
                     try:
                         # TODO: Add retry metric
-                        await dependency_injected(callback)(
-                            message=message, context=self.context
+                        await dependency_injected_with_deps(
+                            callback,
+                            getattr(callback, "dependencies", []) + self.dependencies,
+                        )(
+                            message=message,
+                            context=self.context,
                         )
                     except RejectMessage:
                         await message.reject(requeue=False)
