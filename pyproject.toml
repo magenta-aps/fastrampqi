@@ -48,6 +48,10 @@ debugpy = "^1.8.1"
 hypothesis = "^6.70.0"
 pytest-mock = "^3.8.1"
 
+
+[tool.poetry.group.pre-commit.dependencies]
+types-pyyaml = "^6.0.12.20240311"
+
 [tool.poetry.plugins."pytest11"]
 fastramqpi = "fastramqpi.pytest_plugin"
 

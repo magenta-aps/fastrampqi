@@ -31,12 +31,12 @@ class RejectMessage(Exception):
     """Raise to reject a message, turning it into a dead letter.
 
     Examples:
-        Simple usage::
-
-            @router.register("my.routing.key")
-            async def callback_function(...) -> None:
-                if unrecoverable_condition:
-                    raise RejectMessage("Due to X, the message will never be accepted.")
+        ```python
+        @router.register("my.routing.key")
+        async def callback_function(...) -> None:
+            if unrecoverable_condition:
+                raise RejectMessage("Due to X, the message will never be accepted.")
+        ```
     """
 
 
@@ -44,12 +44,12 @@ class RequeueMessage(Exception):
     """Raise to requeue a message for later redelivery.
 
     Examples:
-        Simple usage::
-
-            @router.register("my.routing.key")
-            async def callback_function(...) -> None:
-                if temporary_condition:
-                    raise RejectMessage("Due to X, the message should be retried later")
+        ```python
+        @router.register("my.routing.key")
+        async def callback_function(...) -> None:
+            if temporary_condition:
+                raise RejectMessage("Due to X, the message should be retried later")
+        ```
     """
 
 
@@ -61,10 +61,10 @@ class AcknowledgeMessage(Exception):
     useful to acknowledge a message from deep within application code.
 
     Examples:
-        Simple usage::
-
-            @router.register("my.routing.key")
-            async def callback_function(...) -> None:
-                if expected_condition:
-                    raise AcknowledgeMessage("Due to X, the message should be acked")
+        ```python
+        @router.register("my.routing.key")
+        async def callback_function(...) -> None:
+            if expected_condition:
+                raise AcknowledgeMessage("Due to X, the message should be acked")
+        ```
     """

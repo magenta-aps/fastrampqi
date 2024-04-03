@@ -2,6 +2,6 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: FastRAMQPI
 Upstream-Contact: Magenta ApS <info@magenta.dk>
 
-Files: typed.py poetry.lock *.json
+Files: docs/poetry.lock poetry.lock
 Copyright: 2021 Magenta ApS <https://magenta.dk>
 License: MPL-2.0
