@@ -1,0 +1,112 @@
+# SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
+# SPDX-License-Identifier: MPL-2.0
+site_name: FastRAMQPI | Rammearkitektur integrations framework
+site_url: ""
+use_directory_urls: False
+site_description: FastRAMQPI dokumentation
+repo_name: FastRAMQPI
+# TODO: Use the GitHub repo when it's ready
+repo_url: https://github.com/magenta-aps/fastrampqi
+docs_dir: src/
+
+nav:
+  - FastRAMQPI:
+    - fastramqpi/index.md
+
+  - RAMQP:
+    - ramqp/index.md
+    - Modules:
+      - abstract: ramqp/modules/abstract.md
+      - amqp: ramqp/modules/amqp.md
+      - config: ramqp/modules/config.md
+      - depends: ramqp/modules/depends.md
+      - metrics: ramqp/modules/metrics.md
+      - mo: ramqp/modules/mo.md
+      - utils: ramqp/modules/utils.md
+
+  - RA Utils:
+    - ra-utils/index.md
+    - Modules:
+      - apply: ra-utils/modules/apply.md
+      - async_to_sync: ra-utils/modules/async_to_sync.md
+      - asyncio_utils: ra-utils/modules/asyncio_utils.md
+      - attrdict: ra-utils/modules/attrdict.md
+      - catchtime: ra-utils/modules/catchtime.md
+      - deprecation: ra-utils/modules/deprecation.md
+      - dict_map: ra-utils/modules/dict_map.md
+      - ensure_hashable: ra-utils/modules/ensure_hashable.md
+      - ensure_single_run: ra-utils/modules/ensure_single_run.md
+      - generate_uuid: ra-utils/modules/generate_uuid.md
+      - headers: ra-utils/modules/headers.md
+      - jinja_filter: ra-utils/modules/jinja_filter.md
+      - lazy_dict: ra-utils/modules/lazy_dict.md
+      - load_settings: ra-utils/modules/load_settings.md
+      - job_settings: ra-utils/modules/job_settings.md
+      - multiple_replace: ra-utils/modules/multiple_replace.md
+      - semantic_version_type: ra-utils/modules/semantic_version_type.md
+      - sentry_init: ra-utils/modules/sentry_init.md
+      - strategies: ra-utils/modules/strategies.md
+      - structured_url: ra-utils/modules/structured_url.md
+      - syncable: ra-utils/modules/syncable.md
+      - transpose_dict: ra-utils/modules/transpose_dict.md
+      - tqdm_wrapper: ra-utils/modules/tqdm_wrapper.md
+
+  - RA Clients:
+    - ra-clients/index.md
+
+  - Release Notes:
+    - changelog.md
+    - Pre-Merge Release History:
+      - FastRAMQPI: fastramqpi/changelog.md
+      - ramqp: ramqp/changelog.md
+      - ra-utils: ra-utils/changelog.md
+      - ra-clients: ra-clients/changelog.md
+
+theme:
+  name: "material"
+  palette:
+    - scheme:
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+  features:
+    - navigation.top
+    - navigation.tabs
+# favicon: static/favicon.ico
+
+# Adds Magenta's colour scheme
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            docstring_options:
+              replace_admonitions: no
+          paths: [..]
+
+watch:
+  - ../fastramqpi/
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.magiclink
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.tabbed
+  - pymdownx.tasklist
+  - toc:
+      toc_depth: 3
+      permalink: "#"

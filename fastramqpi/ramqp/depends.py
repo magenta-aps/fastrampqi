@@ -35,15 +35,15 @@ def dependency_injected(function: Callable) -> Callable:
     """AMQPSystem callback decorator to implement dependency injection.
 
     Examples:
-        Simple usage::
+        ```python
+        from .utils import dependency_injected
+        from fastapi import Depends
 
-            from .utils import dependency_injected
-            from fastapi import Depends
-
-            @dependency_injected
-            @router.register("my.routing.key")
-            def f(z=Depends(lambda: 3)):
-                return z
+        @dependency_injected
+        @router.register("my.routing.key")
+        def f(z=Depends(lambda: 3)):
+            return z
+        ```
 
     Note:
         The dependency injection system is implemented using FastAPIs dependency
@@ -241,14 +241,14 @@ def handle_exclusively(key: Callable[..., H]) -> Callable:
     handle_exclusively, it needs to obtain the lock for each of them before proceeding.
 
     Examples:
-        Simple usage::
-
-                @dependency_injected
-                async def handler(
-                    _: Annotated[None, Depends(handle_exclusively(get_routing_key))],
-                    msg: Annotated[Message, Depends(handle_exclusively(get_message))],
-                ):
-                    pass
+        ```python
+        @dependency_injected
+        async def handler(
+            _: Annotated[None, Depends(handle_exclusively(get_routing_key))],
+            msg: Annotated[Message, Depends(handle_exclusively(get_message))],
+        ):
+            pass
+        ```
 
     Args:
         key: A custom key function returning lock exclusivity key. Note that this
@@ -282,14 +282,14 @@ def handle_exclusively_decorator(key: Callable[..., Hashable]) -> Callable:
     Basic wrapper for handle_exclusively, allowing it to work as a function decorator.
 
     Examples:
-        Simple usage::
+        ```python
+        @handle_exclusively_decorator(key=lambda x, y, z: x, y)
+        async def f(x, y, z):
+            pass
 
-            @handle_exclusively_decorator(key=lambda x, y, z: x, y)
-            async def f(x, y, z):
-                pass
-
-            await f(x=1, y=2, z=8)
-            await f(x=3, y=4, z=8)  # accepted
+        await f(x=1, y=2, z=8)
+        await f(x=3, y=4, z=8)  # accepted
+        ```
 
     Args:
         key: A custom key function returning the arguments considered when determining
