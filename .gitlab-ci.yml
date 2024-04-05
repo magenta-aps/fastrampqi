@@ -45,8 +45,6 @@ include:
   - project: rammearkitektur/os2mo
     file:
       - gitlab-ci-templates/integration-test-meta.v1.yml
-    rules:
-      - <<: *if-merge-request
   - project: labs/salt-automation
     file:
       - gitlab-ci-templates/common/pre-commit.v1.yml
