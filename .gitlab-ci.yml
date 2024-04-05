@@ -2,12 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 
 stages:
+  - sync
   - lint
   - build
   - test
   - coverage
   - release
-
+  - docs
 
 variables:
   IMAGE_SHA: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}
@@ -18,8 +19,8 @@ variables:
   PRECOMMIT_USE_POETRY: "true"
   POETRY_VERSION: "1.7.1"
 
-
-
+# Conditions
+#############
 # Global Conditions
 .if-default-branch-refs: &if-default-branch-refs
   if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
@@ -27,33 +28,124 @@ variables:
 .if-tag: &if-tag
   if: '$CI_COMMIT_TAG'
 
+.if-tag-semver: &if-tag-semver
+  if: '$CI_COMMIT_TAG =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/'
+
 .if-merge-request: &if-merge-request
   if: '$CI_MERGE_REQUEST_IID'
 
 
+include:
+  - project: labs/salt-automation
+    file:
+      - gitlab-ci-templates/common/no-interrupt.v1.yml
+      - gitlab-ci-templates/common/conventional-commits.v1.yml
+      - gitlab-ci-templates/common/conventional-commits-changelog-meta.v1.yml
+      - gitlab-ci-templates/python/pypi-cc.v1.yml
+  - project: rammearkitektur/os2mo
+    file:
+      - gitlab-ci-templates/integration-test-meta.v1.yml
+    rules:
+      - <<: *if-merge-request
+  - project: labs/salt-automation
+    file:
+      - gitlab-ci-templates/common/pre-commit.v1.yml
+      - gitlab-ci-templates/python/pytest.v1.yml
+    rules:
+      - <<: *if-merge-request
+
+
+# Workflow
+###########
 workflow:
   rules:
     - <<: *if-tag
     - <<: *if-default-branch-refs
     - <<: *if-merge-request
 
-
-include:
-  - project: labs/salt-automation
-    file:
-      - gitlab-ci-templates/common/conventional-commits.v1.yml
-      - gitlab-ci-templates/common/pre-commit.v1.yml
-      - gitlab-ci-templates/python/pytest.v1.yml
-      - gitlab-ci-templates/python/pypi-cc.v1.yml
-  - project: rammearkitektur/os2mo
-    file:
-      - gitlab-ci-templates/integration-test-meta.v1.yml
-
-
 Test:
   variables:
     PYTEST_ADDOPTS: "-m 'not integration_test'"
+  rules:
+    - <<: *if-merge-request
 
 Integration-test:
   extends:
     - .integration-test:mo
+  rules:
+    - <<: *if-merge-request
+
+
+# Docs
+#######
+
+.docs:rules:deploy-master-docs:
+  rules:
+    - <<: *if-tag-semver
+      when: never
+    - <<: *if-default-branch-refs
+
+
+Export Changelog:
+  extends:
+    - .docs:export-changelog
+  variables:
+    CHANGELOG_EXTRA_FLAGS: --start-rev=6.0.0
+  rules:
+    - <<: *if-merge-request
+    - !reference [".docs:rules:deploy-master-docs", rules]
+
+
+.build-docs:
+  stage: docs
+  needs:
+    - Export Changelog
+  image: python:3.10
+  variables:
+    POETRY_VERSION: 1.3.2
+    POETRY_VIRTUALENVS_CREATE: "false"
+  before_script:
+    - pip3 install poetry==${POETRY_VERSION}
+    - cd docs && poetry install --no-interaction
+  script:
+    - cat $CI_PROJECT_DIR/.changelog.md >> src/changelog.md
+    - mkdocs build --strict --site-dir=$CI_PROJECT_DIR/site
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/site
+    expire_in: 1 week
+  rules:
+    - <<: *if-merge-request
+    - !reference [".docs:rules:deploy-master-docs", rules]
+
+
+Build and deploy branch docs:
+  extends:
+    - .build-docs
+  environment:
+    name: docs/$CI_COMMIT_REF_SLUG
+    url: $CI_JOB_URL/artifacts/file/site/index.html
+    auto_stop_in: 1 week
+  rules:
+    - <<: *if-merge-request
+
+
+Build master docs:
+  extends:
+    - .build-docs
+    - .docs:rules:deploy-master-docs
+
+
+# To release to GitLab Pages, the job must be called 'pages'
+pages:
+  stage: docs
+  extends:
+    - .docs:rules:deploy-master-docs
+  needs:
+    - Build master docs
+  image: alpine:latest
+  script:
+    - cp -r $CI_PROJECT_DIR/site public
+  artifacts:
+    paths:
+      - public/
