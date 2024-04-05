@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=protected-access
 """This module tests the Router.register decorator method."""
+from typing import Any
+
 import pytest
+from aio_pika import IncomingMessage
+from fastapi import Depends
 from more_itertools import all_unique
 from structlog.testing import LogCapture
 
@@ -84,3 +88,27 @@ def test_register_multiple(amqp_system: AMQPSystem) -> None:
     }
 
     assert all_unique(map(function_to_name, get_registry(amqp_system).keys()))
+
+
+def test_register_dependencies(amqp_system: AMQPSystem) -> None:
+    """Test that functions get their dependencies attached."""
+    assert get_registry(amqp_system) == {}
+
+    async def callback_func3(_: IncomingMessage, **__: Any) -> None:
+        """Dummy callback method."""
+
+    def sync_deps() -> int:
+        return 37
+
+    def async_deps() -> int:
+        return 7
+
+    dependencies = [Depends(sync_deps), Depends(async_deps)]
+
+    decorated_func = amqp_system.router.register(
+        "test.routing.key", dependencies=dependencies
+    )(callback_func3)
+    assert id(callback_func3) == id(decorated_func)
+    assert getattr(callback_func3, "dependencies", []) == dependencies
+
+    assert get_registry(amqp_system) == {callback_func3: {"test.routing.key"}}

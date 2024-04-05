@@ -22,7 +22,7 @@ from fastramqpi import depends
 from fastramqpi.config import Settings as FastRAMQPISettings
 from fastramqpi.main import FastRAMQPI
 from fastramqpi.ramqp.depends import Context
-from fastramqpi.ramqp.depends import RateLimit
+from fastramqpi.ramqp.depends import rate_limit
 from fastramqpi.ramqp.mo import MORouter
 from fastramqpi.ramqp.mo import PayloadUUID
 
@@ -41,12 +41,11 @@ fastapi_router = APIRouter()
 amqp_router = MORouter()
 
 
-@amqp_router.register("engagement")
+@amqp_router.register("engagement", dependencies=[Depends(rate_limit(10))])
 async def listen_to_engagements(
-        context: Context,
-        graphql_session: depends.LegacyGraphQLSession,
-        uuid: PayloadUUID,
-        _: RateLimit
+    context: Context,
+    graphql_session: depends.LegacyGraphQLSession,
+    uuid: PayloadUUID,
 ) -> None:
     print(uuid)
 

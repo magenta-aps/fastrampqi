@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from contextlib import suppress
 from functools import cache
+from functools import partial
 from functools import wraps
 from typing import Annotated
 from typing import Any
@@ -24,6 +25,7 @@ from aio_pika import IncomingMessage
 from fastapi import Depends
 from fastapi import Request
 from fastapi.dependencies.utils import get_dependant
+from fastapi.dependencies.utils import get_parameterless_sub_dependant
 from fastapi.dependencies.utils import solve_dependencies
 from pydantic import parse_raw_as
 from starlette.datastructures import State as StarletteState
@@ -31,7 +33,9 @@ from starlette.datastructures import State as StarletteState
 T = TypeVar("T")
 
 
-def dependency_injected(function: Callable) -> Callable:
+def dependency_injected_with_deps(
+    function: Callable, dependencies: list[Any]
+) -> Callable:
     """AMQPSystem callback decorator to implement dependency injection.
 
     Examples:
@@ -40,7 +44,7 @@ def dependency_injected(function: Callable) -> Callable:
         from fastapi import Depends
 
         @dependency_injected
-        @router.register("my.routing.key")
+        @router.register("my.routing.key", dependencies=[Depends(lambda: 4)])
         def f(z=Depends(lambda: 3)):
             return z
         ```
@@ -50,14 +54,30 @@ def dependency_injected(function: Callable) -> Callable:
         injection system, and thus detailed usage examples can be found on the FastAPI
         documentation.
 
+    Note:
+        Most users will want to use `@dependency_injected` rather than this function
+        directly, as most users do not need to pass in extra dependencies explicitly.
+
     Args:
         function: Callback function with dependency injection parameters.
+        dependencies: Additional dependencies to bind, besides the function ones.
 
     Returns:
         A new wrapper function which fulfills the RAMQP message callback interface.
         The wrapper analyses the decorated function and resolves the dependency
         injection before calling the decorated function.
     """
+
+    # process function dependencies once, and prepare dependent for each call
+    dependant = get_dependant(path="", call=function)
+    # Add our non-argument dependencies
+    # NOTE: This code is stolen from APIWebSocketRocket within FastAPI
+    dependencies = dependencies or []
+    for depends in dependencies[::-1]:
+        dependant.dependencies.insert(
+            0,
+            get_parameterless_sub_dependant(depends=depends, path=""),
+        )
 
     @wraps(function)
     async def wrapper(message: IncomingMessage, context: Context) -> Any:
@@ -89,8 +109,6 @@ def dependency_injected(function: Callable) -> Callable:
                     },
                 }
             )
-            dependant = get_dependant(path="", call=function)
-
             values, errors, *_ = await solve_dependencies(
                 request=request,
                 dependant=dependant,
@@ -103,6 +121,9 @@ def dependency_injected(function: Callable) -> Callable:
             return await function(**values)
 
     return wrapper
+
+
+dependency_injected = partial(dependency_injected_with_deps, dependencies=[])
 
 
 def get_state(request: Request) -> StarletteState:
@@ -249,6 +270,19 @@ def handle_exclusively(key: Callable[..., H]) -> Callable:
         ):
             pass
         ```
+        Or via the AMQP system:
+        ```python
+        @router.register(
+            "person", dependencies=[Depends(handle_exclusively(get_routing_key))]
+        )
+        async def handler(
+            msg: Annotated[Message, Depends(handle_exclusively(get_message))],
+        ):
+            pass
+        ```
+
+    Note:
+        Consider avoiding this function in favor of using ETags.
 
     Args:
         key: A custom key function returning lock exclusivity key. Note that this
