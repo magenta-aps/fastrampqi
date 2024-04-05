@@ -10,6 +10,8 @@ repo_url: https://github.com/magenta-aps/fastrampqi
 docs_dir: src/
 
 nav:
+  - index.md
+
   - FastRAMQPI:
     - fastramqpi/index.md
 
