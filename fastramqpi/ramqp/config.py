@@ -70,8 +70,8 @@ class AMQPConnectionSettings(BaseModel):
             return self.url
         return parse_obj_as(AmqpDsn, AmqpDsn.build(**self.url.dict()))
 
-    # The AMQP Exchange we are binding queue messages from. Can be overridden
-    # for integration specific exchanges.
+    # The AMQP Exchange we are subscribing to messages from.
+    # Can be overridden for integration specific exchanges.
     exchange: str = "os2mo"
 
     # Program specific queue name prefix, should be globally unique, but
