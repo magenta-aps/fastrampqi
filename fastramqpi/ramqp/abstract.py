@@ -207,14 +207,13 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._connection: AbstractRobustConnection | None = None
         self._channel: AbstractRobustChannel | None = None
         self._exchange: AbstractExchange | None = None
-        self._application_exchange: AbstractExchange | None = None
         self._queues: dict[str, AbstractQueue] = {}
 
         self._periodic_task: asyncio.Task | None = None
 
     @property
-    def application_exchange_name(self) -> str:
-        """Generate the application-specific exchange name.
+    def exchange_name(self) -> str:
+        """Generate the exchange name.
 
         Note:
             The return-value of this function is useful as the `exchange`
@@ -222,9 +221,9 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
             integration to be able to target itself with refreshes.
 
         Returns:
-            The application specific exchange name.
+            The exchange name.
         """
-        return f"{self.settings.exchange}_{self.settings.queue_prefix}"
+        return f"{self.settings.exchange}"
 
     @property
     def started(self) -> bool:
@@ -266,7 +265,6 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         assert self._connection is None
         assert self._channel is None
         assert self._exchange is None
-        assert self._application_exchange is None
 
         # We expect function_to_name to be unique for each callback
         assert all_unique(map(function_to_name, self.router.registry.keys()))
@@ -297,10 +295,12 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._exchange = await self._channel.declare_exchange(
             settings.exchange, ExchangeType.TOPIC, durable=True
         )
-        self._application_exchange = await self._channel.declare_exchange(
-            self.application_exchange_name, ExchangeType.TOPIC, durable=True
-        )
-        await self._application_exchange.bind(self._exchange, routing_key="*")
+        # If an upstream exchange is configured, fetch it and bind ours to it
+        if settings.upstream_exchange:
+            upstream_exchange = await self._channel.get_exchange(
+                settings.upstream_exchange, ensure=True
+            )
+            await self._exchange.bind(upstream_exchange, routing_key="*")
 
         # TODO: Create queues and binds in parallel?
         self._queues = {}
@@ -382,15 +382,8 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
             log.info("Binding routing keys")
             for routing_key in routing_keys:
                 log.info("Binding routing-key", routing_key=routing_key)
-                await queue.bind(self._application_exchange, routing_key=routing_key)
-                routes_bound.labels(function_name).inc()
-
-            # TODO: This for-loop should be removed when all queues are bound to the
-            #       application exchange, metrics should verify this.
-            log.info("Unbinding old exchange routing keys")
-            for routing_key in routing_keys:
-                log.info("Unbinding old exchange routing-key", routing_key=routing_key)
                 await queue.bind(self._exchange, routing_key=routing_key)
+                routes_bound.labels(function_name).inc()
 
         self._periodic_task = _setup_periodic_metrics(self._queues)
 
@@ -405,7 +398,6 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
             self._periodic_task = None
 
         self._exchange = None
-        self._application_exchange = None
 
         if self._channel is not None:
             self._channel = None

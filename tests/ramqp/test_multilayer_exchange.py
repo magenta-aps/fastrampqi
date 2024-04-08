@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the migration to quorum queues."""
 import asyncio
+from uuid import uuid4
 
 import pytest
 from pydantic import AmqpDsn
@@ -21,25 +22,32 @@ async def test_multilayer_exchange_publish() -> None:
 
     mo_exchange = random_string()
 
-    queue_prefix_1 = random_string()
+    mo_amqp_system = AMQPSystem(
+        settings=AMQPConnectionSettings(
+            url=url,
+            exchange=mo_exchange,
+        ),
+    )
+
+    amqp_system_1_exchange = random_string()
     amqp_system_1 = AMQPSystem(
         settings=AMQPConnectionSettings(
             url=url,
-            queue_prefix=queue_prefix_1,
-            exchange=mo_exchange,
+            queue_prefix=random_string(),
+            exchange=amqp_system_1_exchange,
+            upstream_exchange=mo_exchange,
         ),
     )
-    amqp_system_1_exchange = f"{mo_exchange}_{queue_prefix_1}"
 
-    queue_prefix_2 = random_string()
+    amqp_system_2_exchange = random_string()
     amqp_system_2 = AMQPSystem(
         settings=AMQPConnectionSettings(
             url=url,
-            queue_prefix=queue_prefix_2,
-            exchange=mo_exchange,
+            queue_prefix=random_string(),
+            exchange=amqp_system_2_exchange,
+            upstream_exchange=mo_exchange,
         ),
     )
-    amqp_system_2_exchange = f"{mo_exchange}_{queue_prefix_2}"
 
     callback_1_event = asyncio.Event()
 
@@ -51,24 +59,25 @@ async def test_multilayer_exchange_publish() -> None:
     async def callback_2() -> None:
         callback_2_event.set()
 
-    routing_key = "foo"
+    routing_key = "facet"
+    payload = uuid4()
 
     amqp_system_1.router.register(routing_key)(callback_1)
     amqp_system_2.router.register(routing_key)(callback_2)
 
-    async with amqp_system_1, amqp_system_2:
+    async with mo_amqp_system, amqp_system_1, amqp_system_2:
         # Publishing to the OS2mo exchange to trigger both callbacks
         callback_1_event.clear()
         callback_2_event.clear()
-        await amqp_system_1.publish_message(routing_key, "")
+        await mo_amqp_system.publish_message(routing_key, payload)
         await callback_1_event.wait()
         await callback_2_event.wait()
 
         # Publishing to the amqp_system_1 exchange to trigger one callback
         callback_1_event.clear()
         callback_2_event.clear()
-        await amqp_system_1.publish_message(
-            routing_key, "", exchange=amqp_system_1_exchange
+        await mo_amqp_system.publish_message(
+            routing_key, payload, exchange=amqp_system_1_exchange
         )
         await callback_1_event.wait()
         assert callback_2_event.is_set() is False
@@ -76,8 +85,8 @@ async def test_multilayer_exchange_publish() -> None:
         # Publishing to the amqp_system_2 exchange to trigger one callback
         callback_1_event.clear()
         callback_2_event.clear()
-        await amqp_system_1.publish_message(
-            routing_key, "", exchange=amqp_system_2_exchange
+        await mo_amqp_system.publish_message(
+            routing_key, payload, exchange=amqp_system_2_exchange
         )
         await asyncio.sleep(0)
         await callback_2_event.wait()

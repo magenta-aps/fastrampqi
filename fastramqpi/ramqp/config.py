@@ -74,6 +74,9 @@ class AMQPConnectionSettings(BaseModel):
     # Can be overridden for integration specific exchanges.
     exchange: str = "os2mo"
 
+    # Attach our exchange to this upstrem exchange, subscribing to all messages on it
+    upstream_exchange: str | None = None
+
     # Program specific queue name prefix, should be globally unique, but
     # consistent across program restarts. The program name is a good candidate.
     queue_prefix: str | None
