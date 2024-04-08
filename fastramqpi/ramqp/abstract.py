@@ -223,7 +223,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         Returns:
             The exchange name.
         """
-        return f"{self.settings.exchange}"
+        return self.settings.exchange
 
     @property
     def started(self) -> bool:

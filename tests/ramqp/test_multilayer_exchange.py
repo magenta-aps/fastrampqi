@@ -29,22 +29,20 @@ async def test_multilayer_exchange_publish() -> None:
         ),
     )
 
-    amqp_system_1_exchange = random_string()
     amqp_system_1 = AMQPSystem(
         settings=AMQPConnectionSettings(
             url=url,
             queue_prefix=random_string(),
-            exchange=amqp_system_1_exchange,
+            exchange=random_string(),
             upstream_exchange=mo_exchange,
         ),
     )
 
-    amqp_system_2_exchange = random_string()
     amqp_system_2 = AMQPSystem(
         settings=AMQPConnectionSettings(
             url=url,
             queue_prefix=random_string(),
-            exchange=amqp_system_2_exchange,
+            exchange=random_string(),
             upstream_exchange=mo_exchange,
         ),
     )
@@ -70,24 +68,24 @@ async def test_multilayer_exchange_publish() -> None:
         callback_1_event.clear()
         callback_2_event.clear()
         await mo_amqp_system.publish_message(routing_key, payload)
-        await callback_1_event.wait()
-        await callback_2_event.wait()
+        await asyncio.wait_for(callback_1_event.wait(), timeout=1)
+        await asyncio.wait_for(callback_2_event.wait(), timeout=1)
 
         # Publishing to the amqp_system_1 exchange to trigger one callback
         callback_1_event.clear()
         callback_2_event.clear()
         await mo_amqp_system.publish_message(
-            routing_key, payload, exchange=amqp_system_1_exchange
+            routing_key, payload, exchange=amqp_system_1.exchange_name
         )
-        await callback_1_event.wait()
+        await asyncio.wait_for(callback_1_event.wait(), timeout=1)
         assert callback_2_event.is_set() is False
 
         # Publishing to the amqp_system_2 exchange to trigger one callback
         callback_1_event.clear()
         callback_2_event.clear()
         await mo_amqp_system.publish_message(
-            routing_key, payload, exchange=amqp_system_2_exchange
+            routing_key, payload, exchange=amqp_system_2.exchange_name
         )
         await asyncio.sleep(0)
-        await callback_2_event.wait()
+        await asyncio.wait_for(callback_2_event.wait(), timeout=1)
         assert callback_1_event.is_set() is False
