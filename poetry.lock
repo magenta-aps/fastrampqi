@@ -673,20 +673,20 @@ extra = ["pygments (>=2.12)"]
 
 [[package]]
 name = "pytest"
-version = "7.4.4"
+version = "8.1.1"
 description = "pytest: simple powerful testing with Python"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 
 [package.dependencies]
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
 iniconfig = "*"
 packaging = "*"
-pluggy = ">=0.12,<2.0"
+pluggy = ">=1.4,<2.0"
 
 [package.extras]
-testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+testing = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "pytest-asyncio"
@@ -1044,7 +1044,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "cc078996484fc20101d67283a3bfe48862ce4a1f014aeb75ad9f1a8fbffba285"
+content-hash = "9d7a0f9d2237354feb817bfbb81b525090632b5feed3f273f41f0fed6a6ce9be"
 
 [metadata.files]
 aio-pika = [
@@ -1741,8 +1741,8 @@ pymdown-extensions = [
     {file = "pymdown_extensions-10.7.1.tar.gz", hash = "sha256:c70e146bdd83c744ffc766b4671999796aba18842b268510a329f7f64700d584"},
 ]
 pytest = [
-    {file = "pytest-7.4.4-py3-none-any.whl", hash = "sha256:b090cdf5ed60bf4c45261be03239c2c1c22df034fbffe691abe93cd80cea01d8"},
-    {file = "pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280"},
+    {file = "pytest-8.1.1-py3-none-any.whl", hash = "sha256:2a8386cfc11fa9d2c50ee7b2a57e7d898ef90470a7a34c4b949ff59662bb78b7"},
+    {file = "pytest-8.1.1.tar.gz", hash = "sha256:ac978141a75948948817d360297b7aae0fcb9d6ff6bc9ec6d514b85d5a65c044"},
 ]
 pytest-asyncio = [
     {file = "pytest-asyncio-0.19.0.tar.gz", hash = "sha256:ac4ebf3b6207259750bc32f4c1d8fcd7e79739edbc67ad0c58dd150b1d072fed"},
