@@ -212,6 +212,20 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._periodic_task: asyncio.Task | None = None
 
     @property
+    def exchange_name(self) -> str:
+        """Generate the exchange name.
+
+        Note:
+            The return-value of this function is useful as the `exchange`
+            parameter to OS2mo's `*_refresh` mutators, in order for an
+            integration to be able to target itself with refreshes.
+
+        Returns:
+            The exchange name.
+        """
+        return self.settings.exchange
+
+    @property
     def started(self) -> bool:
         """Whether a connection has been made.
 
@@ -281,6 +295,12 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._exchange = await self._channel.declare_exchange(
             settings.exchange, ExchangeType.TOPIC, durable=True
         )
+        # If an upstream exchange is configured, fetch it and bind ours to it
+        if settings.upstream_exchange:
+            upstream_exchange = await self._channel.get_exchange(
+                settings.upstream_exchange, ensure=True
+            )
+            await self._exchange.bind(upstream_exchange, routing_key="*")
 
         # TODO: Create queues and binds in parallel?
         self._queues = {}
