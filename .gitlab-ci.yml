@@ -48,7 +48,13 @@ include:
   - project: labs/salt-automation
     file:
       - gitlab-ci-templates/common/pre-commit.v1.yml
+    rules:
+      - <<: *if-merge-request
+  - project: labs/salt-automation
+    file:
       - gitlab-ci-templates/python/pytest.v1.yml
+    inputs:
+      pytest_addopts: "-m 'not integration_test'"
     rules:
       - <<: *if-merge-request
 
@@ -59,12 +65,6 @@ workflow:
   rules:
     - <<: *if-tag
     - <<: *if-default-branch-refs
-    - <<: *if-merge-request
-
-Test:
-  variables:
-    PYTEST_ADDOPTS: "-m 'not integration_test'"
-  rules:
     - <<: *if-merge-request
 
 Integration-test:
