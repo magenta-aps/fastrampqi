@@ -6,6 +6,7 @@ from asyncio import CancelledError
 from asyncio import create_task
 from collections.abc import AsyncIterator
 from contextlib import suppress
+from typing import Any
 from typing import NoReturn
 
 import httpx
@@ -15,8 +16,6 @@ from httpx import BasicAuth
 from pytest import Config
 from pytest import Item
 from respx import MockRouter
-
-from fastramqpi.config import Settings
 
 
 def pytest_configure(config: Config) -> None:
@@ -40,8 +39,9 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
 
 
 @pytest.fixture
-def _settings() -> Settings:
+def _settings() -> Any:
     """Access FastRAMQPI settings without coupling to the integration's settings."""
+    from fastramqpi.config import Settings
 
     class _Settings(Settings):
         class Config:
@@ -51,14 +51,14 @@ def _settings() -> Settings:
 
 
 @pytest.fixture
-async def mo_client(_settings: Settings) -> AsyncIterator[AsyncClient]:
+async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL preconfigured."""
     async with httpx.AsyncClient(base_url=_settings.mo_url) as client:
         yield client
 
 
 @pytest.fixture
-async def rabbitmq_management_client(_settings: Settings) -> AsyncIterator[AsyncClient]:
+async def rabbitmq_management_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client for the RabbitMQ management API."""
     amqp = _settings.amqp.get_url()
     async with httpx.AsyncClient(
@@ -134,7 +134,7 @@ async def amqp_queue_isolation(
 
 
 @pytest.fixture
-def passthrough_backing_services(_settings: Settings, respx_mock: MockRouter) -> None:
+def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None:
     """Allow calls to the backing services to bypass the RESPX mocking.
 
     Automatically used on tests marked as integration_test.
