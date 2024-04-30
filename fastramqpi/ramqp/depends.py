@@ -346,6 +346,7 @@ def handle_exclusively_decorator(key: Callable[..., Hashable]) -> Callable:
     return wrapper
 
 
+@cache
 def rate_limit(
     delay: int = 30,
 ) -> Callable[[Message, Callback], AsyncGenerator[None, None]]:
