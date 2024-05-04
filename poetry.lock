@@ -774,11 +774,11 @@ pyyaml = "*"
 
 [[package]]
 name = "ramodels"
-version = "22.10.0"
+version = "36.1.1"
 description = "Pydantic data models for OS2mo"
 category = "main"
 optional = false
-python-versions = ">=3.10,<4.0"
+python-versions = "<4.0,>=3.11"
 
 [package.dependencies]
 mkdocstrings = {version = ">=0.19.0,<0.20.0", extras = ["python"]}
@@ -1044,7 +1044,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "cc078996484fc20101d67283a3bfe48862ce4a1f014aeb75ad9f1a8fbffba285"
+content-hash = "253c2cc276cf47b70bed60509fe7016d85e740f58dcc4dafe94bab8b25820a4d"
 
 [metadata.files]
 aio-pika = [
@@ -1822,8 +1822,8 @@ pyyaml-env-tag = [
     {file = "pyyaml_env_tag-0.1.tar.gz", hash = "sha256:70092675bda14fdec33b31ba77e7543de9ddc88f2e5b99160396572d11525bdb"},
 ]
 ramodels = [
-    {file = "ramodels-22.10.0-py3-none-any.whl", hash = "sha256:b317c4aeaa1a09ee80ea337a70d4d865a28d364d2fd6483917747b411c2cc76f"},
-    {file = "ramodels-22.10.0.tar.gz", hash = "sha256:aca4e9282cc981747c0201be3287fdd0998315ea469bdcf56d5b734436d0e4cf"},
+    {file = "ramodels-36.1.1-py3-none-any.whl", hash = "sha256:23828a6d49d28b00df378d1d70a405902ac728c7c6dc1cad69e9f21d6e76a4c0"},
+    {file = "ramodels-36.1.1.tar.gz", hash = "sha256:4cc15e19bd3f0aaf006483158a2bb191030b6a48bc903b97b166e78fedc77bb3"},
 ]
 requests = [
     {file = "requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
