@@ -107,12 +107,3 @@ async def test_create_person(
         assert user_context["uuid"] == UUID(employee["uuid"])
 
     await verify()
-
-
-@pytest.mark.integration_test
-async def test_nothing() -> None:
-    """Test nothing.
-
-    The pytest CI template splits tests between two jobs and fails if there is only one
-    integration test in total."""
-    assert True

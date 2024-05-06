@@ -113,6 +113,7 @@ def dependency_injected_with_deps(
                 request=request,
                 dependant=dependant,
                 async_exit_stack=stack,
+                dependency_overrides_provider=context.get("app"),
             )
             if errors:
                 # TODO: Utilize Python 3.11 ExceptionGroup?
