@@ -147,13 +147,13 @@ The above would work with either multiple structured environment variables
 AMQP__URL__SCHEME=amqp
 AMQP__URL__USER=guest
 AMQP__URL__PASSWORD=guest
-AMQP__URL__HOST=msg_broker
+AMQP__URL__HOST=msg-broker
 AMQP__URL__PORT=5672
 AMQP__URL__VHOST=os2mo
 ```
 or a single URL definition
 ```
-AMQP__URL=amqp://guest:guest@msg_broker:5672/os2mo
+AMQP__URL=amqp://guest:guest@msg-broker:5672/os2mo
 ```
 
 ### MO AMQP
