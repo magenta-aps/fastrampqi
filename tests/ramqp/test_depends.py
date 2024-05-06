@@ -22,7 +22,6 @@ from fastramqpi.ramqp.depends import Context
 from fastramqpi.ramqp.depends import dependency_injected
 from fastramqpi.ramqp.depends import dependency_injected_with_deps
 from fastramqpi.ramqp.depends import from_context
-from fastramqpi.ramqp.depends import get_context
 from fastramqpi.ramqp.depends import get_message
 from fastramqpi.ramqp.depends import get_payload_as_type
 from fastramqpi.ramqp.depends import get_payload_bytes
@@ -231,7 +230,7 @@ async def test_handle_exclusively_unrelated_asynchronously() -> None:
 
     @dependency_injected
     async def handler(
-        event: Annotated[Event, Depends(get_context)],
+        event: Annotated[Event, Depends(from_context("event"))],
         _: Annotated[None, Depends(handle_exclusively(get_message))],
     ) -> None:
         event.set()
@@ -240,12 +239,16 @@ async def test_handle_exclusively_unrelated_asynchronously() -> None:
     # Call handler
     message_1 = payload2incoming({"hello": "world"})
     event_1_set = Event()
-    task_1 = asyncio.create_task(handler(message=message_1, context=event_1_set))
+    task_1 = asyncio.create_task(
+        handler(message=message_1, context={"event": event_1_set})
+    )
 
     # Call handler again, with a different message
     message_2 = payload2incoming({"goodbye": "world"})
     event_2_set = Event()
-    task_2 = asyncio.create_task(handler(message=message_2, context=event_2_set))
+    task_2 = asyncio.create_task(
+        handler(message=message_2, context={"event": event_2_set})
+    )
 
     # Check that both task_1 and task_2 are running
     await asyncio.wait_for(event_1_set.wait(), timeout=1)
@@ -263,10 +266,10 @@ async def test_handle_exclusively_related_blocking() -> None:
 
     @dependency_injected
     async def handler(
-        context: Annotated[list[Event], Depends(get_context)],
+        set_event: Annotated[Event, Depends(from_context("set_event"))],
+        wait_event: Annotated[Event, Depends(from_context("wait_event"))],
         _: Annotated[None, Depends(handle_exclusively(get_message))],
     ) -> None:
-        set_event, wait_event = context
         set_event.set()
         await wait_event.wait()
 
@@ -276,7 +279,10 @@ async def test_handle_exclusively_related_blocking() -> None:
     event_1_set = Event()
     event_1_wait = Event()
     task_1 = asyncio.create_task(
-        handler(message=message, context=[event_1_set, event_1_wait])
+        handler(
+            message=message,
+            context={"set_event": event_1_set, "wait_event": event_1_wait},
+        )
     )
 
     # Wait for task_1 to be running (but not finished)
@@ -286,7 +292,10 @@ async def test_handle_exclusively_related_blocking() -> None:
     event_2_set = Event()
     event_2_wait = Event()
     task_2 = asyncio.create_task(
-        handler(message=message, context=[event_2_set, event_2_wait])
+        handler(
+            message=message,
+            context={"set_event": event_2_set, "wait_event": event_2_wait},
+        )
     )  # blocked
 
     # Sleep to ensure that task_2 would run if allowed by handle_exclusively
