@@ -8,7 +8,7 @@ from tenacity import wait_fixed
 
 
 def retry(
-    stop: Any = stop_after_delay(10),
+    stop: Any = stop_after_delay(20),
     wait: Any = wait_fixed(2),
 ) -> Any:
     """Tenacity retry decorator, with defaults useful for testing.
