@@ -13,7 +13,9 @@ from typing import Type
 
 import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
+from sqlalchemy import MetaData
 
+from . import database
 from .app import FastAPIIntegrationSystem
 from .config import ClientSettings
 from .config import Settings
@@ -82,6 +84,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         settings: Settings,
         graphql_version: int,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
+        database_metadata: MetaData | None = None,
     ) -> None:
         super().__init__(application_name, settings)
 
@@ -108,6 +111,21 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
         self._context["amqpsystem"] = self.amqpsystem
+
+        # Setup database
+        if database_metadata is not None:
+            assert settings.database is not None, "database settings missing"
+            database_engine = database.create_engine(
+                user=settings.database.user,
+                password=settings.database.password,
+                host=settings.database.host,
+                port=settings.database.port,
+                name=settings.database.name,
+            )
+            database.run_upgrade(database_metadata)
+            self._context["sessionmaker"] = database.create_sessionmaker(
+                database_engine
+            )
 
         # Authenticated HTTPX Client
         mo_client = AsyncOAuth2Client(

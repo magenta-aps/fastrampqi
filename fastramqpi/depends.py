@@ -4,11 +4,14 @@
 from functools import cache
 from typing import Annotated
 from typing import Any
+from typing import AsyncIterator
 from typing import Callable
 
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import Depends
 from gql.client import AsyncClientSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .raclients.graph.client import GraphQLClient as _GraphQLClient
 from .raclients.modelclient.mo import ModelClient as _ModelClient
@@ -34,6 +37,15 @@ def from_user_context(field: str) -> Callable[..., Any]:
 
 
 MOAMQPSystem = Annotated[_MOAMQPSystem, Depends(from_context("amqpsystem"))]
+
+
+async def get_session(sessionmaker: "Sessionmaker") -> AsyncIterator[AsyncSession]:
+    async with sessionmaker() as session, session.begin():
+        yield session
+
+
+Sessionmaker = Annotated[async_sessionmaker, Depends(from_context("sessionmaker"))]
+Session = Annotated[AsyncSession, Depends(get_session)]
 
 LegacyGraphQLClient = Annotated[
     _GraphQLClient, Depends(from_context("legacy_graphql_client"))

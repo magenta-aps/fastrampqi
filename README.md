@@ -212,6 +212,65 @@ License: MPL-2.0
 ```
 
 
+## Database
+If your integration requires access to a database, set it up as so:
+`compose.yaml`:
+```yaml
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: "fastramqpi"
+      POSTGRES_PASSWORD: "fastramqpi"
+      POSTGRES_DB: "fastramqpi"
+```
+
+`my_integration/database.py`:
+```python
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+```
+
+Due to budgetary constraints FastRAMQPI does not yet facilitate database
+migrations through alembic. Instead, all defined tables are created on startup.
+For technical reasons, this requires us to pass the `DeclarativeBase` from
+above to the FastRAMQPI constructor in `app.py` as so:
+```python
+from my_integration.database import Base
+
+
+fastramqpi = FastRAMQPI(
+    application_name="os2mo-example-integration",
+    settings=set``tings.fastramqpi,
+    ...
+    database_metadata=Base.metadata,
+)
+```
+
+The database can be used in a handler as follows:
+```python
+from fastramqpi import depends
+from my_integration.database import User
+
+
+@amqp_router.register("person")
+async def add(session: depends.Session) -> None:
+    session.add(User(name="Alice"))
+```
+
+
 ## Integration Testing
 The goal of integration testing in our context is to minimise the amount of
 mocking and patching by testing the integration's behavior against a running

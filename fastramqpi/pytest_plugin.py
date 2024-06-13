@@ -7,15 +7,20 @@ from asyncio import create_task
 from collections.abc import AsyncIterator
 from contextlib import suppress
 from typing import Any
+from typing import Iterator
 from typing import NoReturn
 
 import httpx
 import pytest
+import sqlalchemy
 from httpx import AsyncClient
 from httpx import BasicAuth
 from pytest import Config
 from pytest import Item
+from pytest import MonkeyPatch
 from respx import MockRouter
+from sqlalchemy import Connection
+from sqlalchemy import text
 
 
 def pytest_configure(config: Config) -> None:
@@ -31,14 +36,16 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
         if item.get_closest_marker("integration_test"):
             # MUST prepend to replicate auto-use fixtures coming first
             item.fixturenames[:0] = [  # type: ignore[attr-defined]
+                "fastramqpi_database_setup",
+                "fastramqpi_database_isolation",
                 "amqp_event_emitter",
-                "database_snapshot_and_restore",
+                "os2mo_database_snapshot_and_restore",
                 "amqp_queue_isolation",
                 "passthrough_backing_services",
             ]
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def _settings() -> Any:
     """Access FastRAMQPI settings without coupling to the integration's settings."""
     # We must defer importing from the FastRAMQPI module till run-time.
@@ -73,6 +80,63 @@ async def rabbitmq_management_client(_settings: Any) -> AsyncIterator[AsyncClien
         yield client
 
 
+@pytest.fixture(scope="session")
+def superuser(_settings: Any) -> Iterator[Connection]:
+    """Managing databases requires a superuser connection."""
+    # Connect to "postgres" since we cannot drop a database while being connected to it.
+    # TODO: it would be easier to use our own create_engine() from the database module,
+    # but pytest cannot properly share event-loops across session-scoped fixtures and
+    # (function-scoped) tests.
+    # https://github.com/pytest-dev/pytest-asyncio/issues/706#issuecomment-1838860535
+    db = _settings.database
+    url = f"postgresql+psycopg://{db.user}:{db.password}@{db.host}:{db.port}/postgres"
+    engine = sqlalchemy.create_engine(url)
+    # AUTOCOMMIT disables transactions to allow for create/drop database operations
+    engine.update_execution_options(isolation_level="AUTOCOMMIT")
+    with engine.begin() as connection:
+        yield connection
+
+
+@pytest.fixture(scope="session")
+def fastramqpi_database_setup(superuser: Connection) -> None:
+    """Set up testing database template."""
+    # Create separate testing template database. We will apply the database migrations
+    # to this database once, and then use a copy of it for each test.
+    template_db = "test_template"
+    superuser.execute(text(f"drop database if exists {template_db}"))
+    superuser.execute(text(f"create database {template_db}"))
+    # Run migrations
+    # TODO: alembic isn't implemented yet so we don't have to do anything here. Tables
+    # are created on app startup for now.
+
+
+@pytest.fixture
+def fastramqpi_database_isolation(
+    superuser: Connection, monkeypatch: MonkeyPatch
+) -> None:
+    """Ensure test isolation by resetting the database between tests.
+
+    Automatically used on tests marked as integration_test.
+    """
+    # Copy template testing database (with migrations applied) to a temporary testing
+    # database for the test that's about to run.
+    template_db = "test_template"
+    test_db = "test"
+    superuser.execute(
+        text(
+            f"""
+            select pg_terminate_backend(pid)
+            from pg_stat_activity
+            where datname = '{test_db}' and pid <> pg_backend_pid()
+            """
+        )
+    )
+    superuser.execute(text(f"drop database if exists {test_db}"))
+    superuser.execute(text(f"create database {test_db} template {template_db}"))
+    # Patch environment so the app under test will connect to this temporary database
+    monkeypatch.setenv("FASTRAMQPI__DATABASE__NAME", test_db)
+
+
 @pytest.fixture
 async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
     """Continuously, and quickly, emit OS2mo AMQP events during tests.
@@ -101,7 +165,9 @@ async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
 
 
 @pytest.fixture
-async def database_snapshot_and_restore(mo_client: AsyncClient) -> AsyncIterator[None]:
+async def os2mo_database_snapshot_and_restore(
+    mo_client: AsyncClient,
+) -> AsyncIterator[None]:
     """Ensure test isolation by resetting the OS2mo database between tests.
 
     Automatically used on tests marked as integration_test.
