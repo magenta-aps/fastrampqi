@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """Settings handling."""
 from pydantic import AnyHttpUrl
+from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
@@ -28,6 +29,17 @@ class FastAPIIntegrationSystemSettings(BaseSettings):
     dap: bool = Field(False, description="Whether to enable debugging")
 
     enable_metrics: bool = Field(True, description="Whether to enable metrics.")
+
+
+# pylint: disable=too-few-public-methods
+class DatabaseSettings(BaseModel):
+    """Settings for the postgresql database connection."""
+
+    user: str
+    password: str
+    host: str
+    port: int = 5432
+    name: str
 
 
 # pylint: disable=too-few-public-methods
@@ -65,3 +77,4 @@ class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
         env_nested_delimiter = "__"
 
     amqp: AMQPConnectionSettings
+    database: DatabaseSettings | None

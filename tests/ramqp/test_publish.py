@@ -24,14 +24,14 @@ async def test_publish_exchange(amqp_test: Callable) -> None:
 
     amqp_system_1 = AMQPSystem(
         settings=AMQPConnectionSettings(
-            url=parse_obj_as(AmqpDsn, "amqp://guest:guest@rabbitmq:5672"),
+            url=parse_obj_as(AmqpDsn, "amqp://guest:guest@msg-broker:5672"),
             queue_prefix=exchange_1,
             exchange=exchange_1,
         ),
     )
     amqp_system_2 = AMQPSystem(
         settings=AMQPConnectionSettings(
-            url=parse_obj_as(AmqpDsn, "amqp://guest:guest@rabbitmq:5672"),
+            url=parse_obj_as(AmqpDsn, "amqp://guest:guest@msg-broker:5672"),
             queue_prefix=exchange_2,
             exchange=exchange_2,
         ),

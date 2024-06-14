@@ -51,7 +51,7 @@ def fixture_configure_structlog(log_output: LogCapture) -> None:
 def connection_settings() -> AMQPConnectionSettings:
     """Pytest fixture to construct AMQPConnectionSettings."""
     return AMQPConnectionSettings(
-        url=parse_obj_as(AmqpDsn, "amqp://guest:guest@rabbitmq:5672")
+        url=parse_obj_as(AmqpDsn, "amqp://guest:guest@msg-broker:5672")
     )
 
 
@@ -111,7 +111,7 @@ def amqp_test() -> Callable:
 
         amqp_system = AMQPSystem(
             settings=AMQPConnectionSettings(
-                url=parse_obj_as(AmqpDsn, "amqp://guest:guest@rabbitmq:5672"),
+                url=parse_obj_as(AmqpDsn, "amqp://guest:guest@msg-broker:5672"),
                 queue_prefix=queue_prefix,
                 exchange=test_id,
             ),
@@ -173,7 +173,7 @@ def moamqp_test(
 
         amqp_system = MOAMQPSystem(
             settings=AMQPConnectionSettings(
-                url=parse_obj_as(AmqpDsn, "amqp://guest:guest@rabbitmq:5672"),
+                url=parse_obj_as(AmqpDsn, "amqp://guest:guest@msg-broker:5672"),
                 queue_prefix=queue_prefix,
                 exchange=test_id,
             ),

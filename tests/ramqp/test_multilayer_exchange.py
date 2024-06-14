@@ -17,7 +17,7 @@ from fastramqpi.ramqp.config import AMQPConnectionSettings
 @pytest.mark.integration_test
 async def test_multilayer_exchange_publish() -> None:
     """Test that we can publish to different layers on the exchange."""
-    url_raw = "amqp://guest:guest@localhost:5672"
+    url_raw = "amqp://guest:guest@msg-broker:5672"
     url = parse_obj_as(AmqpDsn, url_raw)
 
     mo_exchange = random_string()

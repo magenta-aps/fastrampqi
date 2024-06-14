@@ -16,7 +16,7 @@ from fastramqpi.ramqp.config import AMQPConnectionSettings
 @pytest.mark.integration_test
 async def test_quorum_queue_migration() -> None:
     """Test that classic queues are 'converted' to quorum queues."""
-    url = "amqp://guest:guest@localhost:5672"
+    url = "amqp://guest:guest@msg-broker:5672"
     queue_prefix = random_string()
     connection = await connect(url)
     channel = await connection.channel()
@@ -55,7 +55,7 @@ async def test_quorum_queue_migration() -> None:
 @pytest.mark.integration_test
 async def test_quorum_queue_already_migrated() -> None:
     """Test that the migration works if it is already migrated."""
-    url = "amqp://guest:guest@localhost:5672"
+    url = "amqp://guest:guest@msg-broker:5672"
     queue_prefix = random_string()
     connection = await connect(url)
     channel = await connection.channel()
@@ -100,7 +100,7 @@ async def test_quorum_queue_already_migrated() -> None:
 @pytest.mark.integration_test
 async def test_quorum_queue_migration_fails_if_not_empty() -> None:
     """Test that the migration fails if the queue isn't empty."""
-    url = "amqp://guest:guest@localhost:5672"
+    url = "amqp://guest:guest@msg-broker:5672"
     queue_prefix = random_string()
     exchange = random_string()
     connection = await connect(url)
