@@ -217,6 +217,12 @@ If your integration requires access to a database, set it up as so:
 `compose.yaml`:
 ```yaml
 services:
+  my_integration:
+    environment:
+      FASTRAMQPI__DATABASE__USER: "fastramqpi"
+      FASTRAMQPI__DATABASE__PASSWORD: "fastramqpi"
+      FASTRAMQPI__DATABASE__HOST: "db"
+      FASTRAMQPI__DATABASE__NAME: "fastramqpi"
   db:
     image: postgres:16
     environment:
