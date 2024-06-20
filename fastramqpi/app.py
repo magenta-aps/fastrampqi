@@ -177,6 +177,7 @@ class FastAPIIntegrationSystem:
             },
             lifespan=partial(_lifespan, context=self._context),
         )
+        app.state.context = self._context
         app.include_router(fastapi_router)
         # Expose Metrics
         if self.settings.enable_metrics:
