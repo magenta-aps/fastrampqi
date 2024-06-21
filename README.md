@@ -276,6 +276,88 @@ async def add(session: depends.Session) -> None:
     session.add(User(name="Alice"))
 ```
 
+## Multilayer exchanges
+
+FastRAMQPI supports a multi-layer exchange setup, where all integration queues
+are bound to an intermediate exchange which itself is bound to an upstream
+exchange for instance OS2mo, the below Graph shows this setup with two
+integrations that each has their own intermediate exchange.
+```
+            ┌─────┐
+         ┌──┤OS2mo├──┐
+ R1+R2+R3│  └─────┘  │R4+R5
+         │           │
+      ┌──▼──┐     ┌──▼──┐
+   ┌──┤LDAP ├──┐  │Omada├──┐
+   │  └──┬──┘  │  └──┬──┘  │
+ R1│   R2│   R3│   R4│   R5│
+   │     │     │     │     │
+┌──▼──┬──▼──┬──▼──┐ ┌▼─────▼┐
+│ Q1  │ Q2  │ Q3  │ │  Q4   │
+└─────┴─────┴─────┘ └───────┘
+```
+Here `R1,...R5` are routing keys, and `Q1,...Q4` are queues. Notice that it is
+still possible for a single queue to subscribe to multiple routing keys, and to
+have multiple queues subscribed to a single intermediate exchange.
+
+Compared the above model using intermediate exchanges with the model below,
+that does not utilize intermediate exchanges.
+```
+            ┌─────┐
+   ┌─────┬──┤OS2mo├──┬─────┐
+   │     │  └──┬──┘  │     │
+ R1│   R2│   R3│   R4│   R5│
+   │     │     │     │     │
+┌──▼──┬──▼──┬──▼──┐ ┌▼─────▼┐
+│ Q1  │ Q2  │ Q3  │ │  Q4   │
+└─────┴─────┴─────┘ └───────┘
+```
+Here it is no longer obvious which queues and routing keys belong to which
+integration, and as such it is no longer possible to use OS2mo's `refresh_*`
+mutators to request a specific integration to run its event handlers.
+
+Note in particular that the routing-keys are not guaranteed to be different,
+as such targeting a specific queue would not serve to fully synchronize the
+state of a specific integration to its external system.
+
+Requesting a specific integration to run its event handlers, using multi-layer
+exchanges with intermediate exchanges can be done using the `exchange`
+parameter on the `refresh_*` mutators, by passing the name of the intermediate
+exchange.
+
+To start using intermediate exchanges in your FastRAMQPI integration, simply
+set the `upstream_exchange` value on the `AMQPConnectionSettings` to the
+upstream exchange you want to bind your intermediate exchange to, and set the
+`exchange` value to the name you want to allocate to your intermediate exchange.
+
+It is generally recommended to use the `upstream_exchange` name as a prefix for
+the intermediate exchange set in the `exchange` value, such as:
+```
+FASTRAMQPI__AMQP__UPSTREAM_EXCHANGE=os2mo
+FASTRAMQPI__AMQP__EXCHANGE=os2mo_ldap
+FASTRAMQPI__AMQP__QUEUE_PREFIX=os2mo_ldap
+```
+Although it is preferable to set these settings by inheritence from the 
+`AMQPConnectionSettings`, rather than by overriding the environmental variables,
+as the configuration is probably not variable for different environments.
+```python
+from fastramqpi.config import Settings as _FastRAMQPISettings
+from fastramqpi.ramqp.config import AMQPConnectionSettings as _AMQPConnectionSettings
+
+class AMQPConnectionSettings(_AMQPConnectionSettings):
+    upstream_exchange = "os2mo"
+    exchange = "os2mo_ldap"
+    queue_prefix = "os2mo_ldap"
+
+
+class FastRAMQPISettings(_FastRAMQPISettings):
+    amqp: AMQPConnectionSettings
+
+
+class Settings(BaseSettings):
+    fastramqpi: FastRAMQPISettings
+```
+
 
 ## Integration Testing
 The goal of integration testing in our context is to minimise the amount of
