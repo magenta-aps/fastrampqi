@@ -5,6 +5,7 @@
 from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated
+from typing import Any
 from typing import Literal
 from uuid import UUID
 
@@ -267,7 +268,7 @@ class MORouter(AbstractRouter):
     """
 
     def register(
-        self, routing_key: MORoutingKey
+        self, routing_key: MORoutingKey, dependencies: list[Any] | None = None
     ) -> Callable[[CallbackType], CallbackType]:  # pragma: no cover
         """Get a decorator for registering callbacks.
 
@@ -279,7 +280,7 @@ class MORouter(AbstractRouter):
         Returns:
             A decorator for registering a function to receive callbacks.
         """
-        return self._register(routing_key)
+        return self._register(routing_key, dependencies)
 
 
 class MOPublishMixin(AbstractPublishMixin):
