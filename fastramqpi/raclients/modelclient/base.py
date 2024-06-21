@@ -20,8 +20,6 @@ import more_itertools
 from fastapi.encoders import jsonable_encoder
 from httpx import AsyncClient
 from httpx import HTTPStatusError
-from ramodels.lora import LoraBase
-from ramodels.mo import MOBase
 from structlog import get_logger
 from tenacity import retry
 from tenacity import retry_if_exception_type
@@ -36,7 +34,7 @@ class ModelClientException(Exception):
     pass
 
 
-ModelBase = TypeVar("ModelBase", MOBase, LoraBase)
+ModelBase = TypeVar("ModelBase")
 
 
 class ModelClientBase(Generic[ModelBase]):

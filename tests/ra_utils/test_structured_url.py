@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from pydantic import BaseSettings
-from pydantic import Field
-from pydantic import ValidationError
+from pydantic.v1 import Field
+from pydantic.v1 import ValidationError
+from pydantic_settings import BaseSettings
 
 from fastramqpi.ra_utils.structured_url import StructuredUrl
 

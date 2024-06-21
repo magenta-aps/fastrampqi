@@ -5,11 +5,11 @@
 """This module contains the all pydantic BaseModel settings(s)."""
 import typing
 
-from pydantic import AmqpDsn
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import parse_obj_as
-from pydantic import validator
+from pydantic.v1 import AmqpDsn
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Field
+from pydantic.v1 import parse_obj_as
+from pydantic.v1 import validator
 
 
 class StructuredAmqpDsn(BaseModel):

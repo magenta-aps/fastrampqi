@@ -6,8 +6,8 @@ import asyncio
 from uuid import uuid4
 
 import pytest
-from pydantic import AmqpDsn
-from pydantic import parse_obj_as
+from pydantic.v1 import AmqpDsn
+from pydantic.v1 import parse_obj_as
 
 from .common import random_string
 from fastramqpi.ramqp import AMQPSystem

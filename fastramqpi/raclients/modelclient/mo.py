@@ -7,58 +7,47 @@ from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import List
-from typing import Type
+from typing import TypeVar
 from typing import Union
 
 from fastapi.encoders import jsonable_encoder
-from pydantic import AnyHttpUrl
-from ramodels.mo import ClassWrite
-from ramodels.mo import Employee
-from ramodels.mo import OrganisationUnit
-from ramodels.mo._shared import MOBase
-from ramodels.mo.details import Address
-from ramodels.mo.details import Association
-from ramodels.mo.details import Engagement
-from ramodels.mo.details import EngagementAssociation
-from ramodels.mo.details import ITUser
-from ramodels.mo.details import KLE
-from ramodels.mo.details import Leave
-from ramodels.mo.details import Manager
-from ramodels.mo.details import Role
+from pydantic.v1 import AnyHttpUrl
 
 from ..auth import AuthenticatedAsyncHTTPXClient
 from ..auth import keycloak_token_endpoint
 from ..modelclient.base import ModelClientBase
 
+MOBase = TypeVar("MOBase")
+
 
 class ModelClient(ModelClientBase[MOBase]):
     upload_http_method = "POST"
-    create_path_map: Dict[Type[MOBase], str] = {
-        Address: "/service/details/create",
-        Association: "/service/details/create",
-        Employee: "/service/e/create",
-        Engagement: "/service/details/create",
-        EngagementAssociation: "/service/details/create",
-        ClassWrite: "/service/f/{facet_uuid}/",
-        ITUser: "/service/details/create",
-        KLE: "/service/details/create",
-        Leave: "/service/details/create",
-        Manager: "/service/details/create",
-        OrganisationUnit: "/service/ou/create",
-        Role: "/service/details/create",
+    create_path_map: Dict[str, str] = {
+        "Address": "/service/details/create",
+        "Association": "/service/details/create",
+        "Employee": "/service/e/create",
+        "Engagement": "/service/details/create",
+        "EngagementAssociation": "/service/details/create",
+        "ClassWrite": "/service/f/{facet_uuid}/",
+        "ITUser": "/service/details/create",
+        "KLE": "/service/details/create",
+        "Leave": "/service/details/create",
+        "Manager": "/service/details/create",
+        "OrganisationUnit": "/service/ou/create",
+        "Role": "/service/details/create",
     }
-    edit_path_map: Dict[Type[MOBase], str] = {
-        Address: "/service/details/edit",
-        Association: "/service/details/edit",
-        Employee: "/service/details/edit",
-        Engagement: "/service/details/edit",
-        ClassWrite: "/service/f/{facet_uuid}/",
-        ITUser: "/service/details/edit",
-        KLE: "/service/details/edit",
-        Leave: "/service/details/edit",
-        Manager: "/service/details/edit",
-        OrganisationUnit: "/service/details/edit",
-        Role: "/service/details/edit",
+    edit_path_map: Dict[str, str] = {
+        "Address": "/service/details/edit",
+        "Association": "/service/details/edit",
+        "Employee": "/service/details/edit",
+        "Engagement": "/service/details/edit",
+        "ClassWrite": "/service/f/{facet_uuid}/",
+        "ITUser": "/service/details/edit",
+        "KLE": "/service/details/edit",
+        "Leave": "/service/details/edit",
+        "Manager": "/service/details/edit",
+        "OrganisationUnit": "/service/details/edit",
+        "Role": "/service/details/edit",
     }
     async_httpx_client_class = AuthenticatedAsyncHTTPXClient
 
@@ -113,7 +102,7 @@ class ModelClient(ModelClientBase[MOBase]):
         # support schemes such as /service/f/{facet_uuid}/, where facet_uuid is
         # retrieved from obj.facet_uuid.
         path_map = self.edit_path_map if edit else self.create_path_map
-        path = path_map[type(obj)].format_map(obj.dict())
+        path = path_map[type(obj).__name__].format_map(obj.dict())
         return f"{path}?force={int(self.force)}"
 
     def get_object_json(

@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 from fastapi import Depends
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from .amqp_helpers import payload2incoming
 from fastramqpi.ramqp import AMQPSystem

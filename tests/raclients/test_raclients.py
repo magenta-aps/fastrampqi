@@ -11,9 +11,6 @@ import httpx
 import pytest
 from httpx import Request
 from httpx import Response
-from ramodels.lora import Facet
-from ramodels.mo import ClassWrite
-from ramodels.mo import Employee
 from respx import MockRouter
 
 from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient
