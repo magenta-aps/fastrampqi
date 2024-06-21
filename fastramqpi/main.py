@@ -18,11 +18,13 @@ from sqlalchemy import MetaData
 from . import database
 from .app import FastAPIIntegrationSystem
 from .config import ClientSettings
+from .config import DatabaseSettings
 from .config import Settings
 from .context import Context
 from .raclients.graph.client import GraphQLClient as LegacyGraphQLClient
 from .raclients.modelclient.mo import ModelClient as LegacyModelClient
 from .ramqp.mo import MOAMQPSystem
+from fastramqpi.ramqp.config import AMQPConnectionSettings
 
 
 def construct_legacy_clients(
@@ -72,63 +74,90 @@ class GraphQLClientProtocol(AsyncContextManager, Protocol):
         ...  # pragma: no cover
 
 
-class FastRAMQPI(FastAPIIntegrationSystem):
-    """FastRAMQPI (FastAPI + RAMQP) combined-system.
+from typing import Callable
 
-    Motivated by a lot a shared code between our AMQP integrations.
+
+class Service:
+    def lifespan_managers(self) -> list:
+        return []
+
+    def healthchecks(self) -> list[tuple[str, Callable]]:
+        return []
+
+    def context_exports(self) -> dict[str, Any]:
+        return {}
+
+
+async def healthcheck_amqp(context: Context) -> bool:
+    """AMQP Healthcheck wrapper.
+
+    Args:
+        context: unused context dict.
+
+    Returns:
+        Whether the AMQPSystem is OK.
     """
+    amqpsystem = context["amqpsystem"]
+    return cast(bool, amqpsystem.healthcheck())
 
+
+class AMQPService(Service):
     def __init__(
         self,
         application_name: str,
-        settings: Settings,
-        graphql_version: int,
-        graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
-        database_metadata: MetaData | None = None,
+        settings: AMQPConnectionSettings,
+        context: Context,
     ) -> None:
-        super().__init__(application_name, settings)
+        settings.queue_prefix = settings.queue_prefix or application_name
+        self.amqpsystem = MOAMQPSystem(settings=settings, context=context)
 
-        # Setup AMQPSystem
-        amqp_settings = cast(Settings, self.settings).amqp
-        amqp_settings.queue_prefix = amqp_settings.queue_prefix or application_name
-        self.amqpsystem = MOAMQPSystem(
-            settings=amqp_settings, context=self.get_context()
+    def lifespan_managers(self) -> list:
+        return [self.amqpsystem]
+
+    def healthchecks(self) -> list[tuple[str, Callable]]:
+        return ("AMQP", healthcheck_amqp)
+
+    def context_exports(self) -> dict[str, Any]:
+        return {"amqpsystem": self.amqpsystem}
+
+
+class DatabaseService(Service):
+    def __init__(
+        self,
+        settings: DatabaseSettings,
+        database_metadata: MetaData,
+    ) -> None:
+        self.database_engine = database.create_engine(
+            user=settings.database.user,
+            password=settings.database.password,
+            host=settings.database.host,
+            port=settings.database.port,
+            name=settings.database.name,
         )
-        # Let AMQPSystems lifespan follow ASGI lifespan
-        self.add_lifespan_manager(self.amqpsystem)
+        database.run_upgrade(database_metadata)
 
-        async def healthcheck_amqp(context: Context) -> bool:
-            """AMQP Healthcheck wrapper.
+    def context_exports(self) -> dict[str, Any]:
+        return {"sessionmaker": database.create_sessionmaker(self.database_engine)}
 
-            Args:
-                context: unused context dict.
 
-            Returns:
-                Whether the AMQPSystem is OK.
-            """
-            amqpsystem = context["amqpsystem"]
-            return cast(bool, amqpsystem.healthcheck())
+@asynccontextmanager
+async def mo_client_manager(
+    mo_client: AsyncOAuth2Client, context: Context
+) -> AsyncGenerator[None, None]:
+    async with mo_client as client:
+        context["mo_client"] = client
+        yield
 
-        self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
-        self._context["amqpsystem"] = self.amqpsystem
 
-        # Setup database
-        if database_metadata is not None:
-            assert settings.database is not None, "database settings missing"
-            database_engine = database.create_engine(
-                user=settings.database.user,
-                password=settings.database.password,
-                host=settings.database.host,
-                port=settings.database.port,
-                name=settings.database.name,
-            )
-            database.run_upgrade(database_metadata)
-            self._context["sessionmaker"] = database.create_sessionmaker(
-                database_engine
-            )
-
+class AuthenticatedMOClientService(Service):
+    def __init__(
+        self,
+        settings: Settings,
+        context: Context,
+    ) -> None:
+        self.context = context
         # Authenticated HTTPX Client
-        mo_client = AsyncOAuth2Client(
+        self.mo_client = AsyncOAuth2Client(
             base_url=settings.mo_url,
             client_id=settings.client_id,
             client_secret=settings.client_secret.get_secret_value(),
@@ -142,35 +171,95 @@ class FastRAMQPI(FastAPIIntegrationSystem):
             timeout=settings.graphql_timeout,
         )
 
-        @asynccontextmanager
-        async def mo_client_manager(context: Context) -> AsyncGenerator[None, None]:
-            async with mo_client as client:
-                context["mo_client"] = client
-                yield
+    def lifespan_managers(self) -> list:
+        return [
+            cast(
+                AsyncContextManager,
+                partial(mo_client_manager, self.mo_client, self.context)(),
+            )
+        ]
 
-        self.add_lifespan_manager(
-            cast(AsyncContextManager, partial(mo_client_manager, self._context)())
-        )
+
+@asynccontextmanager
+async def graphql_client_manager(
+    settings: Settings,
+    mo_client: AsyncOAuth2Client,
+    graphql_client_cls: Type[GraphQLClientProtocol],
+    graphql_version: int,
+    context: Context,
+) -> AsyncGenerator[None, None]:
+    graphql_client = graphql_client_cls(
+        url=f"{settings.mo_url}/graphql/v{graphql_version}",
+        http_client=mo_client,
+    )
+    async with graphql_client as client:
+        context["graphql_client"] = client
+        yield
+
+
+class GraphQLClientService(Service):
+    def __init__(
+        self,
+        settings: Settings,
+        graphql_client_cls: Type[GraphQLClientProtocol],
+        graphql_version: int,
+        context: Context,
+    ) -> None:
+        self.settings = settings
+        self.graphql_client_cls = graphql_client_cls
+        self.graphql_version = graphql_version
+        self.context = context
+
+    def lifespan_managers(self) -> list:
+        mo_client = self.context["mo_client"]
+        return [
+            cast(
+                AsyncContextManager,
+                partial(
+                    graphql_client_manager,
+                    settings,
+                    mo_client,
+                    graphql_client_cls,
+                    graphql_version,
+                    self._context,
+                )(),
+            )
+        ]
+
+
+class FastRAMQPI(FastAPIIntegrationSystem):
+    """FastRAMQPI (FastAPI + RAMQP) combined-system.
+
+    Motivated by a lot a shared code between our AMQP integrations.
+    """
+
+    def __init__(
+        self,
+        application_name: str,
+        settings: Settings,
+        graphql_version: int,
+        graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
+        database_metadata: MetaData | None = None,
+        services: list[Service] | None = None,
+    ) -> None:
+        super().__init__(application_name, settings)
+
+        if services is None:
+            services = [
+                AMQPService(application_name, self.settings.amqp, self._context),
+                AuthenticatedMOClientService(self.settings, self._context),
+            ]
+
+        # Setup database
+        if database_metadata is not None:
+            assert settings.database is not None, "database settings missing"
+            services.append(DatabaseService(settings.database, database_metadata))
 
         # GraphQL Client
         if graphql_client_cls is not None:
-
-            @asynccontextmanager
-            async def graphql_client_manager(
-                context: Context,
-            ) -> AsyncGenerator[None, None]:
-                graphql_client = graphql_client_cls(
-                    url=f"{settings.mo_url}/graphql/v{graphql_version}",
-                    http_client=mo_client,
-                )
-                async with graphql_client as client:
-                    context["graphql_client"] = client
-                    yield
-
-            self.add_lifespan_manager(
-                cast(
-                    AsyncContextManager,
-                    partial(graphql_client_manager, self._context)(),
+            services.append(
+                GraphQLClientService(
+                    settings, graphql_client_cls, graphql_version, self._context
                 )
             )
 
