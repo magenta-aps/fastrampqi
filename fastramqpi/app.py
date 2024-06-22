@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
 import logging
-from collections.abc import Awaitable
-from collections.abc import Callable
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from contextlib import suppress
@@ -92,10 +90,11 @@ async def liveness(request: Request) -> JSONResponse:
     """Endpoint to be used as a liveness probe for Kubernetes."""
     status_code = HTTP_200_OK
 
-    context: dict[str, Any] = request.state.context
-    healthchecks = context["healthchecks"]
+    context: Context = request.state.context
+    assert "healthchecks" in context
+    healthchecks: dict[str, HealthcheckFunction] = context["healthchecks"]
 
-    async def check(healthcheck: Callable[[dict], Awaitable[bool]]) -> bool:
+    async def check(healthcheck: HealthcheckFunction) -> bool:
         with suppress(Exception):
             return await healthcheck(context)
         return False
@@ -221,6 +220,7 @@ class FastAPIIntegrationSystem:
         Returns:
             None
         """
+        assert "healthchecks" in self._context
         if name in self._context["healthchecks"]:
             raise ValueError("Name already used")
         self._context["healthchecks"][name] = healthcheck
