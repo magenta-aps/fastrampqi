@@ -124,6 +124,71 @@ async def healthcheck_probe(request: Request) -> JSONResponse:
     return JSONResponse(content=healthstatus, status_code=status_code)
 
 
+def enable_debugging() -> None:  # pragma: no cover
+    import debugpy  # type: ignore
+
+    logger.debug("Enabling debugging", port=5678)
+    debugpy.listen(("0.0.0.0", 5678))
+
+
+class FastIntegration(FastAPI):
+    def __init__(
+        self,
+        application_name: str,
+        settings: FastAPIIntegrationSystemSettings,
+        **kwargs: Any,
+    ) -> None:
+        settings = settings
+
+        configure_logging(settings.log_level)
+
+        if settings.dap:  # pragma: no cover
+            enable_debugging()
+
+        super().__init__(
+            title=application_name,
+            version=settings.commit_tag,
+            contact={
+                "name": "Magenta Aps",
+                "url": "https://www.magenta.dk/",
+                "email": "info@magenta.dk",
+            },
+            license_info={
+                "name": "MPL-2.0",
+                "url": "https://www.mozilla.org/en-US/MPL/2.0/",
+            },
+            **kwargs,
+        )
+        self.state.healthchecks = {}
+        super().include_router(fastapi_router)
+        # Expose Metrics
+        self.state.instrumentator = None
+        if settings.enable_metrics:
+            # Update metrics info
+            update_build_information(
+                version=settings.commit_tag, build_hash=settings.commit_sha
+            )
+            self.state.instrumentator = Instrumentator()
+            self.state.instrumentator.instrument(self).expose(self)
+
+    def add_healthcheck(self, name: str, healthcheck: HealthcheckFunction) -> None:
+        """Add the provided healthcheck to the Kubernetes readiness probe.
+
+        Args:
+            name: Name of the healthcheck to add.
+            healthcheck: The healthcheck callback function.
+
+        Raises:
+            ValueError: If the name has already been used.
+
+        Returns:
+            None
+        """
+        if name in self.state.healthchecks:
+            raise ValueError("Name already used")
+        self.state.healthchecks[name] = healthcheck
+
+
 @asynccontextmanager
 async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
     """ASGI lifespan context handler.
@@ -143,13 +208,6 @@ async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
         }
 
 
-def enable_debugging() -> None:  # pragma: no cover
-    import debugpy  # type: ignore
-
-    logger.debug("Enabling debugging", port=5678)
-    debugpy.listen(("0.0.0.0", 5678))
-
-
 class FastAPIIntegrationSystem:
     """FastAPI-based integration framework.
 
@@ -159,13 +217,7 @@ class FastAPIIntegrationSystem:
     def __init__(
         self, application_name: str, settings: FastAPIIntegrationSystemSettings
     ) -> None:
-        super().__init__()
         self.settings = settings
-
-        configure_logging(self.settings.log_level)
-
-        if self.settings.dap:  # pragma: no cover
-            enable_debugging()
 
         # Setup shared context
         self._context: Context = {
@@ -176,33 +228,13 @@ class FastAPIIntegrationSystem:
         }
 
         # Setup FastAPI
-        app = FastAPI(
-            title=application_name,
-            version=self.settings.commit_tag,
-            contact={
-                "name": "Magenta Aps",
-                "url": "https://www.magenta.dk/",
-                "email": "info@magenta.dk",
-            },
-            license_info={
-                "name": "MPL-2.0",
-                "url": "https://www.mozilla.org/en-US/MPL/2.0/",
-            },
+        app = FastIntegration(
+            application_name,
+            settings,
             lifespan=partial(_lifespan, context=self._context),
         )
         app.state.context = self._context
-        app.state.healthchecks = {}
-        app.include_router(fastapi_router)
-        # Expose Metrics
-        if self.settings.enable_metrics:
-            # Update metrics info
-            update_build_information(
-                version=self.settings.commit_tag, build_hash=self.settings.commit_sha
-            )
-
-            instrumentator = Instrumentator()
-            self._context["instrumentator"] = instrumentator
-            instrumentator.instrument(app).expose(app)
+        self._context["instrumentator"] = app.state.instrumentator
         self.app = app
         self._context["app"] = self.app
 
@@ -235,9 +267,7 @@ class FastAPIIntegrationSystem:
         Returns:
             None
         """
-        if name in self.app.state.healthchecks:
-            raise ValueError("Name already used")
-        self.app.state.healthchecks[name] = healthcheck
+        self.app.add_healthcheck(name, healthcheck)
 
     def add_context(self, **kwargs: Any) -> None:
         """Add the provided key-value pair to the user-context.
