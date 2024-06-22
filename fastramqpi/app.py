@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
 import logging
+from collections.abc import Mapping
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from contextlib import suppress
@@ -15,11 +16,13 @@ import structlog
 from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import Request
+from fastapi.applications import AppType
 from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
+from starlette.types import Lifespan
 
 from .config import FastAPIIntegrationSystemSettings
 from .context import Context
@@ -131,11 +134,25 @@ def enable_debugging() -> None:  # pragma: no cover
     debugpy.listen(("0.0.0.0", 5678))
 
 
+@asynccontextmanager
+async def _lifespan_wrapper(
+    app: AppType, lifespan: Lifespan[AppType]
+) -> AsyncIterator[Mapping[str, Any] | None]:
+    async with lifespan(app) as state:
+        if state is not None:
+            for key, value in state.items():
+                # Assert we are not overwriting existing state keys
+                assert hasattr(app.state, key) is False
+                setattr(app.state, key, value)
+        yield state
+
+
 class FastIntegration(FastAPI):
     def __init__(
         self,
         application_name: str,
         settings: FastAPIIntegrationSystemSettings,
+        lifespan: Lifespan[AppType] | None = None,
         **kwargs: Any,
     ) -> None:
         settings = settings
@@ -144,6 +161,10 @@ class FastIntegration(FastAPI):
 
         if settings.dap:  # pragma: no cover
             enable_debugging()
+
+        wrapped_lifespan = None
+        if lifespan is not None:
+            wrapped_lifespan = partial(_lifespan_wrapper, lifespan=lifespan)
 
         super().__init__(
             title=application_name,
@@ -157,6 +178,7 @@ class FastIntegration(FastAPI):
                 "name": "MPL-2.0",
                 "url": "https://www.mozilla.org/en-US/MPL/2.0/",
             },
+            lifespan=wrapped_lifespan,  # type: ignore
             **kwargs,
         )
         self.state.healthchecks = {}
@@ -190,7 +212,7 @@ class FastIntegration(FastAPI):
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI, context: Context) -> AsyncIterator[dict]:
+async def _lifespan(app: AppType, context: Context) -> AsyncIterator[dict]:
     """ASGI lifespan context handler.
 
     Runs all the configured lifespan managers according to their priority.
@@ -233,7 +255,6 @@ class FastAPIIntegrationSystem:
             settings,
             lifespan=partial(_lifespan, context=self._context),
         )
-        app.state.context = self._context
         self._context["instrumentator"] = app.state.instrumentator
         self.app = app
         self._context["app"] = self.app
