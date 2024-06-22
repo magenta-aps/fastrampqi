@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
+# SPDX-License-Identifier: MPL-2.0
+---
+services:
+  amqp2http:
+    build: .
+    command: ["uvicorn", "--factory", "app.main:create_app", "--host", "0.0.0.0", "--reload"]
+    environment:
+      FASTRAMQPI__AMQP__URL: "amqp://guest:guest@msg-broker"
+      FASTRAMQPI__AUTH_SERVER: "http://keycloak:8080/auth"
+      FASTRAMQPI__MO_URL: "http://mo:5000"
+
+      FASTRAMQPI__CLIENT_ID: "dipex"
+      FASTRAMQPI__CLIENT_SECRET: "603f1c82-d012-4d04-9382-dbe659c533fb"
+
+      FASTRAMQPI__AMQP__UPSTREAM_EXCHANGE: os2mo
+      FASTRAMQPI__AMQP__EXCHANGE: os2mo_mo2nginx
+      FASTRAMQPI__AMQP__QUEUE_PREFIX: os2mo_mo2nginx
+
+      NAME: "mo2nginx"
+      INTEGRATION_URL: "http://nginx:80"
+      EVENT_MAPPING: '{"person": "/trigger/person"}'
+    volumes:
+      - $PWD/:/opt/app/:ro
+    networks:
+      - os2mo_default
+
+  nginx:
+    image: nginx
+    networks:
+      - os2mo_default
+
+networks:
+  os2mo_default:
+    external: true
