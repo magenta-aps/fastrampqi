@@ -1,27 +1,25 @@
 # SPDX-FileCopyrightText: 2019-2020 Magenta ApS
 # SPDX-License-Identifier: MPL-2.0
 """AMQP2HTTP bridge."""
+import asyncio
+from functools import partial
 from typing import Any
+from typing import Awaitable
+from typing import Callable
 
+import httpx
+import structlog
+from fastapi import Depends
 from fastapi import FastAPI
+from fastapi import status
 from pydantic import BaseSettings
 from pydantic import Field
 
 from fastramqpi.config import Settings as FastRAMQPISettings
 from fastramqpi.main import FastRAMQPI
-from fastramqpi.ramqp.depends import rate_limit
 from fastramqpi.ramqp import Router
-from fastapi import Depends
-from typing import Awaitable
-
-import asyncio
-from functools import partial
-from typing import Callable
-
-import httpx
-import structlog
-from fastapi import status
 from fastramqpi.ramqp.depends import Message
+from fastramqpi.ramqp.depends import rate_limit
 from fastramqpi.ramqp.utils import RejectMessage
 from fastramqpi.ramqp.utils import RequeueMessage
 
@@ -120,7 +118,9 @@ async def process_amqp_message(
         # We intentionally do not handle 100 and 300 codes
         # If we got a 300 code it is probably a misconfiguration
         # NOTE: All of these should probably be deadlettered in the future
-        logger.info("Integration send an unknown status-code", status_code=response.status_code)
+        logger.info(
+            "Integration send an unknown status-code", status_code=response.status_code
+        )
         raise RequeueMessage(f"Unexpected status-code: {response.status_code}")
 
 
@@ -129,7 +129,7 @@ def amqp2http(
     name: str,
 ) -> Callable[[Message], Awaitable[None]]:
     callable = partial(process_amqp_message, url)
-    callable.__name__ = name
+    callable.__name__ = name  # type: ignore
     return callable
 
 
@@ -138,9 +138,9 @@ def create_fastramqpi(**kwargs: Any) -> FastRAMQPI:
 
     amqp_router = Router()
     for routing_key, endpoint in settings.event_mapping.items():
-        amqp_router.register(
-            routing_key, dependencies=[Depends(rate_limit(10))]
-        )(amqp2http(url=settings.integration_url + endpoint, name=routing_key))
+        amqp_router.register(routing_key, dependencies=[Depends(rate_limit(10))])(
+            amqp2http(url=settings.integration_url + endpoint, name=routing_key)
+        )
 
     fastramqpi = FastRAMQPI(
         application_name="amqp2http_" + settings.name,
