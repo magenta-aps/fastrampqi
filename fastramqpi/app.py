@@ -99,10 +99,9 @@ async def liveness(request: Request) -> JSONResponse:
             return await healthcheck(context)
         return False
 
-    healthstatus = {}
-    for name, healthcheck in healthchecks.items():
-        healthstatus[name] = await check(healthcheck)
-
+    healthstatus = {
+        name: await check(healthcheck) for name, healthcheck in healthchecks.items()
+    }
     if not all(healthstatus.values()):
         status_code = HTTP_503_SERVICE_UNAVAILABLE
 
