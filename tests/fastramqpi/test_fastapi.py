@@ -5,8 +5,8 @@
 """Test the FastAPIIntegrationSystem."""
 from typing import Any
 
-from fastramqpi.app import build_information
-from fastramqpi.app import update_build_information
+from fastramqpi.fastintegration import build_information
+from fastramqpi.fastintegration import update_build_information
 
 
 def clear_metric_value(metric: Any) -> None:
