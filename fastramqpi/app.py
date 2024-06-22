@@ -91,8 +91,7 @@ async def liveness(request: Request) -> JSONResponse:
     status_code = HTTP_200_OK
 
     context: Context = request.state.context
-    assert "healthchecks" in context
-    healthchecks: dict[str, HealthcheckFunction] = context["healthchecks"]
+    healthchecks: dict[str, HealthcheckFunction] = request.app.state.healthchecks
 
     async def check(healthcheck: HealthcheckFunction) -> bool:
         with suppress(Exception):
@@ -155,7 +154,6 @@ class FastAPIIntegrationSystem:
         self._context: Context = {
             "name": application_name,
             "settings": self.settings,
-            "healthchecks": {},
             "lifespan_managers": {},
             "user_context": {},
         }
@@ -176,6 +174,7 @@ class FastAPIIntegrationSystem:
             lifespan=partial(_lifespan, context=self._context),
         )
         app.state.context = self._context
+        app.state.healthchecks = {}
         app.include_router(fastapi_router)
         # Expose Metrics
         if self.settings.enable_metrics:
@@ -219,10 +218,9 @@ class FastAPIIntegrationSystem:
         Returns:
             None
         """
-        assert "healthchecks" in self._context
-        if name in self._context["healthchecks"]:
+        if name in self.app.state.healthchecks:
             raise ValueError("Name already used")
-        self._context["healthchecks"][name] = healthcheck
+        self.app.state.healthchecks[name] = healthcheck
 
     def add_context(self, **kwargs: Any) -> None:
         """Add the provided key-value pair to the user-context.
