@@ -46,8 +46,6 @@ def test_root_endpoint(test_client: TestClient) -> None:
 @pytest.mark.usefixtures("disable_amqp_lifespan", "enable_metrics")
 def test_metrics_endpoint(fastramqpi: FastRAMQPI, test_client: TestClient) -> None:
     """Test the metrics endpoint on our app."""
-    fastramqpi._context["healthchecks"] = {}
-
     response = test_client.get("/metrics")
     assert response.status_code == 200
     assert "# TYPE build_information_info gauge" in response.text
@@ -236,7 +234,7 @@ def dummy_healthcheck(context: Context) -> bool:
 
 def test_add_healthcheck(fastramqpi: FastRAMQPI) -> None:
     """Test that add_healthcheck adds to the healthcheck list."""
-    assert fastramqpi._context["healthchecks"].keys() == {
+    assert fastramqpi.app.state.healthchecks.keys() == {
         "AMQP",
     }
 
@@ -246,12 +244,12 @@ def test_add_healthcheck(fastramqpi: FastRAMQPI) -> None:
         healthcheck=dummy_healthcheck,  # type: ignore
     )
 
-    assert fastramqpi._context["healthchecks"].keys() == {
+    assert fastramqpi.app.state.healthchecks.keys() == {
         "AMQP",
         "Test",
     }
     # pylint: disable=comparison-with-callable
-    assert fastramqpi._context["healthchecks"]["Test"] == dummy_healthcheck
+    assert fastramqpi.app.state.healthchecks["Test"] == dummy_healthcheck
 
     with pytest.raises(ValueError) as excinfo:
         fastramqpi.add_healthcheck(
