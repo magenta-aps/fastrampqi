@@ -21,7 +21,6 @@ from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.status import HTTP_200_OK
-from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
 from .config import FastAPIIntegrationSystemSettings
@@ -73,13 +72,6 @@ async def index(request: Request) -> dict[str, str]:
     return {"name": context["name"]}
 
 
-@fastapi_router.get("/health/ready", status_code=HTTP_204_NO_CONTENT)
-async def readiness() -> None:
-    """Endpoint to be used as a readiness probe for Kubernetes."""
-    # TODO: Remove once everyone is using v1.4.3+
-    return None
-
-
 @fastapi_router.get(
     "/health/live",
     status_code=HTTP_200_OK,
@@ -88,8 +80,33 @@ async def readiness() -> None:
         "503": {"description": "Not ready"},
     },
 )
-async def liveness(request: Request) -> JSONResponse:
-    """Endpoint to be used as a liveness probe for Kubernetes."""
+@fastapi_router.get(
+    "/health/ready",
+    status_code=HTTP_200_OK,
+    responses={
+        "200": {"description": "Ready"},
+        "503": {"description": "Not ready"},
+    },
+)
+async def healthcheck_probe(request: Request) -> JSONResponse:
+    """Kubernetes healthcheck probe function.
+
+    Kubernetes defines the probes as follows:
+      - The livenessProbe is used to decide whether the integration should be
+        restarted or not.
+      - The readinessProbe is used to decide whether the integration should
+        receive traffic or not.
+    and the implementation of the probes:
+      - The livenessProbe can be implemented however you would like.
+      - The readinessProbe should whether check back-end services are
+        available.
+
+    Using the same probe implementation for both allows us to configure both a
+    readinessProbe and a livenessProbe for the integration, for instance such
+    that we can stop sending traffic to an integration while it has a temporary
+    outage, but that we will only resort to actually restarting the integration
+    if the situation does not seem as temporary as first assumed.
+    """
     status_code = HTTP_200_OK
 
     context: dict[str, Any] = request.state.context
