@@ -66,16 +66,11 @@ def test_metrics_dipex_last_success_timestamp(
     assert "dipex_last_success_timestamp_seconds 1" in response.text
 
 
-@pytest.mark.usefixtures("disable_amqp_lifespan")
-def test_readiness_endpoint(test_client: TestClient) -> None:
-    """Test the readiness endpoint on our app."""
-    response = test_client.get("/health/ready")
-    assert response.status_code == 204
-
-
+@pytest.mark.parametrize("endpoint", ["/health/ready", "/health/live"])
 def test_liveness_endpoint_healthy(
     fastramqpi: FastRAMQPI,
     test_client_builder: Callable[..., TestClient],
+    endpoint: str,
 ) -> None:
     """Test that the liveness endpoint returns 204 if everything is ok."""
     amqp_system = MagicMock()
@@ -87,7 +82,7 @@ def test_liveness_endpoint_healthy(
     test_client = test_client_builder(fastramqpi)
 
     with test_client:
-        response = test_client.get("/health/live")
+        response = test_client.get(endpoint)
         assert response.status_code == 200
         assert amqp_system.mock_calls == [call.healthcheck()]
         assert response.json() == {
@@ -95,9 +90,11 @@ def test_liveness_endpoint_healthy(
         }
 
 
+@pytest.mark.parametrize("endpoint", ["/health/ready", "/health/live"])
 def test_liveness_endpoint_unhealthy(
     fastramqpi: FastRAMQPI,
     test_client_builder: Callable[..., TestClient],
+    endpoint: str,
 ) -> None:
     """Test that the liveness endpoint handles exceptions nicely."""
     amqp_system = MagicMock()
@@ -109,7 +106,7 @@ def test_liveness_endpoint_unhealthy(
     test_client = test_client_builder(fastramqpi)
 
     with test_client:
-        response = test_client.get("/health/live")
+        response = test_client.get(endpoint)
         assert response.status_code == 503
         assert amqp_system.mock_calls == [call.healthcheck()]
         assert response.json() == {
