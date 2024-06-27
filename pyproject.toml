@@ -54,9 +54,6 @@ types-tqdm = "^4.66.0.20240106"
 types-requests = "^2.31.0.20240403"
 
 
-[tool.poetry.group.test.dependencies]
-ramodels = "^36.7.3"
-
 [tool.poetry.plugins."pytest11"]
 fastramqpi = "fastramqpi.pytest_plugin"
 

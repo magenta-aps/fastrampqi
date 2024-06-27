@@ -4,20 +4,38 @@
 # SPDX-License-Identifier: MPL-2.0
 # --------------------------------------------------------------------------------------
 from datetime import datetime
+from typing import Any
 from typing import AsyncIterator
+from uuid import UUID
 from uuid import uuid4
 
 import httpx
 import pytest
 from httpx import Request
 from httpx import Response
-from ramodels.lora import Facet
-from ramodels.mo import ClassWrite
-from ramodels.mo import Employee
+from pydantic import BaseModel
 from respx import MockRouter
 
 from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient
 from fastramqpi.raclients.modelclient.mo import ModelClient as MOModelClient
+
+
+class ClassWrite(BaseModel):
+    facet_uuid: UUID = uuid4()
+    uuid: UUID = uuid4()
+
+
+class Employee(BaseModel):
+    type_: str = "employee"
+    uuid: UUID = uuid4()
+
+
+class Facet(BaseModel):
+    uuid: UUID = uuid4()
+
+    @staticmethod
+    def from_simplified_fields(uuid: UUID, **kwargs: Any) -> "Facet":
+        return Facet(uuid=uuid)
 
 
 @pytest.fixture
