@@ -20,8 +20,7 @@ from .raclients.modelclient.mo import ModelClient
 from .ramqp.mo import MOAMQPSystem
 
 
-# The type is perfectly in order, but mypy cannot handle recursive types
-HealthcheckFunction = Callable[["Context"], Awaitable[bool]]  # type: ignore
+HealthcheckFunction = Callable[["Context"], Awaitable[bool]]
 
 
 class Context(TypedDict, total=False):
@@ -29,8 +28,6 @@ class Context(TypedDict, total=False):
 
     name: str
     settings: BaseSettings
-    # The type is perfectly in order, but mypy cannot handle recursive types
-    healthchecks: dict[str, HealthcheckFunction]  # type: ignore
     lifespan_managers: dict[int, set[AsyncContextManager]]
     app: FastAPI
     instrumentator: Instrumentator

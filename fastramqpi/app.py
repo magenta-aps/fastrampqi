@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
 import logging
-from collections.abc import Awaitable
-from collections.abc import Callable
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from contextlib import suppress
@@ -92,18 +90,17 @@ async def liveness(request: Request) -> JSONResponse:
     """Endpoint to be used as a liveness probe for Kubernetes."""
     status_code = HTTP_200_OK
 
-    context: dict[str, Any] = request.state.context
-    healthchecks = context["healthchecks"]
+    context: Context = request.state.context
+    healthchecks: dict[str, HealthcheckFunction] = request.app.state.healthchecks
 
-    async def check(healthcheck: Callable[[dict], Awaitable[bool]]) -> bool:
+    async def check(healthcheck: HealthcheckFunction) -> bool:
         with suppress(Exception):
             return await healthcheck(context)
         return False
 
-    healthstatus = {}
-    for name, healthcheck in healthchecks.items():
-        healthstatus[name] = await check(healthcheck)
-
+    healthstatus = {
+        name: await check(healthcheck) for name, healthcheck in healthchecks.items()
+    }
     if not all(healthstatus.values()):
         status_code = HTTP_503_SERVICE_UNAVAILABLE
 
@@ -157,7 +154,6 @@ class FastAPIIntegrationSystem:
         self._context: Context = {
             "name": application_name,
             "settings": self.settings,
-            "healthchecks": {},
             "lifespan_managers": {},
             "user_context": {},
         }
@@ -178,6 +174,7 @@ class FastAPIIntegrationSystem:
             lifespan=partial(_lifespan, context=self._context),
         )
         app.state.context = self._context
+        app.state.healthchecks = {}
         app.include_router(fastapi_router)
         # Expose Metrics
         if self.settings.enable_metrics:
@@ -221,9 +218,9 @@ class FastAPIIntegrationSystem:
         Returns:
             None
         """
-        if name in self._context["healthchecks"]:
+        if name in self.app.state.healthchecks:
             raise ValueError("Name already used")
-        self._context["healthchecks"][name] = healthcheck
+        self.app.state.healthchecks[name] = healthcheck
 
     def add_context(self, **kwargs: Any) -> None:
         """Add the provided key-value pair to the user-context.
