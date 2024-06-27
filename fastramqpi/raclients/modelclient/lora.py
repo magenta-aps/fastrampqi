@@ -5,17 +5,19 @@
 # --------------------------------------------------------------------------------------
 from typing import Any
 from typing import Dict
-from typing import Type
+from typing import Protocol
+from uuid import UUID
 
 from fastapi.encoders import jsonable_encoder
 from httpx import AsyncClient
-from ramodels.lora import Facet
-from ramodels.lora import ITSystem
-from ramodels.lora import Klasse
-from ramodels.lora import Organisation
-from ramodels.lora._shared import LoraBase
 
 from .base import ModelClientBase
+
+
+class LoraBase(Protocol):
+    @property
+    def uuid(self) -> UUID:  # pragma: no cover
+        ...
 
 
 class ModelClient(ModelClientBase[LoraBase]):
@@ -34,16 +36,16 @@ class ModelClient(ModelClientBase[LoraBase]):
     """
 
     upload_http_method = "PUT"
-    path_map: Dict[Type[LoraBase], str] = {
-        Facet: "/klassifikation/facet",
-        ITSystem: "/organisation/itsystem",
-        Klasse: "/klassifikation/klasse",
-        Organisation: "/organisation/organisation",
+    path_map: Dict[str, str] = {
+        "Facet": "/klassifikation/facet",
+        "ITSystem": "/organisation/itsystem",
+        "Klasse": "/klassifikation/klasse",
+        "Organisation": "/organisation/organisation",
     }
     async_httpx_client_class = AsyncClient
 
     def get_object_url(self, obj: LoraBase, *args: Any, **kwargs: Any) -> str:
-        return "{}/{}".format(self.path_map[type(obj)], obj.uuid)
+        return "{}/{}".format(self.path_map[type(obj).__name__], obj.uuid)
 
     def get_object_json(self, obj: LoraBase, *args: Any, **kwargs: Any) -> Any:
         # TODO: Pending https://github.com/samuelcolvin/pydantic/pull/2231. For now,

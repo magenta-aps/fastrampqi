@@ -20,8 +20,6 @@ import more_itertools
 from fastapi.encoders import jsonable_encoder
 from httpx import AsyncClient
 from httpx import HTTPStatusError
-from ramodels.lora import LoraBase
-from ramodels.mo import MOBase
 from structlog import get_logger
 from tenacity import retry
 from tenacity import retry_if_exception_type
@@ -36,12 +34,12 @@ class ModelClientException(Exception):
     pass
 
 
-ModelBase = TypeVar("ModelBase", MOBase, LoraBase)
+ModelBase = TypeVar("ModelBase")
 
 
 class ModelClientBase(Generic[ModelBase]):
     upload_http_method: str
-    path_map: Dict[Type[ModelBase], str]
+    path_map: Dict[str, str]
     async_httpx_client_class: Type[AsyncClient]
 
     def __init__(self, *args: Any, chunk_size: int = 10, **kwargs: Any) -> None:
@@ -60,7 +58,7 @@ class ModelClientBase(Generic[ModelBase]):
     def get_object_url(
         self, obj: ModelBase, *args: Any, **kwargs: Any
     ) -> str:  # pragma: no cover
-        return self.path_map[type(obj)]
+        return self.path_map[type(obj).__name__]
 
     def get_object_json(
         self, obj: Union[ModelBase, Any], *args: Any, **kwargs: Any
