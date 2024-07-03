@@ -7,6 +7,8 @@ from asyncio import create_task
 from collections.abc import AsyncIterator
 from contextlib import suppress
 from typing import Any
+from typing import Awaitable
+from typing import Callable
 from typing import Iterator
 from typing import NoReturn
 
@@ -213,3 +215,32 @@ def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None
     # rabbitmq management
     respx_mock.route(host=_settings.amqp.get_url().host).pass_through()
     respx_mock.route(host="localhost").pass_through()
+
+
+@pytest.fixture
+def get_num_queued_messages(
+    rabbitmq_management_client: AsyncClient,
+) -> Callable[[], Awaitable[int]]:
+    """Get number of queued messages in RabbitMQ AMQP."""
+
+    async def _get_num_queued_messages() -> int:
+        queues = (await rabbitmq_management_client.get("queues")).json()
+        return sum(
+            queue.get("messages_ready", 0) + queue.get("messages_unacknowledged", 0)
+            for queue in queues
+        )
+
+    return _get_num_queued_messages
+
+
+@pytest.fixture
+def get_num_consumed_messages(
+    rabbitmq_management_client: AsyncClient,
+) -> Callable[[], Awaitable[int]]:
+    """Get number of consumed messages in RabbitMQ AMQP."""
+
+    async def _get_num_consumed_messages() -> int:
+        queues = (await rabbitmq_management_client.get("queues")).json()
+        return sum(queue.get("message_stats", {}).get("ack", 0) for queue in queues)
+
+    return _get_num_consumed_messages
