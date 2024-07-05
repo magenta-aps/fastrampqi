@@ -5,9 +5,11 @@
 """This module contains the all pydantic BaseModel settings(s)."""
 import typing
 
-from pydantic import field_validator, ConfigDict, AmqpDsn
+from pydantic import AmqpDsn
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 from pydantic import parse_obj_as
 
 
@@ -38,6 +40,7 @@ class StructuredAmqpDsn(BaseModel):
         if value is not None and not value.startswith("/"):
             value = f"/{value}"
         return value
+
     model_config = ConfigDict(populate_by_name=True)
 
 

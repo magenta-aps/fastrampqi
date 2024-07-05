@@ -1,19 +1,22 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 """Settings handling."""
-from pydantic import ConfigDict, AnyHttpUrl
+from pydantic import AnyHttpUrl
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 from .ramqp.config import AMQPConnectionSettings
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # pylint: disable=too-few-public-methods
 class FastAPIIntegrationSystemSettings(BaseSettings):
     """Settings for the FastAPIIntegrationSystem framework."""
+
     model_config = SettingsConfigDict(frozen=True)
 
     # We assume these will be set by the docker build process,
@@ -41,6 +44,7 @@ class DatabaseSettings(BaseModel):
 # pylint: disable=too-few-public-methods
 class ClientSettings(BaseSettings):
     """Settings for the connection to OS2mo."""
+
     model_config = SettingsConfigDict(frozen=True)
 
     mo_url: AnyHttpUrl = Field(
@@ -61,6 +65,7 @@ class ClientSettings(BaseSettings):
 # pylint: disable=too-few-public-methods
 class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
     """Settings for the FastRAMQPI framework."""
+
     model_config = ConfigDict(frozen=True, env_nested_delimiter="__")
 
     amqp: AMQPConnectionSettings

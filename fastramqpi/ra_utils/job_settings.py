@@ -13,10 +13,10 @@ from typing import Tuple
 import structlog
 from pydantic import Extra
 from pydantic.env_settings import SettingsSourceCallable
+from pydantic_settings import BaseSettings
 from structlog.processors import CallsiteParameter
 
 from .load_settings import load_settings
-from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 

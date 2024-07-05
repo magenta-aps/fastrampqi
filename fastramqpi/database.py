@@ -1,13 +1,14 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import sqlalchemy
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from fastramqpi.config import DatabaseSettings
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def create_engine(
@@ -44,6 +45,7 @@ def run_upgrade(database_metadata: MetaData) -> None:
 
     class Settings(DatabaseSettings, BaseSettings):
         """Load database variables without depending on the integration's settings."""
+
         model_config = SettingsConfigDict(env_prefix="FASTRAMQPI__DATABASE__")
 
     # TODO: when we implement alembic the whole interface will be async and we can use

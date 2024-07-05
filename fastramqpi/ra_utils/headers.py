@@ -13,7 +13,8 @@ from pydantic import AnyHttpUrl
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import root_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 
 # Exception

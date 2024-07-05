@@ -15,13 +15,13 @@ import pytest
 import sqlalchemy
 from httpx import AsyncClient
 from httpx import BasicAuth
+from pydantic import ConfigDict
 from pytest import Config
 from pytest import Item
 from pytest import MonkeyPatch
 from respx import MockRouter
 from sqlalchemy import Connection
 from sqlalchemy import text
-from pydantic import ConfigDict
 
 
 def pytest_configure(config: Config) -> None:
