@@ -9,11 +9,11 @@ from typing import Tuple
 from warnings import warn
 
 import requests
-from pydantic import AnyHttpUrl
-from pydantic import BaseSettings
-from pydantic import Field
-from pydantic import parse_obj_as
-from pydantic import root_validator
+from pydantic.v1 import AnyHttpUrl
+from pydantic.v1 import BaseSettings
+from pydantic.v1 import Field
+from pydantic.v1 import parse_obj_as
+from pydantic.v1 import root_validator
 
 
 # Exception

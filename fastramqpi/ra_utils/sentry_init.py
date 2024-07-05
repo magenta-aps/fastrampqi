@@ -6,9 +6,9 @@ from typing import Optional
 
 import sentry_sdk
 import structlog
-from pydantic import BaseSettings
-from pydantic import HttpUrl
-from pydantic import ValidationError
+from pydantic.v1 import BaseSettings
+from pydantic.v1 import HttpUrl
+from pydantic.v1 import ValidationError
 
 
 class Settings(BaseSettings):

@@ -13,7 +13,7 @@ import httpx
 import pytest
 from httpx import Request
 from httpx import Response
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from respx import MockRouter
 
 from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient

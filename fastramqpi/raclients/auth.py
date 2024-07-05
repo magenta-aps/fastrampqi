@@ -11,8 +11,8 @@ from authlib.integrations.httpx_client import OAuth2Client as HTTPXOAuth2Client
 from authlib.oauth2 import OAuth2Client
 from httpx import USE_CLIENT_DEFAULT
 from httpx._types import AuthTypes
-from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
+from pydantic.v1 import AnyHttpUrl
+from pydantic.v1 import parse_obj_as
 
 
 class BaseAuthenticatedClient(OAuth2Client):

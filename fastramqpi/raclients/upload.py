@@ -6,8 +6,8 @@ from typing import Any  # pragma: no cover
 from typing import Callable  # pragma: no cover
 from typing import Generator  # pragma: no cover
 
-from pydantic import AnyHttpUrl  # pragma: no cover
-from pydantic import parse_obj_as  # pragma: no cover
+from pydantic.v1 import AnyHttpUrl  # pragma: no cover
+from pydantic.v1 import parse_obj_as  # pragma: no cover
 
 from .auth import AuthenticatedHTTPXClient  # pragma: no cover
 from .auth import keycloak_token_endpoint  # pragma: no cover

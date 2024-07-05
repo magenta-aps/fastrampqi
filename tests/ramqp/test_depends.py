@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 from fastapi import Depends
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from .amqp_helpers import payload2incoming
 from fastramqpi.ramqp import AMQPSystem
@@ -47,8 +47,10 @@ async def test_depends_errors() -> None:
         return None
 
     message = payload2incoming({"hello": "world"})
-    with pytest.raises(ValueError, match="value_error.missing"):
+    with pytest.raises(ValueError) as exc_info:
         await function(message=message, context={})
+    assert "missing" in str(exc_info.value)
+    assert "Field required" in str(exc_info.value)
 
 
 async def test_from_context() -> None:
