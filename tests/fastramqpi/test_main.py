@@ -20,9 +20,9 @@ import pytest
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
-from pydantic import SecretStr
+from pydantic.v1 import AnyHttpUrl
+from pydantic.v1 import parse_obj_as
+from pydantic.v1 import SecretStr
 from pytest import MonkeyPatch
 
 import fastramqpi
@@ -153,7 +153,7 @@ def test_mo_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
     FastRAMQPI(application_name="test", settings=settings, graphql_version=20)
 
     mock_client.assert_called_once_with(
-        base_url="http://mo-service:5000",
+        base_url="http://mo-service:5000/",
         client_id="foo",
         client_secret="bar",
         grant_type="client_credentials",

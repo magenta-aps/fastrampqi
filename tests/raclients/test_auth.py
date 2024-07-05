@@ -7,8 +7,8 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
-from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
+from pydantic.v1 import AnyHttpUrl
+from pydantic.v1 import parse_obj_as
 from respx import MockRouter
 
 from fastramqpi.raclients.auth import AuthenticatedAsyncHTTPXClient

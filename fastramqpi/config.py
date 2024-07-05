@@ -3,10 +3,11 @@
 """Settings handling."""
 from pydantic import AnyHttpUrl
 from pydantic import BaseModel
-from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 from .ramqp.config import AMQPConnectionSettings
 
@@ -15,10 +16,7 @@ from .ramqp.config import AMQPConnectionSettings
 class FastAPIIntegrationSystemSettings(BaseSettings):
     """Settings for the FastAPIIntegrationSystem framework."""
 
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
+    model_config = SettingsConfigDict(frozen=True)
 
     # We assume these will be set by the docker build process,
     # and as such will contain release information at runtime.
@@ -46,10 +44,7 @@ class DatabaseSettings(BaseModel):
 class ClientSettings(BaseSettings):
     """Settings for the connection to OS2mo."""
 
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
+    model_config = SettingsConfigDict(frozen=True)
 
     mo_url: AnyHttpUrl = Field(
         parse_obj_as(AnyHttpUrl, "http://mo-service:5000"),
@@ -70,11 +65,7 @@ class ClientSettings(BaseSettings):
 class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
     """Settings for the FastRAMQPI framework."""
 
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
-        env_nested_delimiter = "__"
+    model_config = SettingsConfigDict(frozen=True, env_nested_delimiter="__")
 
     amqp: AMQPConnectionSettings
-    database: DatabaseSettings | None
+    database: DatabaseSettings | None = None

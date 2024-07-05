@@ -4,16 +4,15 @@ from typing import Any
 
 import pytest
 from authlib.integrations.httpx_client import AsyncOAuth2Client
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from starlette.testclient import TestClient
 
 from fastramqpi.config import Settings as FastRAMQPISettings
 
 
 class Settings(BaseSettings):
-    class Config:
-        frozen = True
-        env_nested_delimiter = "__"
+    model_config = SettingsConfigDict(frozen=True, env_nested_delimiter="__")
 
     fastramqpi: FastRAMQPISettings
 

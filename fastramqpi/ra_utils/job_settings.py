@@ -9,11 +9,12 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Type
 
 import structlog
-from pydantic import BaseSettings
-from pydantic import Extra
-from pydantic.env_settings import SettingsSourceCallable
+from pydantic_settings import BaseSettings
+from pydantic_settings import PydanticBaseSettingsSource
+from pydantic_settings import SettingsConfigDict
 from structlog.processors import CallsiteParameter
 
 from .load_settings import load_settings
@@ -21,7 +22,7 @@ from .load_settings import load_settings
 logger = logging.getLogger(__name__)
 
 
-def _get_json_settings_source(prefix: str) -> SettingsSourceCallable:
+def _get_json_settings_source(prefix: str) -> PydanticBaseSettingsSource:
     """Create a Pydantic settings source which reads the DIPEX `settings.json`
 
     Args:
@@ -96,7 +97,7 @@ class JobSettings(BaseSettings):
     Each integration should define its settings like this:
     >>> class SqlExportSettings(JobSettings):
     >>>
-    >>>     class Config:
+    >>>     class ConfigX:
     >>>         # Optional: Only use settings from settings.json if they match this
     >>>         # prefix.
     >>>         settings_json_prefix = "exporters.actual_state"
@@ -108,7 +109,7 @@ class JobSettings(BaseSettings):
     >>> settings.start_logging_based_on_settings()
     """
 
-    mora_base = "http://mo:5000"
+    mora_base: str = "http://mo:5000"
     client_id: str = "dipex"
     client_secret: Optional[str] = None
     auth_realm: str = "mo"
@@ -121,30 +122,35 @@ class JobSettings(BaseSettings):
 
     sentry_dsn: Optional[str] = None
 
-    class Config:
-        # Configuration attributes defined by the Pydantic `Config` class
-        extra: Extra = Extra.allow
-        env_file_encoding: str = "utf-8"
-        use_enum_values: bool = True
+    model_config = SettingsConfigDict(
+        extra="allow",
+        env_file_encoding="utf-8",
+        use_enum_values=True,
+    )
 
+    class ConfigX:
         # Additional configuration attributes defined by us.
         settings_json_prefix: str = ""
 
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings: SettingsSourceCallable,
-            env_settings: SettingsSourceCallable,
-            file_secret_settings: SettingsSourceCallable,
-        ) -> Tuple[SettingsSourceCallable, ...]:
-            """Add settings source which reads settings from 'settings.json'"""
-            json_settings = _get_json_settings_source(cls.settings_json_prefix)
-            return (
-                init_settings,
-                env_settings,
-                json_settings,
-                file_secret_settings,
-            )
+    @classmethod
+    def customise_sources(
+        cls,
+        settings_cls: Type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        """Add settings source which reads settings from 'settings.json'"""
+        # TODO: Might have to refactor to this: https://docs.pydantic.dev/latest/concepts/pydantic_settings/#adding-sources
+        json_settings = _get_json_settings_source(cls.Config.settings_json_prefix)
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            json_settings,
+            file_secret_settings,
+        )
 
     def start_logging_based_on_settings(self) -> None:
         """Configure Python `logging` library as well as `structlog` logging according

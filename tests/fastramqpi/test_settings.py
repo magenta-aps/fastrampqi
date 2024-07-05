@@ -13,7 +13,7 @@ def test_missing_client_secret() -> None:
     """Test that we must add client_secret to construct settings."""
     with pytest.raises(ValidationError) as excinfo:
         Settings()
-    assert "client_secret\n  field required" in str(excinfo.value)
+    assert "missing\nclient_secret\n  Field required" in str(excinfo.value)
 
 
 def test_graphql_timeout_default(settings: Settings) -> None:

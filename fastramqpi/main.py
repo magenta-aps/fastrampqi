@@ -39,7 +39,7 @@ def construct_legacy_clients(
     """
     # DEPRECATED: ariadne-codegen is the preferred way to interface with GraphQL
     gql_client = LegacyGraphQLClient(
-        url=f"{settings.mo_url}/graphql/v{graphql_version}",
+        url=f"{settings.mo_url}graphql/v{graphql_version}",
         client_id=settings.client_id,
         client_secret=settings.client_secret.get_secret_value(),
         auth_realm=settings.auth_realm,
@@ -53,7 +53,7 @@ def construct_legacy_clients(
         client_secret=settings.client_secret.get_secret_value(),
         auth_realm=settings.auth_realm,
         auth_server=settings.auth_server,
-        base_url=settings.mo_url,
+        base_url=str(settings.mo_url),
     )
     return gql_client, model_client
 
@@ -129,7 +129,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
 
         # Authenticated HTTPX Client
         mo_client = AsyncOAuth2Client(
-            base_url=settings.mo_url,
+            base_url=str(settings.mo_url),
             client_id=settings.client_id,
             client_secret=settings.client_secret.get_secret_value(),
             grant_type="client_credentials",
@@ -160,7 +160,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 context: Context,
             ) -> AsyncGenerator[None, None]:
                 graphql_client = graphql_client_cls(
-                    url=f"{settings.mo_url}/graphql/v{graphql_version}",
+                    url=f"{settings.mo_url}graphql/v{graphql_version}",
                     http_client=mo_client,
                 )
                 async with graphql_client as client:

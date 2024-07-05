@@ -8,12 +8,12 @@ from urllib.parse import parse_qsl
 from urllib.parse import quote
 from urllib.parse import urlencode
 
-from pydantic import AnyUrl
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import parse_obj_as
-from pydantic import root_validator
-from pydantic import SecretStr
+from pydantic.v1 import AnyUrl
+from pydantic.v1 import BaseModel
+from pydantic.v1 import Field
+from pydantic.v1 import parse_obj_as
+from pydantic.v1 import root_validator
+from pydantic.v1 import SecretStr
 
 
 # pylint: disable=too-few-public-methods
@@ -29,14 +29,14 @@ class StructuredUrl(BaseModel):
 
     url: AnyUrl = Field(..., description="Database URL.")
 
-    scheme: str | None
-    user: str | None
-    password: SecretStr | None
-    host: str | None
-    port: int | None
-    path: str | None
-    query: dict[str, str] | None
-    fragment: str | None
+    scheme: str | None = None
+    user: str | None = None
+    password: SecretStr | None = None
+    host: str | None = None
+    port: int | None = None
+    path: str | None = None
+    query: dict[str, str] | None = None
+    fragment: str | None = None
 
     @root_validator(pre=True)
     def ensure_url(cls, values: dict[str, Any]) -> dict[str, Any]:

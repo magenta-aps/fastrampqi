@@ -3,7 +3,6 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 # --------------------------------------------------------------------------------------
-from datetime import datetime
 from typing import Any
 from typing import AsyncIterator
 from uuid import UUID
@@ -13,7 +12,7 @@ import httpx
 import pytest
 from httpx import Request
 from httpx import Response
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 from respx import MockRouter
 
 from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient
@@ -58,17 +57,7 @@ async def test_request(mo_model_client: MOModelClient, respx_mock: MockRouter) -
         )
     )
 
-    resp = await mo_model_client.upload(
-        [
-            Employee(
-                uuid=uuid4(),
-                givenname="given name",
-                surname="surname",
-                cpr_no=None,
-                seniority=datetime(2000, 1, 1),
-            )
-        ]
-    )
+    resp = await mo_model_client.upload([Employee(uuid=uuid4())])
 
     assert [ok_response] == resp
 
@@ -89,15 +78,7 @@ async def test_uuid_request(
     )
 
     resp = await mo_model_client.upload(
-        [
-            ClassWrite(
-                facet_uuid="00000000-0000-0000-0000-000000000000",
-                name="My Awesome Class",
-                user_key="MyClass",
-                scope="TEXT",
-                org_uuid="11111111-1111-1111-1111-111111111111",
-            )
-        ]
+        [ClassWrite(facet_uuid=UUID("00000000-0000-0000-0000-000000000000"))]
     )
 
     assert [ok_response] == resp
@@ -120,17 +101,7 @@ async def test_edit_request(
         )
     )
 
-    await mo_model_client.edit(
-        [
-            Employee(
-                uuid=uuid,
-                givenname="given name",
-                surname="surname",
-                cpr_no=None,
-                seniority=datetime(2000, 1, 1),
-            )
-        ]
-    )
+    await mo_model_client.edit([Employee(uuid=uuid)])
 
 
 @pytest.mark.asyncio
@@ -147,17 +118,7 @@ async def test_fail_request(
         )
     )
     with pytest.raises(httpx.HTTPStatusError, match=err_response["description"]):
-        await mo_model_client.upload(
-            [
-                Employee(
-                    uuid=uuid4(),
-                    givenname="given name",
-                    surname="surname",
-                    cpr_no=None,
-                    seniority=datetime(2000, 1, 1),
-                )
-            ]
-        )
+        await mo_model_client.upload([Employee(uuid=uuid4())])
 
     respx_mock.post(
         "http://mo.example.org/service/e/create?force=0",
@@ -168,17 +129,7 @@ async def test_fail_request(
         )
     )
     with pytest.raises(httpx.HTTPStatusError, match="Not Found"):
-        await mo_model_client.upload(
-            [
-                Employee(
-                    uuid=uuid4(),
-                    givenname="given name",
-                    surname="surname",
-                    cpr_no=None,
-                    seniority=datetime(2000, 1, 1),
-                )
-            ]
-        )
+        await mo_model_client.upload([Employee(uuid=uuid4())])
 
 
 @pytest.mark.asyncio

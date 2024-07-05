@@ -79,7 +79,7 @@ class AMQPConnectionSettings(BaseModel):
 
     # Program specific queue name prefix, should be globally unique, but
     # consistent across program restarts. The program name is a good candidate.
-    queue_prefix: str | None
+    queue_prefix: str | None = None
 
     # Maximum number of messages to fetch and handle in parallel.
     prefetch_count: int = 10

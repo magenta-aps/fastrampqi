@@ -2,9 +2,12 @@
 # SPDX-License-Identifier: MPL-2.0
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from pydantic import BaseSettings
-from pydantic import Field
-from pydantic import ValidationError
+from pydantic.v1 import AnyUrl
+from pydantic.v1 import Field
+from pydantic.v1 import parse_obj_as
+from pydantic.v1 import SecretStr
+from pydantic.v1 import ValidationError
+from pydantic_settings import BaseSettings
 
 from fastramqpi.ra_utils.structured_url import StructuredUrl
 
@@ -35,7 +38,9 @@ def _assert_parsed(structured_url: StructuredUrl) -> None:
 
 def test_can_provide_url_directly() -> None:
     structured_url = StructuredUrl(
-        url="https://username:password@example.com:1234/valid?a=b#here"
+        url=parse_obj_as(
+            AnyUrl, "https://username:password@example.com:1234/valid?a=b#here"
+        )
     )
     _assert_parsed(structured_url)
 
@@ -44,9 +49,9 @@ def test_can_provide_url_indirectly() -> None:
     structured_url = StructuredUrl(  # type: ignore[call-arg]
         scheme="https",
         user="username",
-        password="password",
+        password=parse_obj_as(SecretStr, "password"),
         host="example.com",
-        port="1234",
+        port=1234,
         path="/valid",
         query={"a": "b"},
         fragment="here",
@@ -58,7 +63,7 @@ def test_that_passwords_are_url_encoded() -> None:
     structured_url = StructuredUrl(  # type: ignore[call-arg]
         scheme="https",
         user="user@domain.com",
-        password="p@ssword",
+        password=parse_obj_as(SecretStr, "p@ssword"),
         host="example.com",
     )
     assert structured_url.url == "https://user%40domain.com:p%40ssword@example.com"
@@ -87,7 +92,7 @@ def _assert_parsed_minimal(structured_url: StructuredUrl) -> None:
 
 
 def test_minimal_url_directly_ok() -> None:
-    structured_url = StructuredUrl(url="http://a")
+    structured_url = StructuredUrl(url=parse_obj_as(AnyUrl, "http://a"))
     _assert_parsed_minimal(structured_url)
 
 
@@ -99,7 +104,7 @@ def test_minimal_url_indirectly_ok() -> None:
 def test_url_is_conflicts_with_others() -> None:
     # Conflicting information here, url always wins
     with pytest.raises(ValidationError):
-        StructuredUrl(url="https://b", scheme="http", host="a")
+        StructuredUrl(url=parse_obj_as(AnyUrl, "https://b"), scheme="http", host="a")
 
 
 @pytest.mark.parametrize(
@@ -112,7 +117,7 @@ def test_url_is_conflicts_with_others() -> None:
     ],
 )
 def test_that_urls_are_ok(url: str) -> None:
-    StructuredUrl(url=url)
+    StructuredUrl(url=parse_obj_as(AnyUrl, url))
 
 
 @pytest.mark.parametrize(
@@ -127,7 +132,7 @@ def test_that_urls_are_ok(url: str) -> None:
 )
 def test_that_urls_are_rejected(url: str) -> None:
     with pytest.raises(ValidationError):
-        StructuredUrl(url=url)
+        StructuredUrl(url=parse_obj_as(AnyUrl, url))
 
 
 class Settings(BaseSettings):

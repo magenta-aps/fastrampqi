@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=too-few-public-methods,missing-class-docstring
 """This module tests the connection settings."""
-from pydantic import AmqpDsn
-from pydantic import BaseSettings
-from pydantic import parse_obj_as
+from pydantic.v1 import AmqpDsn
+from pydantic.v1 import parse_obj_as
+from pydantic_settings import BaseSettings
 from pytest import MonkeyPatch
 
 from fastramqpi.ramqp.config import AMQPConnectionSettings

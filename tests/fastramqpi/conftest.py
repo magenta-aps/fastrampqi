@@ -43,9 +43,7 @@ def settings() -> Settings:
     return Settings(
         client_id="orggatekeeper",
         client_secret="hunter2",
-        amqp=AMQPConnectionSettings(
-            url="amqp://guest:guest@msg-broker:5672/os2mo",
-        ),
+        amqp=AMQPConnectionSettings(url="amqp://guest:guest@msg-broker:5672/os2mo"),
     )
 
 
