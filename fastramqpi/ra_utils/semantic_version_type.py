@@ -3,12 +3,15 @@
 import re
 from functools import lru_cache
 from typing import Any
-from typing import Callable
 from typing import Dict
-from typing import Iterator
 from typing import Pattern
 
 from pydantic import BaseModel
+from pydantic import GetCoreSchemaHandler
+from pydantic import GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import core_schema
+from pydantic_core import CoreSchema
 
 
 # Regex from https://semver.org/
@@ -41,10 +44,20 @@ class SemanticVersion(str):
     """
 
     @classmethod
-    # TODO[pydantic]: We couldn't refactor `__get_validators__`, please create the `__get_pydantic_core_schema__` manually.
-    # Check https://docs.pydantic.dev/latest/migration/#defining-custom-types for more information.
-    def __get_validators__(cls) -> Iterator[Callable]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(cls.validate, handler(str))
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(core_schema)
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema["examples"] = (["0.1.0", "1.0.0-alpha", "1.0.0-alpha+001"],)
+        json_schema["pattern"] = _semver_regex
+        return json_schema
 
     @classmethod
     # TODO[pydantic]: We couldn't refactor `__modify_schema__`, please create the `__get_pydantic_json_schema__` manually.
@@ -52,7 +65,6 @@ class SemanticVersion(str):
     def __modify_schema__(cls, field_schema: Dict) -> None:
         field_schema.update(
             pattern=_semver_regex,
-            examples=["0.1.0", "1.0.0-alpha", "1.0.0-alpha+001"],
         )
 
     @classmethod
