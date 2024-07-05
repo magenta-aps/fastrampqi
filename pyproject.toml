@@ -37,6 +37,7 @@ frozendict = "^2.3.4"
 sqlalchemy = "^2.0.30"
 psycopg = "^3.1.19"
 bump-pydantic = "^0.8.0"
+pydantic-settings = "^2.3.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.2"
