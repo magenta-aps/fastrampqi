@@ -110,7 +110,7 @@ class JobSettings(BaseSettings):
     >>> settings.start_logging_based_on_settings()
     """
 
-    mora_base = "http://mo:5000"
+    mora_base: str = "http://mo:5000"
     client_id: str = "dipex"
     client_secret: Optional[str] = None
     auth_realm: str = "mo"

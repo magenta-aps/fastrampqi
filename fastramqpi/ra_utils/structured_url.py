@@ -8,13 +8,13 @@ from urllib.parse import parse_qsl
 from urllib.parse import quote
 from urllib.parse import urlencode
 
-from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import model_validator
 from pydantic import parse_obj_as
 from pydantic import SecretStr
+from pydantic.v1 import AnyUrl
 
 
 # pylint: disable=too-few-public-methods
