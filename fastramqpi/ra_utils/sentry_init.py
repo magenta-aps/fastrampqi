@@ -6,9 +6,9 @@ from typing import Optional
 
 import sentry_sdk
 import structlog
-from pydantic import BaseSettings
 from pydantic import HttpUrl
 from pydantic import ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -22,10 +22,7 @@ class Settings(BaseSettings):
     debug: Optional[bool]
     attach_stacktrace: Optional[bool]
     integrations: Optional[List[str]]
-    # TODO: Add more settings as needed
-
-    class Config:
-        env_prefix = "SENTRY_"
+    model_config = SettingsConfigDict(env_prefix="SENTRY_")
 
 
 def sentry_init(*args: Any, **kwargs: Any) -> bool:

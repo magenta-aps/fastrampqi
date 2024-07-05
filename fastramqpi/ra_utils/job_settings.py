@@ -11,12 +11,12 @@ from typing import Optional
 from typing import Tuple
 
 import structlog
-from pydantic import BaseSettings
 from pydantic import Extra
 from pydantic.env_settings import SettingsSourceCallable
 from structlog.processors import CallsiteParameter
 
 from .load_settings import load_settings
+from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +121,8 @@ class JobSettings(BaseSettings):
 
     sentry_dsn: Optional[str] = None
 
+    # TODO[pydantic]: We couldn't refactor this class, please create the `model_config` manually.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
     class Config:
         # Configuration attributes defined by the Pydantic `Config` class
         extra: Extra = Extra.allow

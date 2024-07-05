@@ -21,6 +21,7 @@ from pytest import MonkeyPatch
 from respx import MockRouter
 from sqlalchemy import Connection
 from sqlalchemy import text
+from pydantic import ConfigDict
 
 
 def pytest_configure(config: Config) -> None:
@@ -53,8 +54,7 @@ def _settings() -> Any:
     from fastramqpi.config import Settings
 
     class _Settings(Settings):
-        class Config:
-            env_prefix = "FASTRAMQPI__"
+        model_config = ConfigDict(env_prefix="FASTRAMQPI__")
 
     return _Settings()
 

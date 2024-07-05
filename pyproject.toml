@@ -16,7 +16,7 @@ include = ["fastramqpi/py.typed"]
 [tool.poetry.dependencies]
 python = "^3.11"
 structlog = ">=23.1,<25.0"
-pydantic = "^1.10.5"
+pydantic = "^2.8.2"
 gql = "^3.4.0"
 more-itertools = "^9.1.0"
 prometheus-fastapi-instrumentator = ">=5.9.1,<8.0.0"
@@ -36,6 +36,7 @@ sentry-sdk = "^1.12.1"
 frozendict = "^2.3.4"
 sqlalchemy = "^2.0.30"
 psycopg = "^3.1.19"
+bump-pydantic = "^0.8.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.21.2"

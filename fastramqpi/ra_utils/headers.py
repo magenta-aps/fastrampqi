@@ -10,10 +10,10 @@ from warnings import warn
 
 import requests
 from pydantic import AnyHttpUrl
-from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import root_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # Exception
@@ -50,9 +50,7 @@ class TokenSettings(BaseSettings):
 
     # Re-new token this many seconds before it actually expires
     oidc_token_lifespan_offset: int = 30
-
-    class Config:
-        frozen = True
+    model_config = SettingsConfigDict(frozen=True)
 
     @root_validator
     def validate_settings(cls, values: Dict[str, Any]) -> Dict[str, Any]:

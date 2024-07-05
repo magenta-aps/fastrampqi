@@ -5,11 +5,10 @@
 """This module contains the all pydantic BaseModel settings(s)."""
 import typing
 
-from pydantic import AmqpDsn
+from pydantic import field_validator, ConfigDict, AmqpDsn
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import parse_obj_as
-from pydantic import validator
 
 
 class StructuredAmqpDsn(BaseModel):
@@ -22,7 +21,8 @@ class StructuredAmqpDsn(BaseModel):
     port: str | None = None
     path: str | None = Field(None, alias="vhost")
 
-    @validator("path")
+    @field_validator("path")
+    @classmethod
     def add_slash_to_path(cls, value: str | None) -> str | None:
         """Ensure the path component starts with a slash.
 
@@ -38,10 +38,7 @@ class StructuredAmqpDsn(BaseModel):
         if value is not None and not value.startswith("/"):
             value = f"/{value}"
         return value
-
-    # pylint: disable=missing-class-docstring
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AMQPConnectionSettings(BaseModel):
@@ -79,7 +76,7 @@ class AMQPConnectionSettings(BaseModel):
 
     # Program specific queue name prefix, should be globally unique, but
     # consistent across program restarts. The program name is a good candidate.
-    queue_prefix: str | None
+    queue_prefix: str | None = None
 
     # Maximum number of messages to fetch and handle in parallel.
     prefetch_count: int = 10

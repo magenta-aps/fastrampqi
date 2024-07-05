@@ -8,11 +8,10 @@ from urllib.parse import parse_qsl
 from urllib.parse import quote
 from urllib.parse import urlencode
 
-from pydantic import AnyUrl
+from pydantic import model_validator, ConfigDict, AnyUrl
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import parse_obj_as
-from pydantic import root_validator
 from pydantic import SecretStr
 
 
@@ -21,11 +20,7 @@ class StructuredUrl(BaseModel):
     """Structured Url object.
 
     Allows for constructing a url either directly or indirectly."""
-
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
     url: AnyUrl = Field(..., description="Database URL.")
 
@@ -38,7 +33,8 @@ class StructuredUrl(BaseModel):
     query: dict[str, str] | None
     fragment: str | None
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def ensure_url(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Ensure that url is set.
 
@@ -96,7 +92,8 @@ class StructuredUrl(BaseModel):
         values["url"] = parse_obj_as(AnyUrl, uri_string)
         return values
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
+    @classmethod
     def ensure_xstructured_fields(cls, values: dict[str, Any]) -> dict[str, Any]:
         """Ensure that our structured fields are set.
 

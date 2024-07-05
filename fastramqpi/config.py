@@ -1,24 +1,20 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 """Settings handling."""
-from pydantic import AnyHttpUrl
+from pydantic import ConfigDict, AnyHttpUrl
 from pydantic import BaseModel
-from pydantic import BaseSettings
 from pydantic import Field
 from pydantic import parse_obj_as
 from pydantic import SecretStr
 
 from .ramqp.config import AMQPConnectionSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # pylint: disable=too-few-public-methods
 class FastAPIIntegrationSystemSettings(BaseSettings):
     """Settings for the FastAPIIntegrationSystem framework."""
-
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
+    model_config = SettingsConfigDict(frozen=True)
 
     # We assume these will be set by the docker build process,
     # and as such will contain release information at runtime.
@@ -45,11 +41,7 @@ class DatabaseSettings(BaseModel):
 # pylint: disable=too-few-public-methods
 class ClientSettings(BaseSettings):
     """Settings for the connection to OS2mo."""
-
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
+    model_config = SettingsConfigDict(frozen=True)
 
     mo_url: AnyHttpUrl = Field(
         parse_obj_as(AnyHttpUrl, "http://mo-service:5000"),
@@ -69,12 +61,7 @@ class ClientSettings(BaseSettings):
 # pylint: disable=too-few-public-methods
 class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
     """Settings for the FastRAMQPI framework."""
-
-    class Config:
-        """Settings are frozen."""
-
-        frozen = True
-        env_nested_delimiter = "__"
+    model_config = ConfigDict(frozen=True, env_nested_delimiter="__")
 
     amqp: AMQPConnectionSettings
     database: DatabaseSettings | None

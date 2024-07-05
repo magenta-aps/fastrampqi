@@ -12,12 +12,12 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from gql.client import AsyncClientSession
 from prometheus_fastapi_instrumentator import Instrumentator
-from pydantic import BaseSettings
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from .raclients.graph.client import GraphQLClient
 from .raclients.modelclient.mo import ModelClient
 from .ramqp.mo import MOAMQPSystem
+from pydantic_settings import BaseSettings
 
 
 HealthcheckFunction = Callable[["Context"], Awaitable[bool]]
