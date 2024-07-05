@@ -27,7 +27,7 @@ from fastapi import Request
 from fastapi.dependencies.utils import get_dependant
 from fastapi.dependencies.utils import get_parameterless_sub_dependant
 from fastapi.dependencies.utils import solve_dependencies
-from pydantic import parse_raw_as
+from pydantic.v1 import parse_raw_as
 from starlette.datastructures import State as StarletteState
 
 T = TypeVar("T")

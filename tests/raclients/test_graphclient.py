@@ -6,8 +6,8 @@ import httpx
 import pytest
 from gql import gql
 from graphql import DocumentNode
-from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
+from pydantic.v1 import AnyHttpUrl
+from pydantic.v1 import parse_obj_as
 from respx import MockRouter
 
 from fastramqpi.raclients.graph.client import GraphQLClient

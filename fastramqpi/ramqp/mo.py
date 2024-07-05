@@ -11,7 +11,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel
+from pydantic.v1 import BaseModel
 
 from .abstract import AbstractAMQPSystem
 from .abstract import AbstractPublishMixin

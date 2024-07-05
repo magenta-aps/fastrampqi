@@ -11,9 +11,9 @@ from typing import Optional
 from typing import Tuple
 
 import structlog
-from pydantic import BaseSettings
-from pydantic import Extra
-from pydantic.env_settings import SettingsSourceCallable
+from pydantic.v1 import BaseSettings
+from pydantic.v1 import Extra
+from pydantic.v1.env_settings import SettingsSourceCallable
 from structlog.processors import CallsiteParameter
 
 from .load_settings import load_settings

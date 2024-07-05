@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 from authlib.integrations.httpx_client import AsyncOAuth2Client
-from pydantic import BaseSettings
+from pydantic.v1 import BaseSettings
 from starlette.testclient import TestClient
 
 from fastramqpi.config import Settings as FastRAMQPISettings

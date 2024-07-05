@@ -4,7 +4,7 @@
 # pylint: disable=unused-argument
 """Test our settings handling."""
 import pytest
-from pydantic import ValidationError
+from pydantic.v1 import ValidationError
 
 from fastramqpi.config import Settings
 

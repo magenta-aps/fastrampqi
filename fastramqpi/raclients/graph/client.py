@@ -14,7 +14,7 @@ from gql.client import AsyncClientSession
 from gql.client import SyncClientSession
 from gql.transport import AsyncTransport
 from graphql import DocumentNode
-from pydantic import AnyHttpUrl
+from pydantic.v1 import AnyHttpUrl
 
 from ..auth import AuthenticatedAsyncHTTPXClient
 from ..auth import AuthenticatedHTTPXClient
