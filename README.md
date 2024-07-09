@@ -111,8 +111,8 @@ To integrate such client, first add and configure the codegen:
 ```toml
 # pyproject.toml
 
-[tool.poetry.dependencies]
-ariadne-codegen = {extras = ["subscriptions"], version = "^0.7.1"}
+[tool.poetry.group.dev.dependencies]
+ariadne-codegen = "0.13.0"
 
 [tool.ariadne-codegen]
 # Ideally, the GraphQL client is generated as part of the build process and
@@ -128,6 +128,8 @@ target_package_path = "my_integration/"
 client_name = "GraphQLClient"
 schema_path = "schema.graphql"  # curl -O http://localhost:5000/graphql/v8/schema.graphql
 queries_path = "queries.graphql"
+include_all_inputs = false
+include_all_enums = false
 plugins = [
     # Return values directly when only a single top field is requested
     "ariadne_codegen.contrib.shorter_results.ShorterResultsPlugin",
