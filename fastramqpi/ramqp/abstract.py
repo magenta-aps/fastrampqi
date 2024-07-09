@@ -26,6 +26,7 @@ from aio_pika.abc import AbstractExchange
 from aio_pika.abc import AbstractQueue
 from aio_pika.abc import AbstractRobustChannel
 from aio_pika.abc import AbstractRobustConnection
+from aiormq import ChannelInvalidStateError
 from aiormq import ChannelPreconditionFailed
 from fastapi.encoders import jsonable_encoder
 from more_itertools import all_unique
@@ -208,6 +209,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._channel: AbstractRobustChannel | None = None
         self._exchange: AbstractExchange | None = None
         self._queues: dict[str, AbstractQueue] = {}
+        self._closing = False
 
         self._periodic_task: asyncio.Task | None = None
 
@@ -404,7 +406,9 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
 
         if self._connection is not None:
             logger.info("Closing AMQP connection")
+            self._closing = True
             await self._connection.close()
+            self._closing = False
             self._connection = None
 
     async def __aenter__(self: TAMQPSystem) -> TAMQPSystem:
@@ -495,5 +499,8 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
                         await message.reject(requeue=True)
                         raise exception
         except Exception as exception:
+            # Ignore error spam due to connection shutting down
+            if self._closing and isinstance(exception, ChannelInvalidStateError):
+                return
             log.exception("Exception during on_message()")
             raise exception
