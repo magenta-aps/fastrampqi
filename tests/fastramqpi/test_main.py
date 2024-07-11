@@ -265,25 +265,31 @@ async def dummy_lifespan_manager() -> AsyncIterator[None]:
 
 def test_add_lifespan_manager(fastramqpi: FastRAMQPI) -> None:
     """Test that add_lifespan_manager adds to the lifespan manager list."""
-    assert fastramqpi._context["lifespan_managers"].keys() == {1000}
+    assert fastramqpi._context["lifespan_managers"].keys() == {100, 300, 400, 1000}
     # We expect LegacyGraphQLClient, LegacyModelClient, AsyncOAuth2Client MO client and
     # RAMQP to be present.
-    assert len(fastramqpi._context["lifespan_managers"][1000]) == 4
+    assert len(fastramqpi._context["lifespan_managers"][100]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][300]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][400]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][1000]) == 1
 
     context_manager = dummy_lifespan_manager()
 
     fastramqpi.add_lifespan_manager(context_manager)
-    assert fastramqpi._context["lifespan_managers"].keys() == {1000}
+    assert fastramqpi._context["lifespan_managers"].keys() == {100, 300, 400, 1000}
     # We expect our manager to have been added
-    assert len(fastramqpi._context["lifespan_managers"][1000]) == 5
+    assert len(fastramqpi._context["lifespan_managers"][100]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][300]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][400]) == 1
+    assert len(fastramqpi._context["lifespan_managers"][1000]) == 2
 
     fastramqpi.add_lifespan_manager(context_manager, priority=1)
-    assert fastramqpi._context["lifespan_managers"].keys() == {1, 1000}
+    assert fastramqpi._context["lifespan_managers"].keys() == {1, 100, 300, 400, 1000}
     # We expect our manager to have been added
     assert len(fastramqpi._context["lifespan_managers"][1]) == 1
 
     fastramqpi.add_lifespan_manager(context_manager, priority=1)
-    assert fastramqpi._context["lifespan_managers"].keys() == {1, 1000}
+    assert fastramqpi._context["lifespan_managers"].keys() == {1, 100, 300, 400, 1000}
     # We expect our manager already exist, and not to have been readded
     assert len(fastramqpi._context["lifespan_managers"][1]) == 1
 

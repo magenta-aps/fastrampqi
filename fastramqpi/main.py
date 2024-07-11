@@ -94,8 +94,12 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self.amqpsystem = MOAMQPSystem(
             settings=amqp_settings, context=self.get_context()
         )
-        # Let AMQPSystems lifespan follow ASGI lifespan
-        self.add_lifespan_manager(self.amqpsystem)
+        # Let AMQPSystems lifespan follow ASGI lifespan. The AMQPSystem must be started
+        # last (priority 1000) so all the dependency-injectable objects are set up and
+        # available before the AMQP message handlers start receiving messages. Since
+        # lifespan managers are shutdown in reverse order, this also ensures that all
+        # messages handlers have finished before shutting down their dependencies.
+        self.add_lifespan_manager(self.amqpsystem, priority=1000)
 
         async def healthcheck_amqp(context: Context) -> bool:
             """AMQP Healthcheck wrapper.
@@ -149,7 +153,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 yield
 
         self.add_lifespan_manager(
-            cast(AsyncContextManager, partial(mo_client_manager, self._context)())
+            cast(AsyncContextManager, partial(mo_client_manager, self._context)()),
+            priority=100,
         )
 
         # GraphQL Client
@@ -171,7 +176,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 cast(
                     AsyncContextManager,
                     partial(graphql_client_manager, self._context)(),
-                )
+                ),
+                priority=200,
             )
 
         # Prepare legacy clients
@@ -191,10 +197,11 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 yield
 
         self.add_lifespan_manager(
-            cast(AsyncContextManager, partial(legacy_graphql_session, self._context)())
+            cast(AsyncContextManager, partial(legacy_graphql_session, self._context)()),
+            priority=300,
         )
         # Expose legacy Service API connection (model_client)
-        self.add_lifespan_manager(legacy_model_client)
+        self.add_lifespan_manager(legacy_model_client, priority=400)
         self._context["legacy_model_client"] = legacy_model_client
 
     def get_amqpsystem(self) -> MOAMQPSystem:

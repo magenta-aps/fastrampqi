@@ -209,6 +209,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         self._channel: AbstractRobustChannel | None = None
         self._exchange: AbstractExchange | None = None
         self._queues: dict[str, AbstractQueue] = {}
+        self._consumer_tags: dict[AbstractQueue, str] = {}
         self._closing = False
 
         self._periodic_task: asyncio.Task | None = None
@@ -378,14 +379,15 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
 
             self._queues[function_name] = queue
 
-            log.info("Starting message listener")
-            await queue.consume(partial(self._on_message, callback))
-
             log.info("Binding routing keys")
             for routing_key in routing_keys:
                 log.info("Binding routing-key", routing_key=routing_key)
                 await queue.bind(self._exchange, routing_key=routing_key)
                 routes_bound.labels(function_name).inc()
+
+            log.info("Starting message listener")
+            consumer_tag = await queue.consume(partial(self._on_message, callback))
+            self._consumer_tags[queue] = consumer_tag
 
         self._periodic_task = _setup_periodic_metrics(self._queues)
 
@@ -395,6 +397,14 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         This method disconnects from the AMQP server, and stops the periodic metrics.
         """
         logger.info("Stopping AMQP system")
+        logger.info("Waiting for message handlers to finish")
+        await asyncio.gather(
+            *[
+                queue.cancel(consumer_tag)
+                for queue, consumer_tag in self._consumer_tags.items()
+            ]
+        )
+
         if self._periodic_task is not None:
             self._periodic_task.cancel()
             self._periodic_task = None
