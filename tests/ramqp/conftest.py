@@ -16,8 +16,8 @@ import structlog
 from aio_pika import IncomingMessage
 from aio_pika import Message
 from aiormq.abc import DeliveredMessage
-from pydantic.v1 import AmqpDsn
-from pydantic.v1 import parse_obj_as
+from pydantic import AmqpDsn
+from pydantic import parse_obj_as
 from structlog.testing import LogCapture
 
 from .amqp_helpers import delivered2incoming

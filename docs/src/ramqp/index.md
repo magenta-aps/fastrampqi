@@ -129,7 +129,7 @@ included in the `BaseSettings` of the application using the library. The `url`
 parameter of the `AMQPConnectionSettings` object can be given as a single URL
 string or as individual structured fields. Consider the following:
 ```python
-from pydantic.v1 import BaseSettings
+from pydantic import BaseSettings
 
 from ramqp.config import AMQPConnectionSettings
 

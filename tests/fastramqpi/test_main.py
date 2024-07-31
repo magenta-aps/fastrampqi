@@ -20,9 +20,9 @@ import pytest
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic.v1 import AnyHttpUrl
-from pydantic.v1 import parse_obj_as
-from pydantic.v1 import SecretStr
+from pydantic import AnyHttpUrl
+from pydantic import parse_obj_as
+from pydantic import SecretStr
 from pytest import MonkeyPatch
 
 import fastramqpi

@@ -109,7 +109,7 @@ def test_semantic_version_hypothesis_negative(version: str, valid: bool) -> None
 
 @pytest.mark.parametrize("version", [2, 2.1, {}, [], (), object, type(object)])
 def test_semantic_version_invalid_types(version: Any) -> None:
-    from pydantic.v1 import ValidationError
+    from pydantic import ValidationError
 
     with pytest.raises(TypeError) as excinfo_1:
         regex = get_regex()
@@ -126,7 +126,7 @@ def test_semantic_version_invalid_types(version: Any) -> None:
 
 
 def _test_semantic_version(version: Any, valid: bool) -> None:
-    from pydantic.v1 import ValidationError
+    from pydantic import ValidationError
 
     # Check regex itself
     regex = get_regex()

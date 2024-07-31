@@ -5,8 +5,8 @@
 import pytest
 from aio_pika import connect
 from aio_pika import Message
-from pydantic.v1 import AmqpDsn
-from pydantic.v1 import parse_obj_as
+from pydantic import AmqpDsn
+from pydantic import parse_obj_as
 
 from .common import random_string
 from fastramqpi.ramqp import AMQPSystem

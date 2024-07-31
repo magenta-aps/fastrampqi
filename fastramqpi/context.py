@@ -12,7 +12,7 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from gql.client import AsyncClientSession
 from prometheus_fastapi_instrumentator import Instrumentator
-from pydantic.v1 import BaseSettings
+from pydantic import BaseSettings
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from .raclients.graph.client import GraphQLClient

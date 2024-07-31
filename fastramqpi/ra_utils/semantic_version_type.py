@@ -8,7 +8,7 @@ from typing import Dict
 from typing import Iterator
 from typing import Pattern
 
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 
 # Regex from https://semver.org/
