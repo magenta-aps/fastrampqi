@@ -12,7 +12,7 @@ from typing import Union
 from uuid import UUID
 
 from fastapi.encoders import jsonable_encoder
-from pydantic.v1 import AnyHttpUrl
+from pydantic import AnyHttpUrl
 
 from ..auth import AuthenticatedAsyncHTTPXClient
 from ..auth import keycloak_token_endpoint

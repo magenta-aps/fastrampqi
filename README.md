@@ -15,8 +15,8 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import FastAPI
-from pydantic.v1 import BaseSettings
-from pydantic.v1 import Field
+from pydantic import BaseSettings
+from pydantic import Field
 
 from fastramqpi import depends
 from fastramqpi.config import Settings as FastRAMQPISettings
