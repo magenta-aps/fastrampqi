@@ -300,8 +300,8 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         )
         # If an upstream exchange is configured, fetch it and bind ours to it
         if settings.upstream_exchange:
-            upstream_exchange = await self._channel.get_exchange(
-                settings.upstream_exchange, ensure=True
+            upstream_exchange = await self._channel.declare_exchange(
+                settings.upstream_exchange, ExchangeType.TOPIC, durable=True
             )
             await self._exchange.bind(upstream_exchange, routing_key="*")
 
