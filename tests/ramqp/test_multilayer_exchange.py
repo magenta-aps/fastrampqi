@@ -22,13 +22,6 @@ async def test_multilayer_exchange_publish() -> None:
 
     mo_exchange = random_string()
 
-    mo_amqp_system = AMQPSystem(
-        settings=AMQPConnectionSettings(
-            url=url,
-            exchange=mo_exchange,
-        ),
-    )
-
     amqp_system_1 = AMQPSystem(
         settings=AMQPConnectionSettings(
             url=url,
@@ -44,6 +37,13 @@ async def test_multilayer_exchange_publish() -> None:
             queue_prefix=random_string(),
             exchange=random_string(),
             upstream_exchange=mo_exchange,
+        ),
+    )
+
+    mo_amqp_system = AMQPSystem(
+        settings=AMQPConnectionSettings(
+            url=url,
+            exchange=mo_exchange,
         ),
     )
 
