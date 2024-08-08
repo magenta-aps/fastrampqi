@@ -27,6 +27,9 @@ class FastAPIIntegrationSystemSettings(BaseSettings):
 
     log_level: str = Field("INFO", description="Log level to configure.")
     dap: bool = Field(False, description="Whether to enable debugging")
+    production: bool = Field(
+        True, description="Whether to configure logging, et al for production"
+    )
 
     enable_metrics: bool = Field(True, description="Whether to enable metrics.")
 
