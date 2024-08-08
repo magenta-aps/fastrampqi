@@ -11,6 +11,8 @@ from typing import Awaitable
 from typing import Callable
 from typing import Iterator
 from typing import NoReturn
+from unittest.mock import AsyncMock
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -244,3 +246,10 @@ def get_num_consumed_messages(
         return sum(queue.get("message_stats", {}).get("ack", 0) for queue in queues)
 
     return _get_num_consumed_messages
+
+
+@pytest.fixture
+async def disable_asyncio_sleep() -> AsyncIterator[None]:
+    """Fixture to disable `asyncio.sleep` during unit-tests."""
+    with patch("asyncio.sleep", new_callable=AsyncMock):
+        yield
