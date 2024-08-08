@@ -136,6 +136,7 @@ plugins = [
 ]
 [tool.ariadne-codegen.scalars.DateTime]
 type = "datetime.datetime"
+parse = "fastramqpi.ariadne.parse_graphql_datetime"
 [tool.ariadne-codegen.scalars.UUID]
 type = "uuid.UUID"
 ```
