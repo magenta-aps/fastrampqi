@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import asyncio
+import os
 import urllib.parse
 from asyncio import CancelledError
 from asyncio import create_task
@@ -11,6 +12,7 @@ from typing import Awaitable
 from typing import Callable
 from typing import Iterator
 from typing import NoReturn
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -45,6 +47,18 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
                 "amqp_queue_isolation",
                 "passthrough_backing_services",
             ]
+        else:  # unit-test
+            # MUST prepend to replicate auto-use fixtures coming first
+            item.fixturenames[:0] = [  # type: ignore[attr-defined]
+                "empty_environment",
+            ]
+
+
+@pytest.fixture
+async def empty_environment() -> AsyncIterator[None]:
+    """Clear all environmental variables before running unit-test."""
+    with patch.dict(os.environ, clear=True):
+        yield
 
 
 @pytest.fixture(scope="session")
