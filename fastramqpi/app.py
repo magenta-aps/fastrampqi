@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
-import logging
 from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
 from contextlib import suppress
@@ -24,6 +23,7 @@ from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 from .config import FastAPIIntegrationSystemSettings
 from .context import Context
 from .context import HealthcheckFunction
+from fastramqpi.logging import configure_logging
 
 logger = structlog.get_logger()
 fastapi_router = APIRouter()
@@ -45,21 +45,6 @@ def update_build_information(version: str, build_hash: str) -> None:
             "version": version,
             "hash": build_hash,
         }
-    )
-
-
-def configure_logging(log_level_name: str) -> None:
-    """Setup our logging.
-
-    Args:
-        log_level_name: The logging level.
-
-    Returns:
-        None
-    """
-    log_level_value = logging.getLevelName(log_level_name)
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(log_level_value)
     )
 
 
@@ -162,7 +147,7 @@ class FastAPIIntegrationSystem:
         super().__init__()
         self.settings = settings
 
-        configure_logging(self.settings.log_level)
+        configure_logging(self.settings.log_level, self.settings.json_logs)
 
         if self.settings.dap:  # pragma: no cover
             enable_debugging()
