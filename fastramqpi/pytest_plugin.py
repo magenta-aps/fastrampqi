@@ -11,6 +11,7 @@ from typing import Any
 from typing import Awaitable
 from typing import Callable
 from typing import Iterator
+from typing import Mapping
 from typing import NoReturn
 from unittest.mock import patch
 
@@ -19,6 +20,7 @@ import pytest
 import sqlalchemy
 from httpx import AsyncClient
 from httpx import BasicAuth
+from more_itertools import one
 from pytest import Config
 from pytest import Item
 from pytest import MonkeyPatch
@@ -30,6 +32,9 @@ from sqlalchemy import text
 def pytest_configure(config: Config) -> None:
     config.addinivalue_line(
         "markers", "integration_test: mark test as an integration test."
+    )
+    config.addinivalue_line(
+        "markers", "envvar(mapping): set the specified environmental variables"
     )
 
 
@@ -59,6 +64,50 @@ async def empty_environment() -> AsyncIterator[None]:
     """Clear all environmental variables before running unit-test."""
     with patch.dict(os.environ, clear=True):
         yield
+
+
+@pytest.fixture(autouse=True)
+def load_marked_envvars(
+    monkeypatch: pytest.MonkeyPatch,
+    request: Any,
+) -> Iterator[None]:
+    """Fixture to inject environmental variable via pytest.marks.
+
+    Example:
+        ```
+        @pytest.mark.envvar({"VAR1": "1", "VAR2": 2})
+        @pytest.mark.envvar({"VAR3": "3"})
+        def test_load_marked_envvars() -> None:
+            assert os.environ.get("VAR1") == "1"
+            assert os.environ.get("VAR2") == "2"
+            assert os.environ.get("VAR3") == "3"
+            assert os.environ.get("VAR4") is None
+        ```
+
+    Args:
+        monkeypatch: The patcher to use for settings the environmental variables.
+        request: The pytest request object used to extract markers.
+
+    Yields:
+        None, but keeps the settings overrides active.
+    """
+    envvars: dict[str, str] = {}
+    for mark in request.node.iter_markers("envvar"):
+        if not mark.args:
+            pytest.fail("envvar mark must take an argument")
+        if len(mark.args) > 1:
+            pytest.fail("envvar mark must take at most one argument")
+        argument = one(mark.args)
+        if not isinstance(argument, Mapping):
+            pytest.fail("envvar mark argument must be a mapping")
+        if any(not isinstance(key, str) for key in argument.keys()):
+            pytest.fail("envvar mapping keys must be strings")
+        if any(not isinstance(value, str) for value in argument.values()):
+            pytest.fail("envvar mapping values must be strings")
+        envvars.update(**argument)
+    for key, value in envvars.items():
+        monkeypatch.setenv(key, value)
+    yield
 
 
 @pytest.fixture(scope="session")
