@@ -487,7 +487,7 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
         try:
             with _handle_receive_metrics(routing_key, function_name):
                 # Requeue messages on exceptions, so they can be retried.
-                async with message.process(ignore_processed=True):
+                async with message.process(requeue=True, ignore_processed=True):
                     try:
                         # TODO: Add retry metric
                         await dependency_injected_with_deps(
@@ -505,9 +505,6 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
                     except RequeueMessage:
                         await message.reject(requeue=True)
                         log.info("Requested requeueing of message")
-                    except Exception as exception:
-                        await message.reject(requeue=True)
-                        raise exception
         except Exception as exception:
             # Ignore error spam due to connection shutting down
             if self._closing and isinstance(exception, ChannelInvalidStateError):
