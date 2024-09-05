@@ -109,17 +109,17 @@ def dependency_injected_with_deps(
                     },
                 }
             )
-            values, errors, *_ = await solve_dependencies(
+            solved = await solve_dependencies(
                 request=request,
                 dependant=dependant,
                 async_exit_stack=stack,
                 dependency_overrides_provider=context.get("app"),
             )
-            if errors:
+            if solved.errors:
                 # TODO: Utilize Python 3.11 ExceptionGroup?
-                raise ValueError(errors)
+                raise ValueError(solved.errors)
 
-            return await function(**values)
+            return await function(**solved.values)
 
     return wrapper
 
