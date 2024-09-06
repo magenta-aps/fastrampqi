@@ -798,7 +798,7 @@ test = ["pytest", "tornado (>=4.5)", "typeguard"]
 
 [[package]]
 name = "tqdm"
-version = "4.66.4"
+version = "4.66.5"
 description = "Fast, Extensible Progress Meter"
 category = "main"
 optional = false
@@ -1772,8 +1772,8 @@ tenacity = [
     {file = "tenacity-8.5.0.tar.gz", hash = "sha256:8bc6c0c8a09b31e6cad13c47afbed1a567518250a9a171418582ed8d9c20ca78"},
 ]
 tqdm = [
-    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
-    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
+    {file = "tqdm-4.66.5-py3-none-any.whl", hash = "sha256:90279a3770753eafc9194a0364852159802111925aa30eb3f9d85b0e805ac7cd"},
+    {file = "tqdm-4.66.5.tar.gz", hash = "sha256:e1020aef2e5096702d8a025ac7d16b1577279c9d63f8375b63083e9a5f0fcbad"},
 ]
 types-pyyaml = [
     {file = "types-PyYAML-6.0.12.20240311.tar.gz", hash = "sha256:a9e0f0f88dc835739b0c1ca51ee90d04ca2a897a71af79de9aec5f38cb0a5342"},
