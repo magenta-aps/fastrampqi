@@ -96,6 +96,7 @@ def dependency_injected_with_deps(
         Returns:
             What the wrapped function returns.
         """
+        # https://github.com/fastapi/fastapi/blob/master/fastapi/routing.py
         async with AsyncExitStack() as stack:
             request = Request(
                 {
@@ -112,8 +113,9 @@ def dependency_injected_with_deps(
             solved = await solve_dependencies(
                 request=request,
                 dependant=dependant,
-                async_exit_stack=stack,
                 dependency_overrides_provider=context.get("app"),
+                async_exit_stack=stack,
+                embed_body_fields=False,
             )
             if solved.errors:
                 # TODO: Utilize Python 3.11 ExceptionGroup?
