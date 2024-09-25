@@ -60,9 +60,9 @@ def configure_logging(log_level: str, json_logs: bool = True) -> None:
         # string) from the final processor (`JSONRenderer`) will be passed to
         # the method of the same name as that you've called on the bound logger.
         logger_factory=structlog.stdlib.LoggerFactory(),
-        # Effectively freeze configuration after creating the first bound
-        # logger.
-        cache_logger_on_first_use=True,
+        # Cached logger breaks logs capture during testing.
+        # https://www.structlog.org/en/stable/testing.html
+        cache_logger_on_first_use=False,
     )
 
     log_renderer: structlog.types.Processor = structlog.processors.JSONRenderer()
