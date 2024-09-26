@@ -16,7 +16,7 @@ include = ["fastramqpi/py.typed"]
 [tool.poetry.dependencies]
 python = "^3.11"
 structlog = "^24"
-pydantic = "^1"
+pydantic = ">=1,<3"
 gql = "^3"
 more-itertools = "^9"
 prometheus-fastapi-instrumentator = "^7"
