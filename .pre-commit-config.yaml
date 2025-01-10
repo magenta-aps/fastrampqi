@@ -31,3 +31,8 @@ repos:
     rev: v2.0.0
     hooks:
       - id: reuse
+
+  - repo: https://github.com/fpgmaas/deptry.git
+    rev: 0.21.1
+    hooks:
+      - id: deptry
