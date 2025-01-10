@@ -1,5 +1,4 @@
 # SPDX-FileCopyrightText: Magenta ApS
-#
 # SPDX-License-Identifier: MPL-2.0
 from functools import partial
 from unittest.mock import MagicMock
@@ -10,12 +9,14 @@ from aiohttp import ClientResponseError
 from .utils import assert_dar_response
 from .utils import dar_cleanse_parameterize
 from .utils import dar_cleanse_unspecific_match
-from os2mo_dar_client import AddressType
-from os2mo_dar_client import AsyncDARClient
+from fastramqpi.os2mo_dar_client import AddressType
+from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 
 @pytest.mark.parametrize(*dar_cleanse_parameterize)
-async def test_cleanse_single(adarclient: AsyncDARClient, address_string, expected):
+async def test_cleanse_single(
+    adarclient: AsyncDARClient, address_string: str, expected: dict[str, str]
+) -> None:
     """Test cleansing of single address string passes."""
     async with adarclient:
         result = await adarclient.cleanse_single(address_string)
@@ -23,7 +24,7 @@ async def test_cleanse_single(adarclient: AsyncDARClient, address_string, expect
     assert_dar_response(result, expected)
 
 
-async def test_cleanse_invalid_addrtype(adarclient: AsyncDARClient):
+async def test_cleanse_invalid_addrtype(adarclient: AsyncDARClient) -> None:
     async with adarclient:
         with pytest.raises(ValueError) as excinfo:
             await adarclient.cleanse_single("", [AddressType.HISTORIC_ADDRESS])
@@ -31,7 +32,9 @@ async def test_cleanse_invalid_addrtype(adarclient: AsyncDARClient):
 
 
 @pytest.mark.parametrize("address_string", dar_cleanse_unspecific_match)
-async def test_cleanse_single_unspecific(adarclient: AsyncDARClient, address_string):
+async def test_cleanse_single_unspecific(
+    adarclient: AsyncDARClient, address_string: str
+) -> None:
     """Test lookup of a single non-existent entry fails."""
     async with adarclient:
         with pytest.raises(ValueError) as excinfo:
@@ -39,11 +42,13 @@ async def test_cleanse_single_unspecific(adarclient: AsyncDARClient, address_str
         assert "No address match found from cleansing in DAR" in str(excinfo.value)
 
 
-async def test_cleanse_single_clientresponse_error(adarclient: AsyncDARClient):
+async def test_cleanse_single_clientresponse_error(adarclient: AsyncDARClient) -> None:
     """Test that ClientResponseErrors are propagated."""
 
     SeededClientResponseError = partial(
-        ClientResponseError, history=None, request_info=None
+        ClientResponseError,
+        history=None,  # type: ignore
+        request_info=None,  # type: ignore
     )
     address_string = next(iter(dar_cleanse_unspecific_match))
 

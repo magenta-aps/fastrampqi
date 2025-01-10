@@ -1,17 +1,18 @@
 # SPDX-FileCopyrightText: Magenta ApS
-#
 # SPDX-License-Identifier: MPL-2.0
+from uuid import UUID
+
 import pytest
 
 from .utils import assert_dar_response
 from .utils import dar_lookup
 from .utils import dar_non_existent
 from .utils import dar_parameterize
-from os2mo_dar_client import AsyncDARClient
+from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 
 @pytest.mark.integrationtest
-async def test_healthcheck_async(loop):
+async def test_healthcheck_async() -> None:
     """Test healthcheck passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -21,7 +22,7 @@ async def test_healthcheck_async(loop):
 
 @pytest.mark.integrationtest
 @pytest.mark.parametrize(*dar_parameterize)
-async def test_dar_fetch_single(uuid, expected, loop):
+async def test_dar_fetch_single(uuid: UUID, expected: dict[str, str]) -> None:
     """Test lookup of single entry passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -31,7 +32,7 @@ async def test_dar_fetch_single(uuid, expected, loop):
 
 @pytest.mark.integrationtest
 @pytest.mark.parametrize("uuid", dar_non_existent)
-async def test_dar_fetch_single_non_existent(uuid, loop):
+async def test_dar_fetch_single_non_existent(uuid: UUID) -> None:
     """Test lookup of a single non-existent entry fails."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -42,7 +43,7 @@ async def test_dar_fetch_single_non_existent(uuid, loop):
 
 @pytest.mark.integrationtest
 @pytest.mark.parametrize(*dar_parameterize)
-async def test_dar_fetch(uuid, expected, loop):
+async def test_dar_fetch(uuid: UUID, expected: dict[str, str]) -> None:
     """Test lookup of single entry using dar_fetch passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -55,7 +56,7 @@ async def test_dar_fetch(uuid, expected, loop):
 
 @pytest.mark.integrationtest
 @pytest.mark.parametrize("uuid", dar_non_existent)
-async def test_dar_fetch_non_existent(uuid, loop):
+async def test_dar_fetch_non_existent(uuid: UUID) -> None:
     """Test lookup of single non-existent entry using dar_fetch fails."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -67,7 +68,7 @@ async def test_dar_fetch_non_existent(uuid, loop):
 
 
 @pytest.mark.integrationtest
-async def test_dar_fetch_zero(loop):
+async def test_dar_fetch_zero() -> None:
     """Test lookup of zero entries using dar_fetch passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -77,7 +78,7 @@ async def test_dar_fetch_zero(loop):
 
 
 @pytest.mark.integrationtest
-async def test_dar_fetch_multiple(loop):
+async def test_dar_fetch_multiple() -> None:
     """Test lookup of multiple entries using dar_fetch passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -90,7 +91,7 @@ async def test_dar_fetch_multiple(loop):
 
 
 @pytest.mark.integrationtest
-async def test_dar_fetch_multiple_chunked(loop):
+async def test_dar_fetch_multiple_chunked() -> None:
     """Test lookup of multiple entries using dar_fetch passes."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -103,7 +104,7 @@ async def test_dar_fetch_multiple_chunked(loop):
 
 
 @pytest.mark.integrationtest
-async def test_dar_fetch_multiple_non_existent(loop):
+async def test_dar_fetch_multiple_non_existent() -> None:
     """Test lookup of multiple non-existent entries using dar_fetch fails."""
     darclient = AsyncDARClient()
     async with darclient:
@@ -115,7 +116,7 @@ async def test_dar_fetch_multiple_non_existent(loop):
 
 
 @pytest.mark.integrationtest
-async def test_dar_fetch_multiple_mixed_existence(loop):
+async def test_dar_fetch_multiple_mixed_existence() -> None:
     """Test lookup of multiple mixed-existent entries using dar_fetch."""
     darclient = AsyncDARClient()
     async with darclient:

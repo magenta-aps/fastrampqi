@@ -40,12 +40,15 @@ sqlalchemy = "^2"
 psycopg = "^3"
 debugpy = "^1"
 hypothesis = "^6"
+click = "^8"
+aiohttp = "^3"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.24"
 pytest-split = "^0.9"
 pytest-cov = "^5"
 pytest-mock = "^3"
+pytest-aiohttp = "^1"
 
 
 [tool.poetry.group.pre-commit.dependencies]

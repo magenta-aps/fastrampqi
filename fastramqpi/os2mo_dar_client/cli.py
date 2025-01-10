@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: Magenta ApS
-#
 # SPDX-License-Identifier: MPL-2.0
-import json
-from typing import Tuple
-from uuid import UUID
+import json  # pragma: no cover
+from typing import Tuple  # pragma: no cover
+from uuid import UUID  # pragma: no cover
 
-import click
-from ra_utils.async_to_sync import async_to_sync
+import click  # pragma: no cover
 
-from os2mo_dar_client import AsyncDARClient
+from . import AsyncDARClient  # pragma: no cover
+from fastramqpi.ra_utils.async_to_sync import async_to_sync  # pragma: no cover
 
 
 @click.command()
@@ -21,7 +20,7 @@ from os2mo_dar_client import AsyncDARClient
     help="DAR UUIDs to lookup",
 )
 @async_to_sync
-async def cli(uuids: Tuple[UUID]) -> None:
+async def cli(uuids: Tuple[UUID]) -> None:  # pragma: no cover
     darclient = AsyncDARClient()
     async with darclient:
         if not await darclient.healthcheck():
@@ -32,5 +31,5 @@ async def cli(uuids: Tuple[UUID]) -> None:
         print("Missing:", json.dumps(list(map(str, missing)), indent=4))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     cli()

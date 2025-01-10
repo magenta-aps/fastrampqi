@@ -1,5 +1,4 @@
 # SPDX-FileCopyrightText: Magenta ApS
-#
 # SPDX-License-Identifier: MPL-2.0
 import warnings
 from asyncio import gather
@@ -25,10 +24,11 @@ import aiohttp
 from more_itertools import chunked
 from more_itertools import one
 from more_itertools import unzip
-from ra_utils.syncable import Syncable
 from tenacity import retry
 from tenacity import stop_after_delay
 from tenacity import wait_exponential
+
+from fastramqpi.ra_utils.syncable import Syncable
 
 retry_max_time = 10
 
@@ -140,7 +140,7 @@ class AsyncDARClient:
         url = f"{self._baseurl}/autocomplete"
         try:
             async with self._get_session().get(
-                url, timeout=timeout or self._timeout
+                url, timeout=aiohttp.ClientTimeout(timeout or self._timeout)
             ) as response:
                 if response.status == 200:
                     return True
@@ -177,10 +177,10 @@ class AsyncDARClient:
             raise ValueError("DAR does not support historic cleansing")
 
         url = f"{self._baseurl}/datavask/{addrtype.value}"
-        params = {"betegnelse": address_string}
+        params: dict[str, str] = {"betegnelse": address_string}
 
         async with self._get_session().get(
-            url, params=params, timeout=self._timeout
+            url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             payload = await response.json()
@@ -217,10 +217,10 @@ class AsyncDARClient:
         """
 
         url = f"{self._baseurl}/{addrtype.value}/{str(uuid)}"
-        params = {"struktur": "mini", "noformat": 1}
+        params: dict[str, str | int] = {"struktur": "mini", "noformat": 1}
 
         async with self._get_session().get(
-            url, params=params, timeout=self._timeout
+            url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             payload = await response.json()
@@ -245,10 +245,14 @@ class AsyncDARClient:
             * set: Set of UUIDs of entries which were not found.
         """
         url = f"{self._baseurl}/{addrtype.value}"
-        params = {"id": "|".join(map(str, uuids)), "struktur": "mini", "noformat": 1}
+        params: dict[str, str | int] = {
+            "id": "|".join(map(str, uuids)),
+            "struktur": "mini",
+            "noformat": 1,
+        }
 
         async with self._get_session().get(
-            url, params=params, timeout=self._timeout
+            url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             body = await response.json()
@@ -281,15 +285,15 @@ class AsyncDARClient:
         # Chunk our UUIDs into blocks of chunk_size
         uuid_chunks = chunked(uuids, chunk_size)
         # Convert chunks into a list of asyncio.tasks
-        tasks = map(partial(self._fetch_non_chunked, addrtype=addrtype), uuid_chunks)
+        tasks = map(partial(self._fetch_non_chunked, addrtype=addrtype), uuid_chunks)  # type: ignore
         # Here 'result' is a list of tuples (dict, set) => (result, missing)
         result = await gather(*tasks)
         # First we unzip 'result' to get a list of results and a list of missing
         result_dicts, missing_sets = unzip(result)
         # Then we union the dicts and sets before returning
-        combined_result = dict(ChainMap(*result_dicts))
-        combined_missing = set.union(*missing_sets)
-        return combined_result, combined_missing
+        combined_result = dict(ChainMap(*result_dicts))  # type: ignore
+        combined_missing = set.union(*missing_sets)  # type: ignore
+        return combined_result, combined_missing  # type: ignore
 
     async def _fetch(
         self, uuids: Set[UUID], addrtype: AddressType, chunk_size: int

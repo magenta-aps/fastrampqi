@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: Magenta ApS
-#
 # SPDX-License-Identifier: MPL-2.0
 from functools import partial
 from unittest.mock import MagicMock
+from uuid import UUID
 
 import pytest
 from aiohttp import ClientResponseError
@@ -11,11 +11,13 @@ from .utils import assert_dar_response
 from .utils import dar_lookup
 from .utils import dar_non_existent
 from .utils import dar_parameterize
-from os2mo_dar_client import AsyncDARClient
+from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 
 @pytest.mark.parametrize(*dar_parameterize)
-async def test_dar_fetch_single(adarclient: AsyncDARClient, uuid, expected):
+async def test_dar_fetch_single(
+    adarclient: AsyncDARClient, uuid: UUID, expected: dict[str, str]
+) -> None:
     """Test lookup of single entry passes."""
     async with adarclient:
         result = await adarclient.fetch_single(uuid)
@@ -23,7 +25,9 @@ async def test_dar_fetch_single(adarclient: AsyncDARClient, uuid, expected):
 
 
 @pytest.mark.parametrize("uuid", dar_non_existent)
-async def test_dar_fetch_single_non_existent(adarclient: AsyncDARClient, uuid):
+async def test_dar_fetch_single_non_existent(
+    adarclient: AsyncDARClient, uuid: UUID
+) -> None:
     """Test lookup of a single non-existent entry fails."""
     async with adarclient:
         with pytest.raises(ValueError) as excinfo:
@@ -32,7 +36,9 @@ async def test_dar_fetch_single_non_existent(adarclient: AsyncDARClient, uuid):
 
 
 @pytest.mark.parametrize(*dar_parameterize)
-async def test_dar_fetch(adarclient: AsyncDARClient, uuid, expected):
+async def test_dar_fetch(
+    adarclient: AsyncDARClient, uuid: UUID, expected: dict[str, str]
+) -> None:
     """Test lookup of single entry using dar_fetch passes."""
     async with adarclient:
         results, missing = await adarclient.fetch({uuid})
@@ -43,7 +49,7 @@ async def test_dar_fetch(adarclient: AsyncDARClient, uuid, expected):
 
 
 @pytest.mark.parametrize("uuid", dar_non_existent)
-async def test_dar_fetch_non_existent(adarclient: AsyncDARClient, uuid, loop):
+async def test_dar_fetch_non_existent(adarclient: AsyncDARClient, uuid: UUID) -> None:
     """Test lookup of single non-existent entry using dar_fetch fails."""
     async with adarclient:
         results, missing = await adarclient.fetch({uuid})
@@ -53,7 +59,7 @@ async def test_dar_fetch_non_existent(adarclient: AsyncDARClient, uuid, loop):
     assert result == uuid
 
 
-async def test_dar_fetch_zero(adarclient: AsyncDARClient):
+async def test_dar_fetch_zero(adarclient: AsyncDARClient) -> None:
     """Test lookup of zero entries using dar_fetch passes."""
     async with adarclient:
         results, missing = await adarclient.fetch(set())
@@ -61,7 +67,7 @@ async def test_dar_fetch_zero(adarclient: AsyncDARClient):
     assert len(results) == 0
 
 
-async def test_dar_fetch_multiple(adarclient: AsyncDARClient):
+async def test_dar_fetch_multiple(adarclient: AsyncDARClient) -> None:
     """Test lookup of multiple entries using dar_fetch passes."""
     async with adarclient:
         results, missing = await adarclient.fetch(set(dar_lookup.keys()))
@@ -72,7 +78,7 @@ async def test_dar_fetch_multiple(adarclient: AsyncDARClient):
         assert_dar_response(result, expected)
 
 
-async def test_dar_fetch_multiple_chunked(adarclient: AsyncDARClient):
+async def test_dar_fetch_multiple_chunked(adarclient: AsyncDARClient) -> None:
     """Test lookup of multiple entries using dar_fetch passes."""
     async with adarclient:
         results, missing = await adarclient.fetch(set(dar_lookup.keys()), chunk_size=1)
@@ -83,7 +89,7 @@ async def test_dar_fetch_multiple_chunked(adarclient: AsyncDARClient):
         assert_dar_response(result, expected)
 
 
-async def test_dar_fetch_multiple_non_existent(adarclient: AsyncDARClient):
+async def test_dar_fetch_multiple_non_existent(adarclient: AsyncDARClient) -> None:
     """Test lookup of multiple non-existent entries using dar_fetch fails."""
     async with adarclient:
         results, missing = await adarclient.fetch(dar_non_existent)
@@ -93,7 +99,7 @@ async def test_dar_fetch_multiple_non_existent(adarclient: AsyncDARClient):
         assert uuid in missing
 
 
-async def test_dar_fetch_multiple_mixed_existence(adarclient: AsyncDARClient):
+async def test_dar_fetch_multiple_mixed_existence(adarclient: AsyncDARClient) -> None:
     """Test lookup of multiple mixed-existent entries using dar_fetch."""
     async with adarclient:
         results, missing = await adarclient.fetch(
@@ -108,11 +114,15 @@ async def test_dar_fetch_multiple_mixed_existence(adarclient: AsyncDARClient):
         assert_dar_response(result, expected)
 
 
-async def test_dar_fetch_single_clientresponse_error(adarclient: AsyncDARClient):
+async def test_dar_fetch_single_clientresponse_error(
+    adarclient: AsyncDARClient,
+) -> None:
     """Test that ClientResponseErrors are propagated."""
 
     SeededClientResponseError = partial(
-        ClientResponseError, history=None, request_info=None
+        ClientResponseError,
+        history=None,  # type: ignore
+        request_info=None,  # type: ignore
     )
     uuid = next(iter(dar_non_existent))
 
