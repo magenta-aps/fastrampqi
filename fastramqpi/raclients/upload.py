@@ -23,7 +23,7 @@ def upload_file(
     filename_in_mo: str,
 ) -> None:  # pragma: no cover
     """Upload file to OS2mo."""
-    url = f"{mo_url}/graphql/v15"
+    url = f"{mo_url}/graphql/v22"
 
     with open(filepath, "rb") as file:
         # HTTPX inserts a default filename "upload" when there is no filename.
