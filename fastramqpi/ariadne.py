@@ -46,6 +46,46 @@ def parse_graphql_datetime(value: StrBytesIntFloat | datetime) -> datetime:
     return dt.replace(tzinfo=MO_TZ)
 
 
+def _is_ast_annotation_optional(annotation: ast.expr) -> bool:
+    match annotation:
+        # This case handles the `B[A]` syntax
+        case ast.Subscript():
+            # To be optional, `B` in the syntax must be the string "Optional"
+            value = annotation.value
+            # Not a name --> not a match
+            if not isinstance(value, ast.Name):
+                return False
+            return value.id == "Optional"
+
+        # This case handles the `A op B` syntax
+        case ast.BinOp():
+            # To be optional, `B` in the syntax must be None and op must be "|"
+            op = annotation.op
+            # if op is not "|" this is not a match
+            if not isinstance(op, ast.BitOr):
+                return False
+            match annotation.right:
+                case ast.Name():
+                    return annotation.right.id == "None"
+                case ast.Constant():
+                    return annotation.right.value is None
+                case _:
+                    return False
+
+        # This case handles the stringified `"Optional[A]"` syntax
+        # This case handles the stringified `"A | None"` syntax
+        case ast.Name():
+            return "Optional[" in annotation.id or "| None" in annotation.id
+
+        # This case handles the stringified `"Optional[A]"` syntax
+        # This case handles the stringified `"A | None"` syntax
+        case ast.Constant():
+            return "Optional[" in annotation.value or "| None" in annotation.value
+
+        case _:
+            return False
+
+
 class UnsetInputTypesPlugin(Plugin):
     """Ariadne plugin to handle Strawberry UNSET types in input types.
 
@@ -127,50 +167,8 @@ class UnsetInputTypesPlugin(Plugin):
             return field_implementation
 
         # Only optional fields can have difference between UNSET and null
-        if not (
-            # This case handles the `Optional[A]` syntax
-            (
-                isinstance(field_implementation.annotation, ast.Subscript)
-                and isinstance(field_implementation.annotation.value, ast.Name)
-                and field_implementation.annotation.value.id == "Optional"
-            )
-            or
-            # This case handles the `A | None` syntax
-            (
-                isinstance(field_implementation.annotation, ast.BinOp)
-                and isinstance(field_implementation.annotation.op, ast.BitOr)
-                and (
-                    (
-                        isinstance(field_implementation.annotation.right, ast.Name)
-                        and field_implementation.annotation.right.id == "None"
-                    )
-                    or (
-                        isinstance(field_implementation.annotation.right, ast.Constant)
-                        and field_implementation.annotation.right.value is None
-                    )
-                )
-            )
-            or
-            # This case handles the stringified `"Optional[A]"` syntax
-            (
-                isinstance(field_implementation.annotation, ast.Name)
-                and "Optional[" in field_implementation.annotation.id
-            )
-            or (
-                isinstance(field_implementation.annotation, ast.Constant)
-                and "Optional[" in cast(str, field_implementation.annotation.value)
-            )
-            or
-            # This case handles the stringified `"A | None"` syntax
-            (
-                isinstance(field_implementation.annotation, ast.Name)
-                and "| None" in field_implementation.annotation.id
-            )
-            or (
-                isinstance(field_implementation.annotation, ast.Constant)
-                and "| None" in cast(str, field_implementation.annotation.value)
-            )
-        ):
+        optional = _is_ast_annotation_optional(field_implementation.annotation)
+        if not optional:
             return field_implementation
 
         # This occurs for fields generated with aliasses, such as `from` being
