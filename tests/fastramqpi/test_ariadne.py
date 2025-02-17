@@ -12,6 +12,7 @@ import graphql as gql
 import pytest
 from more_itertools import one
 
+from fastramqpi.ariadne import _is_ast_annotation_optional
 from fastramqpi.ariadne import parse_graphql_datetime
 from fastramqpi.ariadne import UnsetInputTypesPlugin
 
@@ -339,3 +340,48 @@ def test_plugin_commentor(graphql_schema: gql.GraphQLSchema) -> None:
     plugin = UnsetInputTypesPlugin(graphql_schema, {})
     result = plugin.generate_inputs_code("")
     assert result == "# This file has been modified by the UnsetInputTypesPlugin\n"
+
+
+@pytest.mark.parametrize(
+    "node,expected",
+    [
+        # Unknown type
+        (ast.List([ast.Name("A")]), False),
+        # Constants
+        (ast.Constant("HI"), False),
+        (ast.Constant("A | None"), True),
+        (ast.Constant("Optional[A]"), True),
+        # Names
+        (ast.Name("HI"), False),
+        (ast.Name("A | None"), True),
+        (ast.Name("Optional[A]"), True),
+        # Binops
+        # Bad operation
+        (
+            ast.BinOp(left=ast.Constant(1), op=ast.BitAnd(), right=ast.Constant(2)),
+            False,
+        ),
+        # Bad values
+        # Wrong type
+        (
+            ast.BinOp(
+                left=ast.Name("A"), op=ast.BitOr(), right=ast.Set([ast.Name("B")])
+            ),
+            False,
+        ),
+        # Wrong value
+        (ast.BinOp(left=ast.Name("A"), op=ast.BitOr(), right=ast.Constant(2)), False),
+        (ast.BinOp(left=ast.Name("A"), op=ast.BitOr(), right=ast.Name("2")), False),
+        (ast.BinOp(left=ast.Name("A"), op=ast.BitOr(), right=ast.Constant(None)), True),
+        (ast.BinOp(left=ast.Name("A"), op=ast.BitOr(), right=ast.Name("None")), True),
+        # Subscripts
+        # Wrong type
+        (ast.Subscript(slice=ast.Name("A"), value=ast.Constant(2)), False),
+        # Wrong name
+        (ast.Subscript(slice=ast.Name("A"), value=ast.Name("B")), False),
+        (ast.Subscript(slice=ast.Name("A"), value=ast.Name("Optional")), True),
+    ],
+)
+def test_is_ast_annotation_optional(node: ast.expr, expected: bool) -> None:
+    result = _is_ast_annotation_optional(node)
+    assert result is expected
