@@ -133,6 +133,8 @@ include_all_enums = false
 plugins = [
     # Return values directly when only a single top field is requested
     "ariadne_codegen.contrib.shorter_results.ShorterResultsPlugin",
+    # Add UNSET and UnsetType to generated input types
+    "fastramqpi.ariadne.UnsetInputTypesPlugin",
 ]
 [tool.ariadne-codegen.scalars.DateTime]
 type = "datetime.datetime"
