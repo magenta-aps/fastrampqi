@@ -529,11 +529,11 @@ python-versions = ">=3.9"
 
 [[package]]
 name = "more-itertools"
-version = "9.1.0"
+version = "10.6.0"
 description = "More routines for operating on iterables, beyond itertools"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 
 [[package]]
 name = "multidict"
@@ -1129,7 +1129,7 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.11"
-content-hash = "c8e51c4cf13801cbcd5f226d46748df0ded21e201c426789c312909927eebb24"
+content-hash = "6872031d09bfacf5880f08f4cb1978963f8b1371872bcf9422294d570bbc471d"
 
 [metadata.files]
 aio-pika = [
@@ -1926,8 +1926,8 @@ markupsafe = [
     {file = "markupsafe-3.0.2.tar.gz", hash = "sha256:ee55d3edf80167e48ea11a923c7386f4669df67d7994554387f84e7d8b0a2bf0"},
 ]
 more-itertools = [
-    {file = "more-itertools-9.1.0.tar.gz", hash = "sha256:cabaa341ad0389ea83c17a94566a53ae4c9d07349861ecb14dc6d0345cf9ac5d"},
-    {file = "more_itertools-9.1.0-py3-none-any.whl", hash = "sha256:d2bc7f02446e86a68911e58ded76d6561eea00cddfb2a91e7019bbb586c799f3"},
+    {file = "more-itertools-10.6.0.tar.gz", hash = "sha256:2cd7fad1009c31cc9fb6a035108509e6547547a7a738374f10bd49a09eb3ee3b"},
+    {file = "more_itertools-10.6.0-py3-none-any.whl", hash = "sha256:6eb054cb4b6db1473f6e15fcc676a08e4732548acd47c708f0e179c2c7c01e89"},
 ]
 multidict = [
     {file = "multidict-6.1.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3380252550e372e8511d49481bd836264c009adb826b23fefcc5dd3c69692f60"},
