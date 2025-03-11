@@ -1,16 +1,18 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from typing import Any
+from typing import Callable
 
 import tenacity
 from tenacity import stop_after_delay
 from tenacity import wait_fixed
+from tenacity import WrappedFn
 
 
 def retry(
     stop: Any = stop_after_delay(20),
     wait: Any = wait_fixed(2),
-) -> Any:
+) -> Callable[[WrappedFn], WrappedFn]:
     """Tenacity retry decorator, with defaults useful for testing.
 
     Args:
