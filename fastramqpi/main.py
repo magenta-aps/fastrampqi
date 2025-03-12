@@ -119,7 +119,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         # Setup database
         if database_metadata is not None:
             assert settings.database is not None, "database settings missing"
-            database_engine = database.create_engine(
+            engine = database.create_engine(
                 user=settings.database.user,
                 password=settings.database.password,
                 host=settings.database.host,
@@ -127,9 +127,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                 name=settings.database.name,
             )
             database.run_upgrade(database_metadata)
-            self._context["sessionmaker"] = database.create_sessionmaker(
-                database_engine
-            )
+            self._context["engine"] = engine
+            self._context["sessionmaker"] = database.create_sessionmaker(engine)
 
         # Authenticated HTTPX Client
         mo_client = AsyncOAuth2Client(
