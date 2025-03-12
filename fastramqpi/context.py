@@ -14,6 +14,7 @@ from gql.client import AsyncClientSession
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseSettings
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .raclients.graph.client import GraphQLClient
 from .raclients.modelclient.mo import ModelClient
@@ -32,6 +33,7 @@ class Context(TypedDict, total=False):
     app: FastAPI
     instrumentator: Instrumentator
     amqpsystem: MOAMQPSystem
+    engine: AsyncEngine
     sessionmaker: async_sessionmaker
 
     # Legacy clients

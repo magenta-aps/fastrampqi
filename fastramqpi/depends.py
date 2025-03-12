@@ -11,6 +11,7 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import Depends
 from gql.client import AsyncClientSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .raclients.graph.client import GraphQLClient as _GraphQLClient
@@ -44,6 +45,7 @@ async def get_session(sessionmaker: "Sessionmaker") -> AsyncIterator[AsyncSessio
         yield session
 
 
+Engine = Annotated[AsyncEngine, Depends(from_context("engine"))]
 Sessionmaker = Annotated[async_sessionmaker, Depends(from_context("sessionmaker"))]
 Session = Annotated[AsyncSession, Depends(get_session)]
 
