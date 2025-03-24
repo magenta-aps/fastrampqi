@@ -17,6 +17,7 @@ class Router(AbstractRouter):
 class PublishMixin(AbstractPublishMixin):
     """Generic PublishMixin."""
 
+    publish_message_to_queue = AbstractPublishMixin._publish_message_to_queue
     publish_message = AbstractPublishMixin._publish_message
 
 

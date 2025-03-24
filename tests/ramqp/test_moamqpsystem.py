@@ -69,6 +69,17 @@ async def test_cannot_publish_before_start(
         await moamqp_system.publish_message(mo_routing_key, mo_payload)
 
 
+async def test_cannot_publish_before_to_queue_start(
+    moamqp_system: MOAMQPSystem,
+    mo_payload: PayloadType,
+) -> None:
+    """Test that messages cannot be published to queue before system start."""
+    queue_name = "os2mo_test_queue"
+
+    with pytest.raises(ValueError):
+        await moamqp_system.publish_message_to_queue(queue_name, mo_payload)
+
+
 def test_has_started(moamqp_system: MOAMQPSystem) -> None:
     """Test the started property."""
     # Fake that the system has started
