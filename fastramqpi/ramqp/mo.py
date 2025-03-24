@@ -291,7 +291,10 @@ class MOPublishMixin(AbstractPublishMixin):
     """
 
     async def publish_message(
-        self, routing_key: MORoutingKey, payload: PayloadType
+        self,
+        routing_key: MORoutingKey,
+        payload: PayloadType,
+        exchange: str | None = None,
     ) -> None:
         """Publish a message to the given service.object.request tuple.
 
@@ -300,7 +303,7 @@ class MOPublishMixin(AbstractPublishMixin):
             payload: The message payload.
         """
         payload_obj = jsonable_encoder(payload)
-        await self._publish_message(str(routing_key), payload_obj)
+        await self._publish_message(str(routing_key), payload_obj, exchange)
 
 
 class MOAMQPSystem(AbstractAMQPSystem[MORouter], MOPublishMixin):
