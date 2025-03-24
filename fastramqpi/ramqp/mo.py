@@ -290,6 +290,16 @@ class MOPublishMixin(AbstractPublishMixin):
     routing-key structure and payload format.
     """
 
+    async def publish_message_to_queue(self, queue: str, payload: PayloadType) -> None:
+        """Publish a message to the given queue.
+
+        Args:
+            queue: The queue to send the message to.
+            payload: The message payload.
+        """
+        payload_obj = jsonable_encoder(payload)
+        await self._publish_message_to_queue(queue, payload_obj)
+
     async def publish_message(
         self, routing_key: MORoutingKey, payload: PayloadType
     ) -> None:

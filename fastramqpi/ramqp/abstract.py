@@ -139,6 +139,23 @@ class AbstractPublishMixin:
     _exchange: AbstractExchange | None
     _channel: AbstractRobustChannel | None = None
 
+    async def _publish_message_to_queue(
+        self, queue: str, payload: Any
+    ) -> None:  # pragma: no cover
+        """Publish a message to the given queue.
+
+        Args:
+            queue: The queue to send the message to.
+            payload: The message payload.
+
+        Raises:
+            ValueError: If the AMQPSystem has not been started yet.
+        """
+        # Every single queue is implicitly bound with its queue name as the routing key
+        # on RabbitMQ's default / nameless exchange (""). Thus publishing with the queue
+        # name as the routing-key makes sure we only target that specific queue.
+        await self._publish_message(routing_key=queue, payload=payload, exchange="")
+
     async def _publish_message(
         self, routing_key: Any, payload: Any, exchange: str | None = None
     ) -> None:  # pragma: no cover
