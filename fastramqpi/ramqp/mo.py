@@ -293,6 +293,11 @@ class MOPublishMixin(AbstractPublishMixin):
     async def publish_message_to_queue(self, queue: str, payload: PayloadType) -> None:
         """Publish a message to the given queue.
 
+        Note:
+            Messages published via this method have their routing-key set to the queue
+            name rather than the routing-key on which the message would normally be
+            published.
+
         Args:
             queue: The queue to send the message to.
             payload: The message payload.
