@@ -1,5 +1,4 @@
-# SPDX-FileCopyrightText: 2023-2023 Magenta ApS
-#
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the AMQPSystem.publish_message method."""
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from functools import partial
 from unittest.mock import MagicMock

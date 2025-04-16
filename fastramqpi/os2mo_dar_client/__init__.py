@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from .dar_client import AddressType
 from .dar_client import AsyncDARClient
