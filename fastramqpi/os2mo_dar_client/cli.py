@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import json  # pragma: no cover
 from typing import Tuple  # pragma: no cover
