@@ -10,8 +10,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient
 from more_itertools import first
 
-from .utils import darclient_mock
 from fastramqpi.os2mo_dar_client import DARClient
+
+from .utils import darclient_mock
 
 
 def test_healthcheck_sync(darclient: DARClient) -> None:

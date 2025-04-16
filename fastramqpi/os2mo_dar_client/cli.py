@@ -6,8 +6,9 @@ from uuid import UUID  # pragma: no cover
 
 import click  # pragma: no cover
 
-from . import AsyncDARClient  # pragma: no cover
 from fastramqpi.ra_utils.async_to_sync import async_to_sync  # pragma: no cover
+
+from . import AsyncDARClient  # pragma: no cover
 
 
 @click.command()

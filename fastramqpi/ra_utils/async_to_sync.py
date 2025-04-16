@@ -12,7 +12,7 @@ CallableReturnType = TypeVar("CallableReturnType")
 
 
 def async_to_sync(
-    func: Callable[..., Awaitable[CallableReturnType]]
+    func: Callable[..., Awaitable[CallableReturnType]],
 ) -> Callable[..., CallableReturnType]:
     """Function decorator to run an async function to completion.
 

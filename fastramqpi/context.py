@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """FastRAMQPI Context."""
+
 from typing import Any
 from typing import AsyncContextManager
 from typing import Awaitable
@@ -13,13 +14,12 @@ from fastapi import FastAPI
 from gql.client import AsyncClientSession
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseSettings
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from .raclients.graph.client import GraphQLClient
 from .raclients.modelclient.mo import ModelClient
 from .ramqp.mo import MOAMQPSystem
-
 
 HealthcheckFunction = Callable[["Context"], Awaitable[bool]]
 

@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 import zoneinfo  # noqa: F401
 from itertools import chain
-from typing import cast
 from typing import Sequence
+from typing import cast
 
 import hypothesis.strategies as st
 from hypothesis.strategies import SearchStrategy

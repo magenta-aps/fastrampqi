@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 import logging
 import sys
-from enum import auto
 from enum import Enum
+from enum import auto
 from typing import Any
 from typing import Dict
 from typing import List

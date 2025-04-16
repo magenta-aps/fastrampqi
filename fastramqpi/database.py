@@ -3,8 +3,8 @@
 import sqlalchemy
 from pydantic import BaseSettings
 from sqlalchemy import MetaData
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from fastramqpi.config import DatabaseSettings

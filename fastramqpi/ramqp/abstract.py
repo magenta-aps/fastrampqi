@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=too-few-public-methods
 """This module contains the Abstract AMQPSystem."""
+
 import asyncio
 import json
 from abc import ABCMeta
@@ -13,15 +14,15 @@ from contextlib import AbstractAsyncContextManager
 from functools import partial
 from types import TracebackType
 from typing import Any
-from typing import cast
 from typing import Generic
 from typing import TypeVar
+from typing import cast
 
 import structlog
-from aio_pika import connect_robust
 from aio_pika import ExchangeType
 from aio_pika import IncomingMessage
 from aio_pika import Message
+from aio_pika import connect_robust
 from aio_pika.abc import AbstractExchange
 from aio_pika.abc import AbstractQueue
 from aio_pika.abc import AbstractRobustChannel
@@ -43,9 +44,9 @@ from .metrics import callbacks_registered
 from .metrics import routes_bound
 from .utils import AcknowledgeMessage
 from .utils import CallbackType
-from .utils import function_to_name
 from .utils import RejectMessage
 from .utils import RequeueMessage
+from .utils import function_to_name
 
 logger = structlog.get_logger()
 

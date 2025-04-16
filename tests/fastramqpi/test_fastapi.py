@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=protected-access
 """Test the FastAPIIntegrationSystem."""
+
 from typing import Any
 
 from fastramqpi.app import build_information

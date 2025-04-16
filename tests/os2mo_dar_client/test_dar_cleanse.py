@@ -6,11 +6,12 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import ClientResponseError
 
+from fastramqpi.os2mo_dar_client import AddressType
+from fastramqpi.os2mo_dar_client import AsyncDARClient
+
 from .utils import assert_dar_response
 from .utils import dar_cleanse_parameterize
 from .utils import dar_cleanse_unspecific_match
-from fastramqpi.os2mo_dar_client import AddressType
-from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 
 @pytest.mark.parametrize(*dar_cleanse_parameterize)

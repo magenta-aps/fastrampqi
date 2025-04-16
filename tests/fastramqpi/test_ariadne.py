@@ -12,9 +12,9 @@ import graphql as gql
 import pytest
 from more_itertools import one
 
+from fastramqpi.ariadne import UnsetInputTypesPlugin
 from fastramqpi.ariadne import _is_ast_annotation_optional
 from fastramqpi.ariadne import parse_graphql_datetime
-from fastramqpi.ariadne import UnsetInputTypesPlugin
 
 
 def test_parse_graphql_datetime_datetime() -> None:

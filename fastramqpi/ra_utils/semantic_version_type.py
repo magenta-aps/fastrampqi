@@ -10,7 +10,6 @@ from typing import Pattern
 
 from pydantic import BaseModel
 
-
 # Regex from https://semver.org/
 _semver_regex = (
     # Version part

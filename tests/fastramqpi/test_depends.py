@@ -4,8 +4,8 @@
 from typing import Annotated
 from typing import AsyncIterable
 from typing import Iterable
-from unittest.mock import create_autospec
 from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 from unittest.mock import sentinel
 
 from fastapi import Depends

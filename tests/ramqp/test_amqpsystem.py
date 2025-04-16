@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the AMQPSystem.start, stop and run-forever methods."""
+
 import pytest
+
+from fastramqpi.ra_utils.attrdict import attrdict
+from fastramqpi.ramqp import AMQPSystem
 
 from .common import _test_context_manager
 from .common import _test_run_forever_worker
-from fastramqpi.ra_utils.attrdict import attrdict
-from fastramqpi.ramqp import AMQPSystem
 
 
 async def test_run_forever(amqp_system: AMQPSystem) -> None:
@@ -36,8 +38,6 @@ def test_has_started_and_health(amqp_system: AMQPSystem) -> None:
     assert amqp_system.started is True
     assert amqp_system.healthcheck() is False
 
-    amqp_system._channel = attrdict(
-        {"is_closed": False, "is_initialized": True}
-    )  # type: ignore
+    amqp_system._channel = attrdict({"is_closed": False, "is_initialized": True})  # type: ignore
     assert amqp_system.started is True
     assert amqp_system.healthcheck() is True

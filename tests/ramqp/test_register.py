@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=protected-access
 """This module tests the Router.register decorator method."""
+
 from typing import Any
 
 import pytest
@@ -11,11 +12,12 @@ from fastapi import Depends
 from more_itertools import all_unique
 from structlog.testing import LogCapture
 
-from .common import callback_func1
-from .common import callback_func2
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.utils import CallbackType
 from fastramqpi.ramqp.utils import function_to_name
+
+from .common import callback_func1
+from .common import callback_func2
 
 
 def get_registry(amqp_system: AMQPSystem) -> dict[CallbackType, set[str]]:

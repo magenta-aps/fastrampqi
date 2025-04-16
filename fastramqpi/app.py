@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI Framework."""
-from contextlib import asynccontextmanager
+
 from contextlib import AsyncExitStack
+from contextlib import asynccontextmanager
 from contextlib import suppress
 from functools import partial
 from typing import Any
@@ -20,10 +21,11 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
+from fastramqpi.logging import configure_logging
+
 from .config import FastAPIIntegrationSystemSettings
 from .context import Context
 from .context import HealthcheckFunction
-from fastramqpi.logging import configure_logging
 
 logger = structlog.get_logger()
 fastapi_router = APIRouter()

@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 from typing import Any
-from typing import cast
 from typing import Optional
+from typing import cast
 
 from authlib.integrations.httpx_client import (
     AsyncOAuth2Client as AsyncHTTPXOAuth2Client,

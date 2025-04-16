@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module contains the utilities."""
+
 from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import TypeVar

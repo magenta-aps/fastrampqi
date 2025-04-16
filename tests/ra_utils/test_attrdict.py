@@ -11,9 +11,10 @@ import hypothesis.strategies as st
 from hypothesis import assume
 from hypothesis import given
 
-from .utils import any_strategy
 from fastramqpi.ra_utils.attrdict import AttrDict
 from fastramqpi.ra_utils.attrdict import attrdict
+
+from .utils import any_strategy
 
 
 def check_status_key(attr_dict: AttrDict, key: str, value: Any) -> None:

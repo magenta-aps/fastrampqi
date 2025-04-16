@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 from datetime import timedelta
 from time import sleep
-from typing import cast
 from typing import Tuple
+from typing import cast
 from unittest import TestCase
 
 import hypothesis.strategies as st

@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from asyncio import gather
 from asyncio import Semaphore
+from asyncio import gather
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Awaitable
 from typing import Callable
-from typing import cast
 from typing import List
 from typing import TypeVar
+from typing import cast
 
 ReturnType = TypeVar("ReturnType")
 WithConcurrencyFunction = Callable[..., Awaitable[ReturnType]]

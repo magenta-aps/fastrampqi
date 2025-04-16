@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=too-few-public-methods
 """This module contains the all pydantic BaseModel settings(s)."""
+
 import typing
 
 from pydantic import AmqpDsn

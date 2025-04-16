@@ -7,11 +7,12 @@ from uuid import UUID
 import pytest
 from aiohttp import ClientResponseError
 
+from fastramqpi.os2mo_dar_client import AsyncDARClient
+
 from .utils import assert_dar_response
 from .utils import dar_lookup
 from .utils import dar_non_existent
 from .utils import dar_parameterize
-from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 
 @pytest.mark.parametrize(*dar_parameterize)

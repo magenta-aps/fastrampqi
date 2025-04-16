@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=too-few-public-methods,protected-access
 """This module contains the Generic AMQPSystem."""
+
 from .abstract import AbstractAMQPSystem
 from .abstract import AbstractPublishMixin
 from .abstract import AbstractRouter

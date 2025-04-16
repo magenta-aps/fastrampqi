@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import re
-from typing import cast
 from typing import Dict
 from typing import Iterator
 from typing import Pattern
+from typing import cast
 
 
 def multiple_replace_compile(replacement_dict: Dict[str, str]) -> Pattern:

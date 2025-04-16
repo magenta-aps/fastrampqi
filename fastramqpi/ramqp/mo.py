@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=too-few-public-methods
 """This module contains the MO specific AMQPSystem."""
+
 from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated

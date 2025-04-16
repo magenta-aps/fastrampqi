@@ -3,10 +3,10 @@
 from typing import Any
 from typing import Coroutine
 from typing import Dict
-from typing import no_type_check
 from typing import Optional
 from typing import Type
 from typing import Union
+from typing import no_type_check
 
 import httpx
 from gql import Client as GQLClient

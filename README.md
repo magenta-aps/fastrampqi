@@ -496,7 +496,7 @@ async def test_create_person(
         employee = one(employee_states.objects)
         assert employee.cpr_number == cpr_number
         assert employee.given_name == "Alice"
-    
+
     await verify()
 ```
 Through the use of the `test_client` fixture, the test begins by starting the

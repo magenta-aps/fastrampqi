@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the migration to quorum queues."""
+
 import asyncio
 from uuid import uuid4
 
@@ -9,9 +10,10 @@ import pytest
 from pydantic import AmqpDsn
 from pydantic import parse_obj_as
 
-from .common import random_string
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.config import AMQPConnectionSettings
+
+from .common import random_string
 
 
 @pytest.mark.integration_test
