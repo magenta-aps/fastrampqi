@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2021 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 """Settings handling."""
+
 from pydantic import AnyHttpUrl
 from pydantic import BaseModel
 from pydantic import BaseSettings
 from pydantic import Field
-from pydantic import parse_obj_as
 from pydantic import SecretStr
+from pydantic import parse_obj_as
 
 from .ramqp.config import AMQPConnectionSettings
 

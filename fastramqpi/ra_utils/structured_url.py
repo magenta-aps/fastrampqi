@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2022 Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 """Pydantic StructuredUrl model."""
+
 import json
 from typing import Any
 from typing import Optional
@@ -11,9 +12,9 @@ from urllib.parse import urlencode
 from pydantic import AnyUrl
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import SecretStr
 from pydantic import parse_obj_as
 from pydantic import root_validator
-from pydantic import SecretStr
 
 
 # pylint: disable=too-few-public-methods

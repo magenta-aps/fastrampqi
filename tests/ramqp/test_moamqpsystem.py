@@ -2,18 +2,20 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the MOAMQPSystem."""
+
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from .common import _test_context_manager
-from .common import _test_run_forever_worker
-from fastramqpi.ramqp.mo import _PayloadType
 from fastramqpi.ramqp.mo import MOAMQPSystem
 from fastramqpi.ramqp.mo import MORoutingKey
 from fastramqpi.ramqp.mo import PayloadType
+from fastramqpi.ramqp.mo import _PayloadType
 from fastramqpi.ramqp.utils import CallbackType
+
+from .common import _test_context_manager
+from .common import _test_run_forever_worker
 
 
 def get_registry(moamqp_system: MOAMQPSystem) -> dict[CallbackType, set[str]]:

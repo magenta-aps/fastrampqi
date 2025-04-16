@@ -14,7 +14,6 @@ from typing import Type
 from typing import TypeVar
 from typing import Union
 
-
 CoroutineReturnType = TypeVar("CoroutineReturnType")
 
 
@@ -111,7 +110,7 @@ class Syncable:
         self,
         coroutine: Callable[..., Awaitable[CoroutineReturnType]],
         *args: Any,
-        **kwargs: Optional[Any]
+        **kwargs: Optional[Any],
     ) -> Union[Awaitable[CoroutineReturnType], CoroutineReturnType]:
         """Call coroutine if event-loop is running, call synchronized otherwise.
 

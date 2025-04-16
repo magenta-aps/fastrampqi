@@ -51,15 +51,14 @@ pytest-cov = "^5"
 pytest-mock = "^3"
 pytest-aiohttp = "^1"
 
-
 [tool.poetry.group.pre-commit.dependencies]
-types-pyyaml = "^6"
-mypy = "^1"
 pre-commit = "^3"
+ruff = "^0.9"
+deptry = "^0.23"
+mypy = "^1"
+types-pyyaml = "^6"
 types-tqdm = "^4"
 types-requests = "^2"
-deptry = "^0.21"
-
 
 [tool.poetry.plugins."pytest11"]
 fastramqpi = "fastramqpi.pytest_plugin"
@@ -84,11 +83,23 @@ plugins = "pydantic.mypy"
 module = "authlib.*"
 ignore_missing_imports = true
 
-[tool.flake8]
-max-line-length = 999  # let black worry about that
-exclude = [
-".git", "__pycache__", ".mypy_cache", ".pytest_cache", ".venv", ".gitlab"
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+extend-select = [
+    # isort
+    "I"
 ]
+ignore = [
+  # Allow function calls in arguments, like `Depends(...)`
+  "B008",
+  # Allow lines longer than 90 characters if ruff-format decides so
+  "E501"
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
 
 [tool.coverage.run]
 omit = [

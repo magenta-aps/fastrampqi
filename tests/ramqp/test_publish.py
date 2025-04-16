@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the AMQPSystem.publish_message method."""
+
 import asyncio
 from collections.abc import Callable
 
@@ -9,9 +10,10 @@ import pytest
 from pydantic import AmqpDsn
 from pydantic import parse_obj_as
 
-from .common import random_string
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.config import AMQPConnectionSettings
+
+from .common import random_string
 
 
 @pytest.mark.integration_test

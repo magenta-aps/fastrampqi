@@ -4,9 +4,9 @@ from typing import Any
 from typing import Callable
 
 import tenacity
+from tenacity import WrappedFn
 from tenacity import stop_after_delay
 from tenacity import wait_fixed
-from tenacity import WrappedFn
 
 
 def retry(

@@ -6,9 +6,9 @@ from unittest.mock import mock_open
 from unittest.mock import patch
 
 from fastramqpi.ra_utils.load_settings import _JSON_SETTINGS_PATH
+from fastramqpi.ra_utils.load_settings import Sentinel
 from fastramqpi.ra_utils.load_settings import load_setting
 from fastramqpi.ra_utils.load_settings import load_settings
-from fastramqpi.ra_utils.load_settings import Sentinel
 
 
 class LoadSettingsTests(TestCase):

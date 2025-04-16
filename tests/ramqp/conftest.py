@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=redefined-outer-name,not-callable
 """This module contains pytest specific code, fixtures and helpers."""
+
 import asyncio
 from collections.abc import Callable
 from collections.abc import Iterator
@@ -20,11 +21,6 @@ from pydantic import AmqpDsn
 from pydantic import parse_obj_as
 from structlog.testing import LogCapture
 
-from .amqp_helpers import delivered2incoming
-from .amqp_helpers import json2raw
-from .amqp_helpers import message2delivered
-from .amqp_helpers import raw2message
-from .common import random_string
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp import Router
 from fastramqpi.ramqp.config import AMQPConnectionSettings
@@ -33,6 +29,12 @@ from fastramqpi.ramqp.mo import MORouter
 from fastramqpi.ramqp.mo import MORoutingKey
 from fastramqpi.ramqp.mo import PayloadType
 from fastramqpi.ramqp.utils import CallbackType
+
+from .amqp_helpers import delivered2incoming
+from .amqp_helpers import json2raw
+from .amqp_helpers import message2delivered
+from .amqp_helpers import raw2message
+from .common import random_string
 
 
 @pytest.fixture

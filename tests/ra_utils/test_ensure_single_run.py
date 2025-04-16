@@ -58,7 +58,7 @@ def input_func_fail() -> None:
         ("", False),
         ("\n", False),
         ("hej", True),
-        (" hej", True)  # it os often just tested if the first char is a
+        (" hej", True),  # it os often just tested if the first char is a
         # whitespace, this test the case where a whitespace is accidentally
         # put in as the first char
     ],

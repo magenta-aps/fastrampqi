@@ -10,7 +10,6 @@ from itertools import starmap
 from operator import itemgetter
 from types import TracebackType
 from typing import Any
-from typing import cast
 from typing import ChainMap as tChainMap
 from typing import Dict
 from typing import List
@@ -18,6 +17,7 @@ from typing import Optional
 from typing import Set
 from typing import Tuple
 from typing import Type
+from typing import cast
 from uuid import UUID
 
 import aiohttp

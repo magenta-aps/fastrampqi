@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=redefined-outer-name
 """This module contains pytest specific code, fixtures and helpers."""
+
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -74,7 +75,7 @@ def fastramqpi_builder(
 
 @pytest.fixture
 def fastramqpi(
-    fastramqpi_builder: Callable[[], FastRAMQPI]
+    fastramqpi_builder: Callable[[], FastRAMQPI],
 ) -> Generator[FastRAMQPI, None, None]:
     """Fixture for the FastRAMQPI instance."""
     yield fastramqpi_builder()
@@ -103,7 +104,7 @@ def test_client_builder(
 
 @pytest.fixture
 def test_client(
-    test_client_builder: Callable[[], TestClient]
+    test_client_builder: Callable[[], TestClient],
 ) -> Generator[TestClient, None, None]:
     """Fixture for the FastAPI test client."""
     test_client = test_client_builder()

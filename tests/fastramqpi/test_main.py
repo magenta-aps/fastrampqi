@@ -6,14 +6,15 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 """Test the FastRAMQPI system."""
+
 from contextlib import asynccontextmanager
 from functools import partial
 from typing import AsyncIterator
 from typing import Callable
 from unittest.mock import ANY
 from unittest.mock import AsyncMock
-from unittest.mock import call
 from unittest.mock import MagicMock
+from unittest.mock import call
 from unittest.mock import patch
 
 import pytest
@@ -21,16 +22,16 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import AnyHttpUrl
-from pydantic import parse_obj_as
 from pydantic import SecretStr
+from pydantic import parse_obj_as
 from pytest import MonkeyPatch
 
 import fastramqpi
 from fastramqpi import depends
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
-from fastramqpi.main import construct_legacy_clients
 from fastramqpi.main import FastRAMQPI
+from fastramqpi.main import construct_legacy_clients
 from fastramqpi.metrics import dipex_last_success_timestamp
 from fastramqpi.ramqp.mo import MOAMQPSystem
 

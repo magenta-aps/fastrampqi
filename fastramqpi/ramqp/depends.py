@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2019-2020 Magenta ApS
 # SPDX-License-Identifier: MPL-2.0
 """This module implement FastAPI dependency injection for RAMQP."""
+
 import asyncio
 from asyncio import Task
 from collections import defaultdict
@@ -8,17 +9,17 @@ from collections.abc import AsyncGenerator
 from collections.abc import Awaitable
 from collections.abc import Callable
 from collections.abc import Hashable
-from contextlib import asynccontextmanager
 from contextlib import AsyncExitStack
+from contextlib import asynccontextmanager
 from contextlib import suppress
 from functools import cache
 from functools import partial
 from functools import wraps
 from typing import Annotated
 from typing import Any
-from typing import cast
 from typing import DefaultDict
 from typing import TypeVar
+from typing import cast
 
 import anyio
 from aio_pika import IncomingMessage

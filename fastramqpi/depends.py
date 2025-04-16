@@ -10,9 +10,9 @@ from typing import Callable
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from fastapi import Depends
 from gql.client import AsyncClientSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from .raclients.graph.client import GraphQLClient as _GraphQLClient
 from .raclients.modelclient.mo import ModelClient as _ModelClient

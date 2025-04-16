@@ -11,9 +11,8 @@ from zoneinfo import ZoneInfo
 from ariadne_codegen.plugins.base import Plugin
 from graphql import GraphQLInputField
 from graphql import Undefined
-from pydantic.datetime_parse import parse_datetime
 from pydantic.datetime_parse import StrBytesIntFloat
-
+from pydantic.datetime_parse import parse_datetime
 
 MO_TZ = ZoneInfo("Europe/Copenhagen")
 

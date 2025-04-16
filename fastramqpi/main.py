@@ -2,14 +2,15 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """FastAPI + RAMQP Framework."""
+
 from contextlib import asynccontextmanager
 from functools import partial
 from typing import Any
 from typing import AsyncContextManager
 from typing import AsyncGenerator
-from typing import cast
 from typing import Protocol
 from typing import Type
+from typing import cast
 
 import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
@@ -68,8 +69,7 @@ class GraphQLClientProtocol(AsyncContextManager, Protocol):
         ws_headers: Any = None,
         ws_origin: Any = None,
         ws_connection_init_payload: Any = None,
-    ) -> None:
-        ...  # pragma: no cover
+    ) -> None: ...  # pragma: no cover
 
 
 class FastRAMQPI(FastAPIIntegrationSystem):

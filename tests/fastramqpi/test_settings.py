@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=unused-argument
 """Test our settings handling."""
+
 import pytest
 from pydantic import ValidationError
 

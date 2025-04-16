@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module contains commonly used test utilities."""
+
 import asyncio
 import random
 import string

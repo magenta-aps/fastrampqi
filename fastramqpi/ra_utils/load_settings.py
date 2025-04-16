@@ -5,8 +5,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from typing import Callable
-from typing import cast
 from typing import Dict
+from typing import cast
 
 # This path is now used on all (non-K8S) servers
 _JSON_SETTINGS_PATH = "/opt/dipex/os2mo-data-import-and-export/settings/settings.json"

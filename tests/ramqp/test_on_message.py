@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests the AMQPSystem.on_message handler."""
+
 import asyncio
 from collections.abc import Callable
 from typing import Any

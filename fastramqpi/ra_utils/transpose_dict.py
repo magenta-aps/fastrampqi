@@ -6,13 +6,12 @@ from typing import TypeVar
 
 from .ensure_hashable import ensure_hashable
 
-
 DictKeyType = TypeVar("DictKeyType")
 DictValueType = TypeVar("DictValueType")
 
 
 def transpose_dict(
-    dicty: Dict[DictKeyType, DictValueType]
+    dicty: Dict[DictKeyType, DictValueType],
 ) -> Dict[DictValueType, List[DictKeyType]]:
     """Transpose a dictionary, such that keys become values and values become keys.
 

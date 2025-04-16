@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 """This module tests that metrics are updated as expected."""
+
 from functools import partial
 from typing import Any
 from typing import cast
 
 import pytest
 
-from .common import callback_func1
-from .common import callback_func2
 from fastramqpi.ramqp import AMQPSystem
 from fastramqpi.ramqp.metrics import callbacks_registered
+
+from .common import callback_func1
+from .common import callback_func2
 
 
 @pytest.fixture(autouse=True)
