@@ -15,7 +15,10 @@ import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from sqlalchemy import MetaData
 
+from fastramqpi.events import GraphQLEvents
+
 from . import database
+from . import events
 from .app import FastAPIIntegrationSystem
 from .config import ClientSettings
 from .config import Settings
@@ -83,12 +86,14 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         settings: Settings,
         graphql_version: int,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
+        graphql_events: GraphQLEvents | None = None,
         database_metadata: MetaData | None = None,
     ) -> None:
         super().__init__(application_name, settings)
 
         # Setup AMQPSystem
-        amqp_settings = cast(Settings, self.settings).amqp
+        # TODO: make AMQP optional
+        amqp_settings = settings.amqp
         amqp_settings.queue_prefix = amqp_settings.queue_prefix or application_name
         self.amqpsystem = MOAMQPSystem(
             settings=amqp_settings, context=self.get_context()
@@ -101,19 +106,23 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self.add_lifespan_manager(self.amqpsystem, priority=1000)
 
         async def healthcheck_amqp(context: Context) -> bool:
-            """AMQP Healthcheck wrapper.
-
-            Args:
-                context: unused context dict.
-
-            Returns:
-                Whether the AMQPSystem is OK.
-            """
             amqpsystem = context["amqpsystem"]
             return cast(bool, amqpsystem.healthcheck())
 
         self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
         self._context["amqpsystem"] = self.amqpsystem
+
+        # Setup GraphQL events
+        if graphql_events is not None:
+            self.add_lifespan_manager(
+                events.lifespan(
+                    app=self.app,
+                    settings=settings,
+                    context=self.get_context(),
+                    events=graphql_events,
+                ),
+                priority=1000,
+            )
 
         # Setup database
         if database_metadata is not None:
@@ -181,7 +190,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         # Prepare legacy clients
         legacy_graphql_client, legacy_model_client = construct_legacy_clients(
             graphql_version=graphql_version,
-            settings=cast(ClientSettings, self.settings),
+            settings=settings,
         )
         # Expose legacy GraphQL connection (gql_client)
         self._context["legacy_graphql_client"] = legacy_graphql_client
