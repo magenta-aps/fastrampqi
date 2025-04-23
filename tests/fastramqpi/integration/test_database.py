@@ -29,7 +29,7 @@ def test_database() -> None:
     fastramqpi = FastRAMQPI(
         application_name="os2mo-test-integration",
         settings=settings.fastramqpi,
-        graphql_version=22,
+        graphql_version=25,
         database_metadata=Base.metadata,
     )
     fastramqpi.add_context(settings=settings)

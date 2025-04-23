@@ -24,3 +24,30 @@ query FetchEvent($listener: UUID!) {
 mutation AcknowledgeEvent($token: EventToken!) {
   event_acknowledge(input: { token: $token })
 }
+
+query _Testing_GetEmployee($cpr_number: CPR!) {
+  employees(filter: {cpr_numbers: [$cpr_number]}) {
+    objects {
+      validities {
+        uuid
+        cpr_number
+        given_name
+      }
+    }
+  }
+}
+
+
+mutation _Testing_CreateEmployee($cpr_number: CPR!) {
+  employee_create(
+    input: {
+      given_name: "Alice",
+      surname: "Nielsen",
+      cpr_number: $cpr_number,
+    }
+  ) {
+    validities {
+      uuid
+    }
+  }
+}
