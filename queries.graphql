@@ -25,6 +25,10 @@ mutation AcknowledgeEvent($token: EventToken!) {
   event_acknowledge(input: { token: $token })
 }
 
+mutation _Testing_SendEvent($input: EventSendInput!) {
+  event_send(input: $input)
+}
+
 query _Testing_GetEmployee($cpr_number: CPR!) {
   employees(filter: {cpr_numbers: [$cpr_number]}) {
     objects {
