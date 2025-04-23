@@ -1,9 +1,26 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 
-query Version {
-  version {
-    mo_version
-    mo_hash
+mutation DeclareEventNamespace($input: NamespaceCreateInput!) {
+  event_namespace_declare(input: $input) {
+    name
   }
+}
+
+mutation DeclareEventListener($input: ListenerCreateInput!) {
+  event_listener_declare(input: $input) {
+    uuid
+  }
+}
+
+query FetchEvent($listener: UUID!) {
+  event_fetch(filter: { listener: $listener }) {
+    subject
+    priority
+    token
+  }
+}
+
+mutation AcknowledgeEvent($token: EventToken!) {
+  event_acknowledge(input: { token: $token })
 }

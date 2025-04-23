@@ -3775,25 +3775,25 @@ type Mutation {
   event_namespace_declare(input: NamespaceCreateInput!): Namespace!
 
   "Delete a namespace.\n\nUse `event_listener_delete` first, if there are any listeners.\n"
-  event_namespace_delete(input: NamespaceDeleteInput!): Void
+  event_namespace_delete(input: NamespaceDeleteInput!): Boolean!
 
   "Create a listener.\n\nThis operation is idempotent, so it can always be called upon application startup.\n\nUse different user_keys to listen for the same (namespace, routing_key) multiple times. The user_key must be unique for each listener in your integration.\n"
   event_listener_declare(input: ListenerCreateInput!): Listener!
 
   """Delete a listener."""
-  event_listener_delete(input: ListenerDeleteInput!): Void
+  event_listener_delete(input: ListenerDeleteInput!): Boolean!
 
   """Acknowledge an event."""
-  event_acknowledge(input: EventAcknowledgeInput!): Void
+  event_acknowledge(input: EventAcknowledgeInput!): Boolean!
 
   """Send an event."""
-  event_send(input: EventSendInput!): Void
+  event_send(input: EventSendInput!): Boolean!
 
   "Silence an event.\n\nIn general, this should only be done by humans while the implementation of a fix is in the works.\n"
-  event_silence(input: EventSilenceInput!): Void
+  event_silence(input: EventSilenceInput!): Boolean!
 
   """Unsilence all matching events"""
-  event_unsilence(input: EventUnsilenceInput!): Void
+  event_unsilence(input: EventUnsilenceInput!): Boolean!
 
   "Upload a file.\n\nFile upload must be done via multipart form-data.\n\nHow to do this is client-specific, but below is an example using [curl](https://curl.se/):\n```console\ncurl https://{{MO_URL}}/graphql/v7 \\\n  -H \"Authorization: Bearer {{TOKEN}}\" \\\n  -F operations=\"{\\\"query\\\": \\\"{{QUERY}}\\\", \\\n      \\\"variables\\\": {\\\"file\\\": null}}\" \\\n  -F map='{\"file\": [\"variables.file\"]}' \\\n  -F file=@myfile.txt\n```\nWhere:\n* `myfile.txt` is the file to upload.\n* `{{MO_URL}}` is the base-url for the OS2mo instance to upload the file to.\n* `{{TOKEN}}` is a valid JWT-token acquired from Keycloak.\n* `{{QUERY}}` is the upload query:\n```gql\nmutation($file: Upload!) {\n  upload_file(\n    file_store: EXPORTS,\n    file: $file\n  )\n}\n```\n\nNote:\nAs GraphiQL does not support sending multipart form-data payloads, it is unfortunately not possible to upload files from GraphiQL.\n"
   upload_file(
@@ -5370,8 +5370,5 @@ type Version {
   "DIPEX version.\n\nContains a [semantic version](https://semver.org/) if configured.\nContains the `null` on development builds of OS2mo.\n\nExamples:\n* `null`\n* `4.34.1`\n* `4.28.0`\n"
   dipex_version: String
 }
-
-"""Represents NULL values"""
-scalar Void
 
 scalar int
