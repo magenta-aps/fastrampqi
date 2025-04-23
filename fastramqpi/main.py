@@ -88,7 +88,8 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         super().__init__(application_name, settings)
 
         # Setup AMQPSystem
-        amqp_settings = cast(Settings, self.settings).amqp
+        # TODO: make AMQP optional
+        amqp_settings = settings.amqp
         amqp_settings.queue_prefix = amqp_settings.queue_prefix or application_name
         self.amqpsystem = MOAMQPSystem(
             settings=amqp_settings, context=self.get_context()
@@ -101,14 +102,6 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         self.add_lifespan_manager(self.amqpsystem, priority=1000)
 
         async def healthcheck_amqp(context: Context) -> bool:
-            """AMQP Healthcheck wrapper.
-
-            Args:
-                context: unused context dict.
-
-            Returns:
-                Whether the AMQPSystem is OK.
-            """
             amqpsystem = context["amqpsystem"]
             return cast(bool, amqpsystem.healthcheck())
 
@@ -181,7 +174,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         # Prepare legacy clients
         legacy_graphql_client, legacy_model_client = construct_legacy_clients(
             graphql_version=graphql_version,
-            settings=cast(ClientSettings, self.settings),
+            settings=settings,
         )
         # Expose legacy GraphQL connection (gql_client)
         self._context["legacy_graphql_client"] = legacy_graphql_client
