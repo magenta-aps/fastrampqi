@@ -15,7 +15,10 @@ import httpx
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 from sqlalchemy import MetaData
 
+from fastramqpi.events import GraphQLEvents
+
 from . import database
+from . import events
 from .app import FastAPIIntegrationSystem
 from .config import ClientSettings
 from .config import Settings
@@ -83,6 +86,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         settings: Settings,
         graphql_version: int,
         graphql_client_cls: Type[GraphQLClientProtocol] | None = None,
+        graphql_events: GraphQLEvents | None = None,
         database_metadata: MetaData | None = None,
     ) -> None:
         super().__init__(application_name, settings)
@@ -169,6 +173,18 @@ class FastRAMQPI(FastAPIIntegrationSystem):
                     partial(graphql_client_manager, self._context)(),
                 ),
                 priority=200,
+            )
+
+        # Setup GraphQL events
+        if graphql_events is not None:
+            self.add_lifespan_manager(
+                events.lifespan(
+                    app=self.app,
+                    settings=settings,
+                    mo_client=mo_client,
+                    events=graphql_events,
+                ),
+                priority=1000,
             )
 
         # Prepare legacy clients
