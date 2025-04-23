@@ -4,8 +4,8 @@
 from .base_model import BaseModel
 
 
-class AcknowledgeEvent(BaseModel):
-    event_acknowledge: bool
+class TestingSendEvent(BaseModel):
+    event_send: bool
 
 
-AcknowledgeEvent.update_forward_refs()
+TestingSendEvent.update_forward_refs()
