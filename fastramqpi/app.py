@@ -18,12 +18,10 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from prometheus_client import Info
 from prometheus_fastapi_instrumentator import Instrumentator
-from starlette.middleware import Middleware
 from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
 from fastramqpi.logging import configure_logging
-from fastramqpi.middleware import RequestIdMiddleware
 
 from .config import FastAPIIntegrationSystemSettings
 from .context import Context
@@ -177,9 +175,6 @@ class FastAPIIntegrationSystem:
                 "name": "MPL-2.0",
                 "url": "https://www.mozilla.org/en-US/MPL/2.0/",
             },
-            middleware=[
-                Middleware(RequestIdMiddleware),
-            ],
             lifespan=partial(_lifespan, context=self._context),
         )
         app.state.context = self._context
