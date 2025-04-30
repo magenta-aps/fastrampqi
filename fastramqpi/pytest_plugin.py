@@ -48,6 +48,7 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
                 "fastramqpi_database_setup",
                 "fastramqpi_database_isolation",
                 "amqp_event_emitter",
+                "graphql_events_quick_fetch",
                 "os2mo_database_snapshot_and_restore",
                 "amqp_queue_isolation",
                 "passthrough_backing_services",
@@ -216,7 +217,7 @@ async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
 
     async def emitter() -> NoReturn:
         while True:
-            await asyncio.sleep(3)
+            await asyncio.sleep(1.13)
             r = await mo_client.post("/testing/amqp/emit")
             r.raise_for_status()
 
@@ -227,6 +228,12 @@ async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
         # Await the task to ensure potential errors in the fixture itself, such as a
         # wrong URL or misconfigured OS2mo, are returned to the user.
         await task
+
+
+@pytest.fixture
+async def graphql_events_quick_fetch(monkeypatch: MonkeyPatch) -> None:
+    """Quickly fetch GraphQL events during tests."""
+    monkeypatch.setattr("fastramqpi.events.NO_EVENT_SLEEP_DURATION", 0.599)
 
 
 @pytest.fixture
