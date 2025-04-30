@@ -20,12 +20,8 @@ from tests.fastramqpi.integration.conftest import Settings
 
 
 @pytest.fixture
-def test_client() -> Iterator[FastAPI]:
-    """Create FastAPI ASGI test client with associated lifecycles.
-
-    NOTE: This MUST follow the example from the README very closely -- that's exactly
-    what we want to test works.
-    """
+def app() -> Iterator[FastAPI]:
+    """Old AMQP-based README example."""
     fastapi_router = APIRouter()
     amqp_router = MORouter()
 
@@ -65,15 +61,9 @@ def test_client() -> Iterator[FastAPI]:
 
 
 @pytest.mark.integration_test
-async def test_create_person(
-    test_client: FastAPI,
-) -> None:
-    """Test pytest integration plugin.
-
-    NOTE: This MUST follow the example from the README very closely -- that's exactly
-    what we want to test works.
-    """
-    graphql_client: GraphQLClient = test_client.state.context["graphql_client"]
+async def test_create_person(app: FastAPI) -> None:
+    """Old AMQP-based README example."""
+    graphql_client: GraphQLClient = app.state.context["graphql_client"]
 
     # Precondition: The person does not already exist.
     cpr_number = "0711909893"  # 0.37% chance of being emil's
@@ -92,7 +82,7 @@ async def test_create_person(
         assert employee.cpr_number == cpr_number
         assert employee.given_name == "Alice"
         # Check that we received an AMQP event
-        user_context = test_client.state.context["user_context"]
+        user_context = app.state.context["user_context"]
         assert user_context["uuid"] == employee.uuid
 
     await verify()
