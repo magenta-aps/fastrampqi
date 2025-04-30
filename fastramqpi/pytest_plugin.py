@@ -15,6 +15,16 @@ from typing import Mapping
 from typing import NoReturn
 from unittest.mock import patch
 
+# WARNING: You CANNOT import from `fastramqpi` here!
+#
+# This file is registered as a pytest plugin in pyproject.toml. Pytest does not
+# allow controlling the order in which plugins are loaded, so if this plugin is
+# loaded before pytest-cov, this file *and every line that was executed from
+# its imports* is reported as missed because it doesn't execute after coverage
+# collection is started.
+# https://github.com/pytest-dev/pytest-cov/issues/635
+# https://github.com/pytest-dev/pytest-cov/issues/682
+# https://pytest-cov.readthedocs.io/en/latest/plugins.html
 import httpx
 import pytest
 import sqlalchemy
@@ -27,6 +37,8 @@ from pytest import MonkeyPatch
 from respx import MockRouter
 from sqlalchemy import Connection
 from sqlalchemy import text
+
+# WARNING: Do not import from `fastramqpi` here!
 
 
 def pytest_configure(config: Config) -> None:
