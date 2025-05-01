@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import warnings
 from asyncio import gather
@@ -30,7 +30,7 @@ from tenacity import wait_exponential
 
 from fastramqpi.ra_utils.syncable import Syncable
 
-retry_max_time = 10
+retry_max_time = 30
 
 # TODO: Pydantic type: #45518
 AddressReply = Dict[str, Any]

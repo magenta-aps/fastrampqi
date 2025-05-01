@@ -1,5 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
-#
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 # pylint: disable=no-value-for-parameter,invalid-name,unused-argument
 """Test helper utilities from utils.py."""

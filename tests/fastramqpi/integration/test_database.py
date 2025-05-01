@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Magenta ApS
+# SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import pytest
 from fastapi.testclient import TestClient
@@ -29,7 +29,7 @@ def test_database() -> None:
     fastramqpi = FastRAMQPI(
         application_name="os2mo-test-integration",
         settings=settings.fastramqpi,
-        graphql_version=22,
+        graphql_version=25,
         database_metadata=Base.metadata,
     )
     fastramqpi.add_context(settings=settings)
