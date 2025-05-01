@@ -118,6 +118,7 @@ schema_path = "schema.graphql"  # curl -O http://localhost:5000/graphql/v8/schem
 queries_path = "queries.graphql"
 include_all_inputs = false
 include_all_enums = false
+include_comments = false
 plugins = [
     # Return values directly when only a single top field is requested
     "ariadne_codegen.contrib.shorter_results.ShorterResultsPlugin",
