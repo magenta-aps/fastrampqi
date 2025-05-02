@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 
+import asyncio
+
 import pytest
 from fastapi import APIRouter
 from starlette.testclient import TestClient
@@ -12,7 +14,6 @@ from fastramqpi.events import GraphQLEvents
 from fastramqpi.events import Listener
 from fastramqpi.events import Namespace
 from fastramqpi.main import FastRAMQPI
-from fastramqpi.pytest_util import retry
 from tests.fastramqpi.integration.conftest import Settings
 
 
@@ -41,10 +42,12 @@ async def test_events() -> None:
 
     router = APIRouter()
     received_events = []
+    done = asyncio.Event()
 
     @router.post("/handler")
     async def handler(event: Event) -> None:
         received_events.append(event)
+        done.set()
 
     app.include_router(router)
 
@@ -58,14 +61,10 @@ async def test_events() -> None:
                 priority=1337,
             )
         )
-
-        @retry()
-        async def verify() -> None:
-            assert received_events == [
-                Event(
-                    subject="✉️",
-                    priority=1337,
-                )
-            ]
-
-        await verify()
+        await asyncio.wait_for(done.wait(), timeout=10)
+        assert received_events == [
+            Event(
+                subject="✉️",
+                priority=1337,
+            )
+        ]
