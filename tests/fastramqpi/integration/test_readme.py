@@ -17,14 +17,16 @@ from fastramqpi.pytest_util import retry
 
 
 def readme_usage_example() -> Callable[[], FastAPI]:
+    from uuid import UUID
+
     from fastapi import APIRouter
     from fastapi import FastAPI
     from pydantic import BaseSettings
 
     from fastramqpi.config import Settings as FastRAMQPISettings
+    from fastramqpi.events import Event
     from fastramqpi.events import GraphQLEvents
     from fastramqpi.events import Listener
-    from fastramqpi.events import UUIDEvent
     from fastramqpi.main import FastRAMQPI
 
     class Settings(BaseSettings):
@@ -37,7 +39,7 @@ def readme_usage_example() -> Callable[[], FastAPI]:
     router = APIRouter()
 
     @router.post("/events/person")
-    async def person(event: UUIDEvent) -> None:
+    async def person(event: Event[UUID]) -> None:
         print("Received event", event.subject)
 
     def create_fastramqpi() -> FastRAMQPI:
