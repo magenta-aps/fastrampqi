@@ -71,6 +71,9 @@ def create_app() -> FastAPI:
     return fastramqpi.get_app()
 ```
 
+**NOTE:** Use `Event[Json[MySubject]]` if your application sends and receives
+JSON as the event subject to ensure the string is deserialised correctly.
+
 ### Metrics
 FastRAMQPI Metrics are exported via `prometheus/client_python` on the FastAPI's `/metrics`.
 
