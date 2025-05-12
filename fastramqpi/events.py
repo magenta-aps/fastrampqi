@@ -134,7 +134,8 @@ async def lifespan(
     integration_client = AsyncClient(
         transport=ASGITransport(app=app),
         # An arbitrary base url is required when calling directly on an ASGI app
-        base_url="http://graphql-events",
+        # base_url="http://graphql-events",
+        base_url="http://localhost:8000/",
         # Raise the timeout from the default of 5 seconds
         timeout=300,
     )
