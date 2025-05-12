@@ -139,7 +139,10 @@ def get_state(request: Request) -> StarletteState:
     Returns:
         The request state contained within the request.
     """
-    return request.state
+    try:
+        return request.app.state
+    except Exception:
+        return request.state
 
 
 State = Annotated[StarletteState, Depends(get_state)]
