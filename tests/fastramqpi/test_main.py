@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from functools import partial
 from typing import AsyncIterator
 from typing import Callable
+from typing import Generator
 from unittest.mock import ANY
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
@@ -25,7 +26,6 @@ from pydantic import SecretStr
 from pydantic import parse_obj_as
 from pytest import MonkeyPatch
 
-import fastramqpi
 from fastramqpi import depends
 from fastramqpi.config import Settings
 from fastramqpi.context import Context
@@ -33,6 +33,80 @@ from fastramqpi.main import FastRAMQPI
 from fastramqpi.main import construct_legacy_clients
 from fastramqpi.metrics import dipex_last_success_timestamp
 from fastramqpi.ramqp.mo import MOAMQPSystem
+
+
+@pytest.fixture(autouse=True, scope="session")
+def disable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
+    """Disable metrics by setting ENABLE_METRICS to false by default."""
+    monkeysession.setenv("ENABLE_METRICS", "false")
+    yield
+
+
+@pytest.fixture(scope="session")
+def enable_metrics(monkeysession: MonkeyPatch) -> Generator[None, None, None]:
+    """Enable metrics by setting ENABLE_METRICS to true on demand."""
+    monkeysession.setenv("ENABLE_METRICS", "true")
+    yield
+
+
+@pytest.fixture
+def fastramqpi_builder(
+    settings: Settings,
+) -> Generator[Callable[[], FastRAMQPI], None, None]:
+    """Fixture for generating FastRAMQPI instances."""
+    # pylint: disable=unnecessary-lambda
+    yield lambda: FastRAMQPI("test", settings=settings, graphql_version=20)
+
+
+@pytest.fixture
+def fastramqpi(
+    fastramqpi_builder: Callable[[], FastRAMQPI],
+) -> Generator[FastRAMQPI, None, None]:
+    """Fixture for the FastRAMQPI instance."""
+    yield fastramqpi_builder()
+
+
+@pytest.fixture
+def disable_amqp_lifespan(fastramqpi: FastRAMQPI) -> Generator[None, None, None]:
+    fastramqpi._context["lifespan_managers"][1000].remove(fastramqpi.amqpsystem)
+    yield
+
+
+@pytest.fixture
+def test_client_builder(
+    fastramqpi: FastRAMQPI,
+) -> Generator[Callable[[FastRAMQPI | None], TestClient], None, None]:
+    """Fixture for generating FastRAMQPI / FastAPI test clients."""
+
+    def create_test_client(override: FastRAMQPI | None = None) -> TestClient:
+        app = fastramqpi.get_app()
+        if override is not None:
+            app = override.get_app()
+        return TestClient(app)
+
+    yield create_test_client
+
+
+@pytest.fixture
+def test_client(
+    test_client_builder: Callable[[], TestClient],
+) -> Generator[TestClient, None, None]:
+    """Fixture for the FastAPI test client."""
+    test_client = test_client_builder()
+    with test_client:
+        yield test_client
+
+
+@pytest.fixture
+def graphql_session() -> Generator[AsyncMock, None, None]:
+    """Fixture for the GraphQL session."""
+    yield AsyncMock()
+
+
+@pytest.fixture
+def model_client() -> Generator[AsyncMock, None, None]:
+    """Fixture for the ModelClient."""
+    yield AsyncMock()
 
 
 @pytest.mark.usefixtures("disable_amqp_lifespan")
@@ -138,7 +212,7 @@ def test_legacy_gql_client_created_with_timeout(
 def test_mo_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
     """Test that the MO client is called with the correct settings."""
     mock_client = MagicMock()
-    monkeypatch.setattr(fastramqpi.main, "AsyncOAuth2Client", mock_client)
+    monkeypatch.setattr("fastramqpi.main.AsyncOAuth2Client", mock_client)
 
     settings = settings.copy(
         update=dict(
@@ -165,7 +239,7 @@ def test_mo_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
 
 async def test_graphql_client(settings: Settings, monkeypatch: MonkeyPatch) -> None:
     """Test that the GraphQL client is initialised correctly."""
-    monkeypatch.setattr(fastramqpi.main, "MOAMQPSystem", MagicMock())
+    monkeypatch.setattr("fastramqpi.main.MOAMQPSystem", MagicMock())
     cls = MagicMock()
 
     app = FastRAMQPI(
