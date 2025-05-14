@@ -44,6 +44,7 @@ click = "^8"
 aiohttp = "^3"
 ariadne-codegen = "^0.7"
 websockets = "^13" # for ariadne
+uvicorn = "^0.34"
 
 [tool.poetry.group.test.dependencies]
 pytest-asyncio = "^0.24"

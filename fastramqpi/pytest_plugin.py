@@ -28,6 +28,8 @@ from unittest.mock import patch
 import httpx
 import pytest
 import sqlalchemy
+import uvicorn
+from fastapi import FastAPI
 from httpx import AsyncClient
 from httpx import BasicAuth
 from more_itertools import one
@@ -157,6 +159,31 @@ async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
 
     async with construct_mo_client(_settings) as client:
         yield client
+
+
+@pytest.fixture
+async def app() -> FastAPI:
+    raise NotImplementedError(
+        "You need to override the `app` fixture. See the FastRAMQPI README."
+    )
+
+
+@pytest.fixture
+async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+    """Create httpx client bound to the local uvicorn."""
+    # Start uvicorn
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
+    server = uvicorn.Server(config)
+    task = asyncio.create_task(server.serve())
+    async with asyncio.timeout(5):
+        while not server.started:
+            await asyncio.sleep(0.1)
+    # Yield HTTPX client for localhost
+    async with AsyncClient(base_url="http://127.0.0.1:8000") as client:
+        yield client
+    # Stop uvicorn
+    server.should_exit = True
+    await asyncio.wait_for(task, timeout=5)
 
 
 @pytest.fixture
@@ -308,6 +335,8 @@ def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None
 
     Automatically used on tests marked as integration_test.
     """
+    # the integration itself, running in uvicorn
+    respx_mock.route(host="127.0.0.1", port=8000).pass_through()
     # mo and keycloak are named to allow tests to revert the passthrough if needed
     respx_mock.route(name="keycloak", host=_settings.auth_server.host).pass_through()
     respx_mock.route(name="mo", host=_settings.mo_url.host).pass_through()
