@@ -10,9 +10,7 @@ from typing import TypeVar
 from uuid import UUID
 
 import structlog
-from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
-from httpx import ASGITransport
 from httpx import AsyncClient
 from httpx import HTTPStatusError
 from pydantic.generics import GenericModel
@@ -115,7 +113,6 @@ async def fetcher(
 
 @asynccontextmanager
 async def lifespan(
-    app: FastAPI,
     settings: Settings,
     mo_client: AsyncClient,
     events: GraphQLEvents,
@@ -129,12 +126,10 @@ async def lifespan(
         url=f"{settings.mo_url}/graphql/v25",
         http_client=mo_client,
     )
-    # HTTPX client to call directly through the integration's ASGI interface
-    # without involving TCP sockets.
+    # HTTPX client to call the integration itself
     integration_client = AsyncClient(
-        transport=ASGITransport(app=app),
-        # An arbitrary base url is required when calling directly on an ASGI app
-        base_url="http://graphql-events",
+        # We assume the integration is listening on port 8000
+        base_url="http://127.0.0.1:8000",
         # Raise the timeout from the default of 5 seconds
         timeout=300,
     )

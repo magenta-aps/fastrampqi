@@ -183,7 +183,6 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         if graphql_events is not None:
             self.add_lifespan_manager(
                 events.lifespan(
-                    app=self.app,
                     settings=settings,
                     mo_client=mo_client,
                     events=graphql_events,
