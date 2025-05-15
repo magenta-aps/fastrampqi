@@ -61,6 +61,22 @@ def construct_legacy_clients(
     return gql_client, model_client
 
 
+def construct_mo_client(settings: ClientSettings) -> AsyncOAuth2Client:
+    return AsyncOAuth2Client(
+        base_url=settings.mo_url,
+        client_id=settings.client_id,
+        client_secret=settings.client_secret.get_secret_value(),
+        grant_type="client_credentials",
+        # TODO: We should take a full token URL instead of hard-coding Keycloak's
+        # URL scheme. Let's wait until the legacy clients are removed.
+        token_endpoint=f"{settings.auth_server}/realms/{settings.auth_realm}/protocol/openid-connect/token",
+        # TODO (https://github.com/lepture/authlib/issues/531): Hack to enable
+        # automatic fetching of token on first call, instead of only refreshing.
+        token={"expires_at": -1, "access_token": ""},
+        timeout=settings.graphql_timeout,
+    )
+
+
 class GraphQLClientProtocol(AsyncContextManager, Protocol):
     def __init__(
         self,
@@ -127,19 +143,7 @@ class FastRAMQPI(FastAPIIntegrationSystem):
             self._context["sessionmaker"] = database.create_sessionmaker(engine)
 
         # Authenticated HTTPX Client
-        mo_client = AsyncOAuth2Client(
-            base_url=settings.mo_url,
-            client_id=settings.client_id,
-            client_secret=settings.client_secret.get_secret_value(),
-            grant_type="client_credentials",
-            # TODO: We should take a full token URL instead of hard-coding Keycloak's
-            # URL scheme. Let's wait until the legacy clients are removed.
-            token_endpoint=f"{settings.auth_server}/realms/{settings.auth_realm}/protocol/openid-connect/token",
-            # TODO (https://github.com/lepture/authlib/issues/531): Hack to enable
-            # automatic fetching of token on first call, instead of only refreshing.
-            token={"expires_at": -1, "access_token": ""},
-            timeout=settings.graphql_timeout,
-        )
+        mo_client = construct_mo_client(settings)
 
         @asynccontextmanager
         async def mo_client_manager(context: Context) -> AsyncGenerator[None, None]:
@@ -179,7 +183,6 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         if graphql_events is not None:
             self.add_lifespan_manager(
                 events.lifespan(
-                    app=self.app,
                     settings=settings,
                     mo_client=mo_client,
                     events=graphql_events,

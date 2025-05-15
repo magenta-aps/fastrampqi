@@ -28,6 +28,8 @@ from unittest.mock import patch
 import httpx
 import pytest
 import sqlalchemy
+import uvicorn
+from fastapi import FastAPI
 from httpx import AsyncClient
 from httpx import BasicAuth
 from more_itertools import one
@@ -138,10 +140,50 @@ def _settings() -> Any:
 
 
 @pytest.fixture
-async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
+async def unauthenticated_mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL preconfigured."""
-    async with httpx.AsyncClient(base_url=_settings.mo_url) as client:
+    mo_client = AsyncClient(base_url=_settings.mo_url)
+    async with mo_client as client:
         yield client
+
+
+@pytest.fixture
+async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
+    """HTTPX client with the OS2mo URL and auth preconfigured.
+
+    For use by the integration's fixtures and tests. May be closed by the
+    integration's ariadne codegen client, and as such cannot be used for
+    post-test teardown (such as database restore).
+    """
+    from fastramqpi.main import construct_mo_client
+
+    async with construct_mo_client(_settings) as client:
+        yield client
+
+
+@pytest.fixture
+async def app() -> FastAPI:
+    raise NotImplementedError(
+        "You need to override the `app` fixture. See the FastRAMQPI README."
+    )
+
+
+@pytest.fixture
+async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+    """Create httpx client bound to the local uvicorn."""
+    # Start uvicorn
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
+    server = uvicorn.Server(config)
+    task = asyncio.create_task(server.serve())
+    async with asyncio.timeout(5):
+        while not server.started:
+            await asyncio.sleep(0.1)
+    # Yield HTTPX client for localhost
+    async with AsyncClient(base_url="http://127.0.0.1:8000") as client:
+        yield client
+    # Stop uvicorn
+    server.should_exit = True
+    await asyncio.wait_for(task, timeout=5)
 
 
 @pytest.fixture
@@ -216,7 +258,9 @@ def fastramqpi_database_isolation(
 
 
 @pytest.fixture
-async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
+async def amqp_event_emitter(
+    unauthenticated_mo_client: AsyncClient,
+) -> AsyncIterator[None]:
     """Continuously, and quickly, emit OS2mo AMQP events during tests.
 
     Normally, OS2mo emits AMQP events periodically, but very slowly. Even though there
@@ -230,7 +274,7 @@ async def amqp_event_emitter(mo_client: AsyncClient) -> AsyncIterator[None]:
     async def emitter() -> NoReturn:
         while True:
             await asyncio.sleep(1.13)
-            r = await mo_client.post("/testing/amqp/emit")
+            r = await unauthenticated_mo_client.post("/testing/amqp/emit")
             r.raise_for_status()
 
     task = create_task(emitter())
@@ -250,16 +294,16 @@ async def graphql_events_quick_fetch(monkeypatch: MonkeyPatch) -> None:
 
 @pytest.fixture
 async def os2mo_database_snapshot_and_restore(
-    mo_client: AsyncClient,
+    unauthenticated_mo_client: AsyncClient,
 ) -> AsyncIterator[None]:
     """Ensure test isolation by resetting the OS2mo database between tests.
 
     Automatically used on tests marked as integration_test.
     """
-    r = await mo_client.post("/testing/database/snapshot")
+    r = await unauthenticated_mo_client.post("/testing/database/snapshot")
     r.raise_for_status()
     yield
-    r = await mo_client.post("/testing/database/restore")
+    r = await unauthenticated_mo_client.post("/testing/database/restore")
     r.raise_for_status()
 
 
@@ -291,6 +335,8 @@ def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None
 
     Automatically used on tests marked as integration_test.
     """
+    # the integration itself, running in uvicorn
+    respx_mock.route(host="127.0.0.1", port=8000).pass_through()
     # mo and keycloak are named to allow tests to revert the passthrough if needed
     respx_mock.route(name="keycloak", host=_settings.auth_server.host).pass_through()
     respx_mock.route(name="mo", host=_settings.mo_url.host).pass_through()
