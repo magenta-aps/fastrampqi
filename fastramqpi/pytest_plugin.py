@@ -179,7 +179,14 @@ async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
         while not server.started:
             await asyncio.sleep(0.1)
     # Yield HTTPX client for localhost
-    async with AsyncClient(base_url="http://127.0.0.1:8000") as client:
+    async with AsyncClient(
+        base_url="http://127.0.0.1:8000",
+        # To avoid flaky tests, Starlette's TestClient does not enforce
+        # timeouts[1]. We subscribe to their philosophy, but set a timeout of 5
+        # minutes to avoid stuck tests.
+        # [1] https://github.com/encode/starlette/issues/1108
+        timeout=300,
+    ) as client:
         yield client
     # Stop uvicorn
     server.should_exit = True
