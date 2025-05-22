@@ -118,6 +118,7 @@ async def test_event_not_acknowledges_on_http_error(
                 "log_level": "warning",
                 "event": "HTTP status error in event callback",
                 "status_code": 404,
+                "response": '{"detail":"no"}',
             } in cap_logs
 
         await verify()
