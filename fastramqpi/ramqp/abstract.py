@@ -10,6 +10,7 @@ from asyncio import CancelledError
 from collections.abc import Callable
 from collections.abc import Mapping
 from contextlib import AbstractAsyncContextManager
+from contextlib import suppress
 from functools import partial
 from types import TracebackType
 from typing import Any
@@ -429,6 +430,8 @@ class AbstractAMQPSystem(AbstractAsyncContextManager, Generic[TRouter]):
 
         if self._periodic_task is not None:
             self._periodic_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._periodic_task
             self._periodic_task = None
 
         self._exchange = None
