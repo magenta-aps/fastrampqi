@@ -66,6 +66,7 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
                 "amqp_queue_isolation",
                 "amqp_event_emitter",
                 "graphql_events_quick_fetch",
+                "graphql_events_quick_retry",
             ]
         else:  # unit-test
             # MUST prepend to replicate auto-use fixtures coming first
@@ -288,8 +289,31 @@ async def amqp_event_emitter(
     yield
     task.cancel()
     with suppress(CancelledError):
-        # Await the task to ensure potential errors in the fixture itself, such as a
-        # wrong URL or misconfigured OS2mo, are returned to the user.
+        await task
+
+
+@pytest.fixture
+async def graphql_events_quick_retry(
+    unauthenticated_mo_client: AsyncClient,
+) -> AsyncIterator[None]:
+    """Continuously reset GraphQL events to allow quick retrying during tests.
+
+    Normally, events which are fetched - but not acknowledged - are not retried
+    (cannot be fetched) for three minutes, increasing exponentially.
+
+    Automatically used on tests marked as integration_test.
+    """
+
+    async def resetter() -> NoReturn:
+        while True:
+            await asyncio.sleep(0.941)
+            r = await unauthenticated_mo_client.post("/testing/events/reset-last-tried")
+            r.raise_for_status()
+
+    task = create_task(resetter())
+    yield
+    task.cancel()
+    with suppress(CancelledError):
         await task
 
 
