@@ -59,13 +59,13 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
         if item.get_closest_marker("integration_test"):
             # MUST prepend to replicate auto-use fixtures coming first
             item.fixturenames[:0] = [  # type: ignore[attr-defined]
+                "passthrough_backing_services",
                 "fastramqpi_database_setup",
                 "fastramqpi_database_isolation",
-                "amqp_event_emitter",
-                "graphql_events_quick_fetch",
                 "os2mo_database_snapshot_and_restore",
                 "amqp_queue_isolation",
-                "passthrough_backing_services",
+                "amqp_event_emitter",
+                "graphql_events_quick_fetch",
             ]
         else:  # unit-test
             # MUST prepend to replicate auto-use fixtures coming first
