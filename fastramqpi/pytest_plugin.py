@@ -6,6 +6,7 @@ import urllib.parse
 from asyncio import CancelledError
 from asyncio import create_task
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from contextlib import suppress
 from typing import Any
 from typing import Awaitable
@@ -169,9 +170,9 @@ async def app() -> FastAPI:
     )
 
 
-@pytest.fixture
-async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
-    """Create httpx client bound to the local uvicorn."""
+@asynccontextmanager
+async def run_server(app: FastAPI) -> AsyncIterator[None]:
+    """Construct an ASGI server on localhost port 8000."""
     # Start uvicorn
     config = uvicorn.Config(app, host="127.0.0.1", port=8000)
     server = uvicorn.Server(config)
@@ -179,6 +180,22 @@ async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     async with asyncio.timeout(5):
         while not server.started:
             await asyncio.sleep(0.1)
+    # Yield the running server
+    yield
+    # Stop uvicorn
+    server.should_exit = True
+    await asyncio.wait_for(task, timeout=5)
+
+
+@pytest.fixture
+async def server(app: FastAPI) -> AsyncIterator[None]:
+    async with run_server(app):
+        yield
+
+
+@asynccontextmanager
+async def run_test_client() -> AsyncIterator[AsyncClient]:
+    """Create httpx client bound to localhost port 8000."""
     # Yield HTTPX client for localhost
     async with AsyncClient(
         base_url="http://127.0.0.1:8000",
@@ -189,9 +206,13 @@ async def test_client(app: FastAPI) -> AsyncIterator[AsyncClient]:
         timeout=300,
     ) as client:
         yield client
-    # Stop uvicorn
-    server.should_exit = True
-    await asyncio.wait_for(task, timeout=5)
+
+
+@pytest.fixture
+async def test_client(server: None) -> AsyncIterator[AsyncClient]:
+    """Create httpx client bound to the local uvicorn."""
+    async with run_test_client() as client:
+        yield client
 
 
 @pytest.fixture
