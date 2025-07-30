@@ -1,12 +1,18 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
+from functools import partial
 from typing import Any
 from typing import Callable
 
 import tenacity
+from tenacity import AsyncRetrying
 from tenacity import WrappedFn
 from tenacity import stop_after_delay
 from tenacity import wait_fixed
+
+retrying = partial(
+    AsyncRetrying, stop=stop_after_delay(20), wait=wait_fixed(2), reraise=True
+)
 
 
 def retry(
