@@ -266,8 +266,21 @@ def fastramqpi_database_isolation(
 
 
 @pytest.fixture
-async def amqp_event_emitter(
+async def amqp_emit_events(
     unauthenticated_mo_client: AsyncClient,
+) -> Callable[[], Awaitable[None]]:
+    """Emits outstanding events when called."""
+
+    async def inner() -> None:
+        r = await unauthenticated_mo_client.post("/testing/amqp/emit")
+        r.raise_for_status()
+
+    return inner
+
+
+@pytest.fixture
+async def amqp_event_emitter(
+    amqp_emit_events: Callable[[], Awaitable[None]],
 ) -> AsyncIterator[None]:
     """Continuously, and quickly, emit OS2mo AMQP events during tests.
 
@@ -282,8 +295,7 @@ async def amqp_event_emitter(
     async def emitter() -> NoReturn:
         while True:
             await asyncio.sleep(1.13)
-            r = await unauthenticated_mo_client.post("/testing/amqp/emit")
-            r.raise_for_status()
+            await amqp_emit_events()
 
     task = create_task(emitter())
     yield
