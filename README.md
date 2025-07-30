@@ -399,6 +399,18 @@ async def test_create_person(
 
     await verify()
 ```
+Alternatively the `verify` step of the test can also be written as:
+```python
+    async for attempt in retrying():
+        with attempt:
+            employees = await graphql_client._testing__get_employee(cpr_number)
+            employee_states = one(employees.objects)
+            employee = one(employee_states.objects)
+            assert employee.cpr_number == cpr_number
+            assert employee.given_name == "Alice"
+```
+Using `fastramqpi.pytest_util.retrying`.
+
 Through the use of the `test_client` fixture, the test begins by starting the
 integration, including initialising any associated lifecyles. We sanity-check,
 to ensure the test isn't trivially passing, and trigger the integration. Due to
