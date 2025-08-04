@@ -75,11 +75,12 @@ async def fetcher(
     listener: UUID,
     path: str,
 ) -> None:
-    logger.info("Starting fetcher", listener=listener)
+    log = logger.bind(listener=listener)
+    log.info("Starting fetcher")
     while True:
         try:
             event = await graphql_client.fetch_event(listener)
-            logger.debug("Fetched event", graphql_event=event)
+            log.debug("Fetched event", graphql_event=event)
             if event is None:
                 await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
                 continue
@@ -99,16 +100,16 @@ async def fetcher(
             try:
                 r.raise_for_status()
             except HTTPStatusError as e:
-                logger.warning(
+                log.warning(
                     "HTTP status error in event callback",
                     status_code=e.response.status_code,
                     response=e.response.text,
                 )
                 continue
-            logger.debug("Acknowledging event", graphql_event=event)
+            log.debug("Acknowledging event", graphql_event=event)
             await graphql_client.acknowledge_event(event.token)
         except Exception:  # pragma: no cover
-            logger.exception("Unexpected exception in GraphQL event fetcher")
+            log.exception("Unexpected exception in GraphQL event fetcher")
             await asyncio.sleep(5)
 
 

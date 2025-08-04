@@ -3,6 +3,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
+from unittest.mock import ANY
 
 import pytest
 from fastapi import APIRouter
@@ -117,6 +118,7 @@ async def test_event_not_acknowledges_on_http_error(
             assert {
                 "log_level": "warning",
                 "event": "HTTP status error in event callback",
+                "listener": ANY,
                 "status_code": 404,
                 "response": '{"detail":"no"}',
             } in cap_logs
