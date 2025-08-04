@@ -40,6 +40,7 @@ async def app() -> FastAPI:
                     user_key="test-listener",
                     routing_key="🔑",
                     path="/handler",
+                    parallelism=2,
                 ),
             ],
         ),
@@ -119,8 +120,37 @@ async def test_event_not_acknowledges_on_http_error(
                 "log_level": "warning",
                 "event": "HTTP status error in event callback",
                 "listener": ANY,
+                "n": ANY,
                 "status_code": 404,
                 "response": '{"detail":"no"}',
             } in cap_logs
 
         await verify()
+
+
+@pytest.mark.integration_test
+async def test_event_parallelism(
+    app: FastAPI, test_client: AsyncClient, graphql_client: GraphQLClient
+) -> None:
+    router = APIRouter()
+    barrier = asyncio.Barrier(parties=2)
+    done = asyncio.Event()
+
+    @router.post("/handler")
+    async def handler(event: Event) -> None:
+        # Both handlers need break the barrier at the same time to continue
+        await barrier.wait()
+        done.set()
+
+    app.include_router(router)
+
+    for subject in ("a", "b"):
+        await graphql_client._testing__send_event(
+            input=EventSendInput(
+                namespace="🌌",
+                routing_key="🔑",
+                subject=subject,
+            )
+        )
+
+    await asyncio.wait_for(done.wait(), timeout=10)

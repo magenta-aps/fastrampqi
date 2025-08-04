@@ -52,6 +52,7 @@ class Listener:
     user_key: str
     routing_key: str
     path: str
+    parallelism: int = 1
 
 
 @dataclass(frozen=True)
@@ -74,8 +75,9 @@ async def fetcher(
     graphql_client: GraphQLClient,
     listener: UUID,
     path: str,
+    fetcher_number: int,
 ) -> None:
-    log = logger.bind(listener=listener)
+    log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
     while True:
         try:
@@ -157,14 +159,16 @@ async def lifespan(
                         routing_key=listener.routing_key,
                     )
                 )
-                tg.create_task(
-                    fetcher(
-                        integration_client=integration_client,
-                        graphql_client=graphql_client,
-                        listener=graphql_listener.uuid,
-                        path=listener.path,
+                for i in range(listener.parallelism):
+                    tg.create_task(
+                        fetcher(
+                            integration_client=integration_client,
+                            graphql_client=graphql_client,
+                            listener=graphql_listener.uuid,
+                            path=listener.path,
+                            fetcher_number=i,
+                        )
                     )
-                )
             yield
             logger.info("Stopping GraphQL event fetchers")
             tg.create_task(terminate_task_group())
