@@ -35,6 +35,7 @@ from httpx import AsyncClient
 from httpx import BasicAuth
 from more_itertools import one
 from pytest import Config
+from pytest import FixtureRequest
 from pytest import Item
 from pytest import MonkeyPatch
 from respx import MockRouter
@@ -86,7 +87,7 @@ async def empty_environment() -> AsyncIterator[None]:
 @pytest.fixture(autouse=True)
 def load_marked_envvars(
     monkeypatch: pytest.MonkeyPatch,
-    request: Any,
+    request: FixtureRequest,
 ) -> Iterator[None]:
     """Fixture to inject environmental variable via pytest.marks.
 

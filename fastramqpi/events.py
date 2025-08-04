@@ -52,6 +52,7 @@ class Listener:
     user_key: str
     routing_key: str
     path: str
+    parallelism: int = 1
 
 
 @dataclass(frozen=True)
@@ -74,12 +75,14 @@ async def fetcher(
     graphql_client: GraphQLClient,
     listener: UUID,
     path: str,
+    fetcher_number: int,
 ) -> None:
-    logger.info("Starting fetcher", listener=listener)
+    log = logger.bind(listener=listener, n=fetcher_number)
+    log.info("Starting fetcher")
     while True:
         try:
             event = await graphql_client.fetch_event(listener)
-            logger.debug("Fetched event", graphql_event=event)
+            log.debug("Fetched event", graphql_event=event)
             if event is None:
                 await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
                 continue
@@ -99,16 +102,16 @@ async def fetcher(
             try:
                 r.raise_for_status()
             except HTTPStatusError as e:
-                logger.warning(
+                log.warning(
                     "HTTP status error in event callback",
                     status_code=e.response.status_code,
                     response=e.response.text,
                 )
                 continue
-            logger.debug("Acknowledging event", graphql_event=event)
+            log.debug("Acknowledging event", graphql_event=event)
             await graphql_client.acknowledge_event(event.token)
         except Exception:  # pragma: no cover
-            logger.exception("Unexpected exception in GraphQL event fetcher")
+            log.exception("Unexpected exception in GraphQL event fetcher")
             await asyncio.sleep(5)
 
 
@@ -156,14 +159,16 @@ async def lifespan(
                         routing_key=listener.routing_key,
                     )
                 )
-                tg.create_task(
-                    fetcher(
-                        integration_client=integration_client,
-                        graphql_client=graphql_client,
-                        listener=graphql_listener.uuid,
-                        path=listener.path,
+                for i in range(listener.parallelism):
+                    tg.create_task(
+                        fetcher(
+                            integration_client=integration_client,
+                            graphql_client=graphql_client,
+                            listener=graphql_listener.uuid,
+                            path=listener.path,
+                            fetcher_number=i,
+                        )
                     )
-                )
             yield
             logger.info("Stopping GraphQL event fetchers")
             tg.create_task(terminate_task_group())
