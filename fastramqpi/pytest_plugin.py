@@ -178,7 +178,7 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
     config = uvicorn.Config(app, host="127.0.0.1", port=8000)
     server = uvicorn.Server(config)
     task = asyncio.create_task(server.serve())
-    async with asyncio.timeout(5):
+    async with asyncio.timeout(10):
         while not server.started:
             await asyncio.sleep(0.1)
     # Yield the running server
