@@ -75,17 +75,25 @@ async def fetcher(
     graphql_client: GraphQLClient,
     listener: UUID,
     path: str,
+    rate_limit_allowed: asyncio.Event,
     fetcher_number: int,
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
     while True:
         try:
+            # Wait until the event is set. This will pause the fetcher if
+            # another fetcher for the same listener received a Retry-After.
+            await rate_limit_allowed.wait()
+
+            # Fetch GraphQL event from MO
             event = await graphql_client.fetch_event(listener)
             log.debug("Fetched event", graphql_event=event)
             if event is None:
                 await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
                 continue
+
+            # HTTP POST event to the integration
             r = await integration_client.post(
                 path,
                 # Pass all event arguments; we let the receiver decide which
@@ -107,6 +115,17 @@ async def fetcher(
                     status_code=e.response.status_code,
                     response=e.response.text,
                 )
+                # Rate-limiting
+                if retry_after := e.response.headers.get("Retry-After"):
+                    # Retry-After can either be a HTTP-date (not ISO 8601!) or
+                    # a number of seconds to delay. We only support the latter.
+                    # https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3
+                    # https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.1
+                    delay = int(retry_after)
+                    logger.warning("Rate-limited", delay=delay)
+                    rate_limit_allowed.clear()  # pause all fetchers for this listener
+                    await asyncio.sleep(delay)
+                    rate_limit_allowed.set()  # resume all fetchers for this listener
                 continue
             log.debug("Acknowledging event", graphql_event=event)
             await graphql_client.acknowledge_event(event.token)
@@ -159,6 +178,9 @@ async def lifespan(
                         routing_key=listener.routing_key,
                     )
                 )
+                # All fetchers for a listener share the same rate-limiting
+                rate_limit_allowed = asyncio.Event()
+                rate_limit_allowed.set()
                 for i in range(listener.parallelism):
                     tg.create_task(
                         fetcher(
@@ -166,6 +188,7 @@ async def lifespan(
                             graphql_client=graphql_client,
                             listener=graphql_listener.uuid,
                             path=listener.path,
+                            rate_limit_allowed=rate_limit_allowed,
                             fetcher_number=i,
                         )
                     )

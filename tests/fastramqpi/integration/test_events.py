@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import asyncio
+import itertools
+import time
 from collections.abc import AsyncIterator
 from unittest.mock import ANY
 
@@ -110,7 +112,6 @@ async def test_event_not_acknowledges_on_http_error(
                 namespace="🌌",
                 routing_key="🔑",
                 subject="✉️",
-                priority=1337,
             )
         )
 
@@ -154,3 +155,43 @@ async def test_event_parallelism(
         )
 
     await asyncio.wait_for(done.wait(), timeout=10)
+
+
+@pytest.mark.integration_test
+async def test_event_rate_limit(
+    app: FastAPI, test_client: AsyncClient, graphql_client: GraphQLClient
+) -> None:
+    router = APIRouter()
+    calls = []
+    done = asyncio.Event()
+
+    @router.post("/handler")
+    async def handler(event: Event) -> None:
+        calls.append(time.monotonic())
+        # Request rate-limiting on the first five calls
+        if len(calls) < 5:
+            raise HTTPException(
+                status_code=429,
+                headers={"Retry-After": "5"},
+            )
+        # Allow immediate retrying on the next five
+        elif len(calls) < 10:
+            raise HTTPException(status_code=404, detail="no")
+        else:
+            done.set()
+
+    app.include_router(router)
+
+    await graphql_client._testing__send_event(
+        input=EventSendInput(
+            namespace="🌌",
+            routing_key="🔑",
+            subject="✉️",
+        )
+    )
+
+    await asyncio.wait_for(done.wait(), timeout=30)
+
+    delays = [b - a for a, b in itertools.pairwise(calls)]
+    assert all([x > 5 for x in delays[:4]]), delays  # rate-limited
+    assert all([x < 5 for x in delays[4:]]), delays  # not rate-limited
