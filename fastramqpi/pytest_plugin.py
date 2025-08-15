@@ -185,7 +185,7 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
     yield
     # Stop uvicorn
     server.should_exit = True
-    await asyncio.wait_for(task, timeout=5)
+    await asyncio.wait_for(task, timeout=10)
 
 
 @pytest.fixture
