@@ -181,11 +181,16 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
     async with asyncio.timeout(10):
         while not server.started:
             await asyncio.sleep(0.1)
-    # Yield the running server
-    yield
-    # Stop uvicorn
-    server.should_exit = True
-    await asyncio.wait_for(task, timeout=10)
+    try:
+        # Yield the running server
+        yield
+    finally:
+        # Always stop uvicorn whether our app exited successfully or not
+        # The reason this is required here while being omitted for the other code in
+        # this file, is that this is a standard asynccontextmanager while the functions
+        # are pytest fixtures, for which pytest handles the exceptions
+        server.should_exit = True
+        await asyncio.wait_for(task, timeout=10)
 
 
 @pytest.fixture

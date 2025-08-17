@@ -48,12 +48,6 @@ async def test_run_server_restarts() -> None:
             await check_http_request()
 
 
-@pytest.mark.xfail(
-    reason="""
-    The server does not shutdown when an exception occurs, rather it keeps running,
-    meaning the second run_server call fails due to the port already being taken.
-    """
-)
 async def test_run_server_exception() -> None:
     with suppress(ValueError):
         # Server should shutdown gracefully even if an exception occurs
