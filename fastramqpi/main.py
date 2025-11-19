@@ -108,25 +108,24 @@ class FastRAMQPI(FastAPIIntegrationSystem):
         super().__init__(application_name, settings)
 
         # Setup AMQPSystem
-        # TODO: make AMQP optional
-        amqp_settings = settings.amqp
-        amqp_settings.queue_prefix = amqp_settings.queue_prefix or application_name
-        self.amqpsystem = MOAMQPSystem(
-            settings=amqp_settings, context=self.get_context()
-        )
-        # Let AMQPSystems lifespan follow ASGI lifespan. The AMQPSystem must be started
-        # last (priority 1000) so all the dependency-injectable objects are set up and
-        # available before the AMQP message handlers start receiving messages. Since
-        # lifespan managers are shutdown in reverse order, this also ensures that all
-        # messages handlers have finished before shutting down their dependencies.
-        self.add_lifespan_manager(self.amqpsystem, priority=1000)
+        if settings.amqp is not None:
+            settings.amqp.queue_prefix = settings.amqp.queue_prefix or application_name
+            self.amqpsystem = MOAMQPSystem(
+                settings=settings.amqp, context=self.get_context()
+            )
+            # Let AMQPSystems lifespan follow ASGI lifespan. The AMQPSystem must be started
+            # last (priority 1000) so all the dependency-injectable objects are set up and
+            # available before the AMQP message handlers start receiving messages. Since
+            # lifespan managers are shutdown in reverse order, this also ensures that all
+            # messages handlers have finished before shutting down their dependencies.
+            self.add_lifespan_manager(self.amqpsystem, priority=1000)
 
-        async def healthcheck_amqp(context: Context) -> bool:
-            amqpsystem = context["amqpsystem"]
-            return cast(bool, amqpsystem.healthcheck())
+            async def healthcheck_amqp(context: Context) -> bool:
+                amqpsystem = context["amqpsystem"]
+                return cast(bool, amqpsystem.healthcheck())
 
-        self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
-        self._context["amqpsystem"] = self.amqpsystem
+            self.add_healthcheck(name="AMQP", healthcheck=healthcheck_amqp)
+            self._context["amqpsystem"] = self.amqpsystem
 
         # Setup database
         if database_metadata is not None:
