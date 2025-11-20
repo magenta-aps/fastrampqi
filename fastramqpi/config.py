@@ -80,5 +80,5 @@ class Settings(FastAPIIntegrationSystemSettings, ClientSettings):
         frozen = True
         env_nested_delimiter = "__"
 
-    amqp: AMQPConnectionSettings
+    amqp: AMQPConnectionSettings | None
     database: DatabaseSettings | None
