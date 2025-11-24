@@ -236,7 +236,7 @@ _MORoutingKey = Literal[
     "owner",
     "person",
     "related_unit",
-    "role",
+    "rolebinding",
 ]
 
 MORoutingKey = Annotated[_MORoutingKey | _MORoutingKeyOld, Depends(get_routing_key)]
