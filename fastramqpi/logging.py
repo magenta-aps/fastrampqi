@@ -1,22 +1,9 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import logging
-from typing import Any
 
 import structlog
-from structlog.types import EventDict
 from structlog.types import Processor
-
-
-def _drop_color_message_key(_: Any, __: Any, event_dict: EventDict) -> EventDict:
-    """Remove `color_message` from uvicorn logs.
-
-    Uvicorn logs the message a second time in the extra `color_message`, but we
-    don't need it.
-    """
-
-    event_dict.pop("color_message", None)
-    return event_dict
 
 
 def configure_logging(log_level: str, json_logs: bool = True) -> None:
@@ -34,7 +21,6 @@ def configure_logging(log_level: str, json_logs: bool = True) -> None:
         structlog.stdlib.add_log_level,
         # Add extra attributes to the event dictionary
         structlog.stdlib.ExtraAdder(),
-        _drop_color_message_key,
         # If the "stack_info" key in the event dict is true, remove it and
         # render the current stack trace in the "stack" key.
         structlog.processors.StackInfoRenderer(),
@@ -87,10 +73,3 @@ def configure_logging(log_level: str, json_logs: bool = True) -> None:
     root_logger = logging.getLogger()
     root_logger.handlers = [handler]
     root_logger.setLevel(log_level.upper())
-
-    for _log in ("uvicorn", "uvicorn.error", "uvicorn.access"):
-        # Clear the log handlers for uvicorn loggers, and enable propagation so
-        # the messages are caught by our root logger and formatted correctly by
-        # structlog
-        logging.getLogger(_log).handlers.clear()
-        logging.getLogger(_log).propagate = True
