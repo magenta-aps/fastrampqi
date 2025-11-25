@@ -22,6 +22,7 @@ from starlette.status import HTTP_200_OK
 from starlette.status import HTTP_503_SERVICE_UNAVAILABLE
 
 from fastramqpi.logging import configure_logging
+from fastramqpi.middleware import ExceptionMiddleware
 from fastramqpi.middleware import RequestIdMiddleware
 
 from .config import FastAPIIntegrationSystemSettings
@@ -178,6 +179,7 @@ class FastAPIIntegrationSystem:
             },
             middleware=[
                 Middleware(RequestIdMiddleware),
+                Middleware(ExceptionMiddleware),
             ],
             lifespan=partial(_lifespan, context=self._context),
         )

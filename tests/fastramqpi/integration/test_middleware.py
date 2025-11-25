@@ -42,3 +42,23 @@ def test_request_id_middleware(capsys: pytest.CaptureFixture[str]) -> None:
             capsys.readouterr().err,
             flags=re.MULTILINE,
         )
+
+
+@pytest.mark.integration_test
+def test_exception_middleware(capsys: pytest.CaptureFixture[str]) -> None:
+    settings = Settings()
+    fastramqpi = FastRAMQPI(
+        application_name="os2mo-test-integration",
+        settings=settings.fastramqpi,
+        graphql_version=22,
+    )
+    app = fastramqpi.get_app()
+
+    @app.get("/error")
+    async def error() -> float:
+        raise ArithmeticError("Negative bank balance after rent! Eat the rich!")
+
+    with TestClient(app) as client:
+        r = client.get("/error")
+        assert "ArithmeticError" in r.text
+        assert "ArithmeticError" in capsys.readouterr().err
