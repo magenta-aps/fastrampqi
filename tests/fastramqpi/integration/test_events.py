@@ -6,11 +6,13 @@ import itertools
 import time
 from collections.abc import AsyncIterator
 from unittest.mock import ANY
+from uuid import UUID
 
 import pytest
 from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi import HTTPException
+from fastapi import Request
 from httpx import AsyncClient
 from structlog.testing import capture_logs
 
@@ -195,3 +197,30 @@ async def test_event_rate_limit(
     delays = [b - a for a, b in itertools.pairwise(calls)]
     assert all([x > 5 for x in delays[:4]]), delays  # rate-limited
     assert all([x < 5 for x in delays[4:]]), delays  # not rate-limited
+
+
+@pytest.mark.integration_test
+async def test_event_sets_request_id(
+    app: FastAPI, test_client: AsyncClient, graphql_client: GraphQLClient
+) -> None:
+    router = APIRouter()
+    done = asyncio.Event()
+
+    @router.post("/handler")
+    async def handler(request: Request, event: Event) -> None:
+        x_request_id = request.headers["x-request-id"]
+        # Check if it is a valid UUID
+        UUID(x_request_id)
+        done.set()
+
+    app.include_router(router)
+
+    await graphql_client._testing__send_event(
+        input=EventSendInput(
+            namespace="🌌",
+            routing_key="🔑",
+            subject="✉️",
+            priority=1337,
+        )
+    )
+    await asyncio.wait_for(done.wait(), timeout=10)
