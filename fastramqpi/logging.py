@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 import logging
 
+import httpcore
+import httpx
 import structlog
 from structlog.types import Processor
 
@@ -27,7 +29,13 @@ def configure_logging(log_level: str, json_logs: bool = True) -> None:
         # If the "exc_info" key in the event dict is either true or a
         # sys.exc_info() tuple, remove "exc_info" and render the exception
         # with traceback into the "exception" key.
-        structlog.processors.format_exc_info,
+        structlog.processors.ExceptionRenderer(
+            structlog.tracebacks.ExceptionDictTransformer(
+                locals_max_length=10,
+                locals_max_string=2048,
+                suppress=[httpcore, httpx],
+            )
+        ),
         # If some value is in bytes, decode it to a Unicode str.
         structlog.processors.UnicodeDecoder(),
     ]
