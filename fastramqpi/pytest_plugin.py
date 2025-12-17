@@ -411,7 +411,8 @@ def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None
     respx_mock.route(name="keycloak", host=_settings.auth_server.host).pass_through()
     respx_mock.route(name="mo", host=_settings.mo_url.host).pass_through()
     # rabbitmq management
-    respx_mock.route(host=_settings.amqp.get_url().host).pass_through()
+    if _settings.amqp is not None:
+        respx_mock.route(host=_settings.amqp.get_url().host).pass_through()
     respx_mock.route(host="localhost").pass_through()
 
 
