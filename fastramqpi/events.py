@@ -13,6 +13,7 @@ from uuid import uuid4
 import structlog
 from fastapi.encoders import jsonable_encoder
 from httpx import AsyncClient
+from httpx import ConnectError
 from httpx import HTTPStatusError
 from pydantic.generics import GenericModel
 from structlog.contextvars import bound_contextvars
@@ -91,27 +92,37 @@ async def fetcher(
                 await rate_limit_allowed.wait()
 
                 # Fetch GraphQL event from MO
-                event = await graphql_client.fetch_event(listener)
+                try:
+                    event = await graphql_client.fetch_event(listener)
+                except ConnectError:  # pragma: no cover
+                    log.warning("Unable to fetch event (ConnectError)")
+                    await asyncio.sleep(5)
+                    continue
                 log.debug("Fetched event", graphql_event=event)
                 if event is None:
                     await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
                     continue
 
                 # HTTP POST event to the integration
-                r = await integration_client.post(
-                    path,
-                    headers={
-                        "x-request-id": str(request_id),
-                    },
-                    # Pass all event arguments; we let the receiver decide which
-                    # are important.
-                    json=jsonable_encoder(
-                        Event(
-                            subject=event.subject,
-                            priority=event.priority,
-                        )
-                    ),
-                )
+                try:
+                    r = await integration_client.post(
+                        path,
+                        headers={
+                            "x-request-id": str(request_id),
+                        },
+                        # Pass all event arguments; we let the receiver decide which
+                        # are important.
+                        json=jsonable_encoder(
+                            Event(
+                                subject=event.subject,
+                                priority=event.priority,
+                            )
+                        ),
+                    )
+                except ConnectError:  # pragma: no cover
+                    log.warning("Unable to pass event to integration (ConnectError)")
+                    await asyncio.sleep(5)
+                    continue
                 # 2xx is acknowledged, anything else is not. The GraphQL event
                 # system does not have negative acknowledgements.
                 try:
