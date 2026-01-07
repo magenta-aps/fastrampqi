@@ -129,7 +129,7 @@ async def fetcher(
                         # https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3
                         # https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.1
                         delay = int(retry_after)
-                        logger.warning("Rate-limited", delay=delay)
+                        log.warning("Rate-limited", delay=delay)
                         rate_limit_allowed.clear()  # pause all fetchers for this listener
                         await asyncio.sleep(delay)
                         rate_limit_allowed.set()  # resume all fetchers for this listener
