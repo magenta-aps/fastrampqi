@@ -204,11 +204,12 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
         timeout_graceful_shutdown=0,
     )
     server = uvicorn.Server(config)
-    task = asyncio.create_task(server.serve())
-    async with asyncio.timeout(10):
-        while not server.started:
-            await asyncio.sleep(0.1)
+    task = None
     try:
+        task = asyncio.create_task(server.serve())
+        async with asyncio.timeout(10):
+            while not server.started:
+                await asyncio.sleep(0.1)
         # Yield the running server
         yield
     finally:
@@ -232,6 +233,7 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
         #  5. "Finished server process"
         # The duration of step 2 is controlled by the timeout_graceful_shutdown
         # option above, but step 3 might still take some time.
+        assert task is not None
         await asyncio.wait_for(task, timeout=300)
 
 
