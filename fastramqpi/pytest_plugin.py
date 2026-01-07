@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import asyncio
+import logging
 import os
 import urllib.parse
 from asyncio import CancelledError
@@ -29,6 +30,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 import sqlalchemy
+import structlog
 import uvicorn
 from fastapi import FastAPI
 from httpx import AsyncClient
@@ -43,6 +45,9 @@ from sqlalchemy import Connection
 from sqlalchemy import text
 
 # WARNING: Do not import from `fastramqpi` here!
+
+
+logger = structlog.stdlib.get_logger()
 
 
 def pytest_configure(config: Config) -> None:
@@ -171,11 +176,33 @@ async def app() -> FastAPI:
     )
 
 
+def _is_uvicorn_cancellederror(record: logging.LogRecord) -> bool:
+    if record.exc_info is None:
+        return False
+    exc_type, exc_value, exc_traceback = record.exc_info
+    # https://github.com/Kludex/uvicorn/blob/918dae6ef91917a5824ab48c46026e07b7c80beb/uvicorn/server.py#L289
+    if not isinstance(exc_value, CancelledError):
+        return False
+    if str(exc_value) != "Task cancelled, timeout graceful shutdown exceeded":
+        return False
+    logger.warning("Ignoring uvicorn cancellation errors")
+    return True
+
+
 @asynccontextmanager
 async def run_server(app: FastAPI) -> AsyncIterator[None]:
     """Construct an ASGI server on localhost port 8000."""
     # Start uvicorn
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
+    config = uvicorn.Config(
+        app,
+        host="127.0.0.1",
+        port=8000,
+        # When uvicorn is asked to shutdown, it first stops accepting new http
+        # connections, and then waits for ongoing ones to finish, potentially
+        # forever. Since the test has already passed (or failed!), we don't
+        # want to spend any time waiting around.
+        timeout_graceful_shutdown=0,
+    )
     server = uvicorn.Server(config)
     task = asyncio.create_task(server.serve())
     async with asyncio.timeout(10):
@@ -185,12 +212,27 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
         # Yield the running server
         yield
     finally:
+        # Uvicorn will throw a lot of errors when ongoing requests are
+        # cancelled due to timeout_graceful_shutdown=0, ignore them.
+        logging.getLogger("uvicorn.error").addFilter(
+            lambda record: not _is_uvicorn_cancellederror(record)
+        )
+
         # Always stop uvicorn whether our app exited successfully or not
         # The reason this is required here while being omitted for the other code in
         # this file, is that this is a standard asynccontextmanager while the functions
         # are pytest fixtures, for which pytest handles the exceptions
         server.should_exit = True
-        await asyncio.wait_for(task, timeout=10)
+
+        # When uvicorn is asked to shutdown, it does the following:
+        #  1. "Shutting down" (uvicorn stops accepting new http connections)
+        #  2. "Waiting for connections to close"
+        #  3. "Waiting for application shutdown" (uvicorn stops the lifespan)
+        #  4. "Application shutdown complete"
+        #  5. "Finished server process"
+        # The duration of step 2 is controlled by the timeout_graceful_shutdown
+        # option above, but step 3 might still take some time.
+        await asyncio.wait_for(task, timeout=300)
 
 
 @pytest.fixture
