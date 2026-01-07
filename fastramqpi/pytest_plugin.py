@@ -207,7 +207,7 @@ async def run_server(app: FastAPI) -> AsyncIterator[None]:
     task = None
     try:
         task = asyncio.create_task(server.serve())
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(60):
             while not server.started:
                 await asyncio.sleep(0.1)
         # Yield the running server
