@@ -403,7 +403,11 @@ async def graphql_events_quick_retry(
 @pytest.fixture
 async def graphql_events_quick_fetch(monkeypatch: MonkeyPatch) -> None:
     """Quickly fetch GraphQL events during tests."""
-    monkeypatch.setattr("fastramqpi.events.NO_EVENT_SLEEP_DURATION", 0.599)
+
+    def constant_get_sleep_time(_: int) -> float:
+        return 0.599
+
+    monkeypatch.setattr("fastramqpi.events.get_sleep_time", constant_get_sleep_time)
 
 
 @pytest.fixture

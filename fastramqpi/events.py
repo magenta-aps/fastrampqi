@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
 import asyncio
+import random
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from dataclasses import field
@@ -29,8 +30,16 @@ T = TypeVar("T")
 
 logger = structlog.stdlib.get_logger()
 
-# Define globally to allow overwriting sleep duration during testing
-NO_EVENT_SLEEP_DURATION = 5.0
+
+def get_sleep_time(attempt: int) -> float:
+    # https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/
+    # Calculated in MS
+    cap = 120 * 1000
+    # Only used when there are no events - 5 seconds is fine to wait here
+    base = 5 * 1000
+    jitter = random.randint(0, min(cap, base * 2**attempt))
+    sleep_time = jitter / 1000  # Converted to seconds
+    return sleep_time
 
 
 @dataclass(frozen=True)
@@ -83,6 +92,7 @@ async def fetcher(
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
+    attempt = 0
     while True:
         request_id = uuid4()
         with bound_contextvars(request_id=request_id):
@@ -100,8 +110,10 @@ async def fetcher(
                     continue
                 log.debug("Fetched event", graphql_event=event)
                 if event is None:
-                    await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                    await asyncio.sleep(get_sleep_time(attempt))
+                    attempt += 1
                     continue
+                attempt = 0
 
                 # HTTP POST event to the integration
                 try:
