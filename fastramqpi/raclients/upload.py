@@ -21,6 +21,7 @@ def upload_file(
     mo_url: str,
     filepath: str,
     filename_in_mo: str,
+    timeout: float = 5.0,
 ) -> None:  # pragma: no cover
     """Upload file to OS2mo."""
     url = f"{mo_url}/graphql/v22"
@@ -45,13 +46,13 @@ def upload_file(
                 auth_realm=auth_realm,
             ),
         ) as client:
-            r = client.post(url, files=form)
+            r = client.post(url, timeout=timeout, files=form)
             r.raise_for_status()
 
 
 @contextmanager  # pragma: no cover
 def file_uploader(
-    settings: Any, filename: str
+    settings: Any, filename: str, timeout: float = 5.0
 ) -> Generator[str, None, None]:  # pragma: no cover
     """Return a temporary file, that will be uploaded to OS2mo when the context
     manager exits."""
@@ -83,6 +84,7 @@ def file_uploader(
             mora_base,
             tmp_filename,
             filename,
+            timeout,
         )
 
 
@@ -92,9 +94,10 @@ def run_report_and_upload(
     run_report_function: Callable,
     report_function: Callable,
     *report_function_args: tuple[Any, ...],
+    timeout: float = 5.0,
 ) -> None:  # pragma: no cover
     """Run a report and upload it to OS2mo."""
-    with file_uploader(settings, filename) as report_file:
+    with file_uploader(settings, filename, timeout) as report_file:
         run_report_function(
             report_function,
             *report_function_args,
