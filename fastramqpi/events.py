@@ -130,6 +130,7 @@ async def fetcher(
                 except HTTPStatusError as e:
                     log.warning(
                         "HTTP status error in event callback",
+                        graphql_event=event,
                         status_code=e.response.status_code,
                         response=e.response.text,
                     )
