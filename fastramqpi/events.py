@@ -84,7 +84,15 @@ async def fetcher(
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
     while True:
-        request_id = uuid4()
+        # Must be string so we don't log like:
+        #
+        #   {
+        #     "request_id": "UUID('0313f358-3dd1-41f0-9eb0-e4c44415e691')",
+        #     ...
+        #   }
+        #
+        # in the JSON logs.
+        request_id = str(uuid4())
         with bound_contextvars(request_id=request_id):
             try:
                 # Wait until the event is set. This will pause the fetcher if
@@ -108,7 +116,7 @@ async def fetcher(
                     r = await integration_client.post(
                         path,
                         headers={
-                            "x-request-id": str(request_id),
+                            "x-request-id": request_id,
                         },
                         # Pass all event arguments; we let the receiver decide which
                         # are important.
