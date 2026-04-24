@@ -79,10 +79,15 @@ async def fetcher(
     listener: UUID,
     path: str,
     rate_limit_allowed: asyncio.Event,
+    has_events: asyncio.Event,
     fetcher_number: int,
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
+    # Only the leader fetcher polls during quiet periods. Followers park on
+    # `has_events` and are released once the leader sees an event; they are
+    # paused again the next time the leader gets no event.
+    is_leader = fetcher_number == 0
     while True:
         # Must be string so we don't log like:
         #
@@ -98,6 +103,9 @@ async def fetcher(
                 # Wait until the event is set. This will pause the fetcher if
                 # another fetcher for the same listener received a Retry-After.
                 await rate_limit_allowed.wait()
+                # Followers additionally wait until the leader has seen activity.
+                if not is_leader:
+                    await has_events.wait()
 
                 # Fetch GraphQL event from MO
                 try:
@@ -108,8 +116,16 @@ async def fetcher(
                     continue
                 log.debug("Fetched event", graphql_event=event)
                 if event is None:
-                    await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                    if is_leader:
+                        # Pause followers and probe again after the sleep.
+                        has_events.clear()
+                        await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                    # Followers loop back to `has_events.wait()` above.
                     continue
+
+                # Got an event — release followers to fetch in parallel.
+                if is_leader and not has_events.is_set():
+                    has_events.set()
 
                 # HTTP POST event to the integration
                 try:
@@ -208,6 +224,10 @@ async def lifespan(
                 # All fetchers for a listener share the same rate-limiting
                 rate_limit_allowed = asyncio.Event()
                 rate_limit_allowed.set()
+                # ...and a shared "there are events to fetch" signal. Starts
+                # cleared so followers wait until the leader observes activity;
+                # the leader (fetcher 0) ignores this event and polls regardless.
+                has_events = asyncio.Event()
                 for i in range(listener.parallelism):
                     tg.create_task(
                         fetcher(
@@ -216,6 +236,7 @@ async def lifespan(
                             listener=graphql_listener.uuid,
                             path=listener.path,
                             rate_limit_allowed=rate_limit_allowed,
+                            has_events=has_events,
                             fetcher_number=i,
                         )
                     )
