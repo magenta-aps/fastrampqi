@@ -79,6 +79,7 @@ async def fetcher(
     listener: UUID,
     path: str,
     rate_limit_allowed: asyncio.Event,
+    fetch_lock: asyncio.Lock,
     fetcher_number: int,
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
@@ -99,17 +100,20 @@ async def fetcher(
                 # another fetcher for the same listener received a Retry-After.
                 await rate_limit_allowed.wait()
 
-                # Fetch GraphQL event from MO
-                try:
-                    event = await graphql_client.fetch_event(listener)
-                except ConnectError:  # pragma: no cover
-                    log.warning("Unable to fetch event (ConnectError)")
-                    await asyncio.sleep(5)
-                    continue
-                log.debug("Fetched event", graphql_event=event)
-                if event is None:
-                    await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
-                    continue
+                # Use a lock to coordinate fetching between parallel fetchers.
+                # This ensures only one fetcher hits the API when it's empty.
+                async with fetch_lock:
+                    # Fetch GraphQL event from MO
+                    try:
+                        event = await graphql_client.fetch_event(listener)
+                    except ConnectError:  # pragma: no cover
+                        log.warning("Unable to fetch event (ConnectError)")
+                        await asyncio.sleep(5)
+                        continue
+                    log.debug("Fetched event", graphql_event=event)
+                    if event is None:
+                        await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                        continue
 
                 # HTTP POST event to the integration
                 try:
@@ -206,8 +210,10 @@ async def lifespan(
                     )
                 )
                 # All fetchers for a listener share the same rate-limiting
+                # and a fetch lock to coordinate when the API is empty.
                 rate_limit_allowed = asyncio.Event()
                 rate_limit_allowed.set()
+                fetch_lock = asyncio.Lock()
                 for i in range(listener.parallelism):
                     tg.create_task(
                         fetcher(
@@ -216,6 +222,7 @@ async def lifespan(
                             listener=graphql_listener.uuid,
                             path=listener.path,
                             rate_limit_allowed=rate_limit_allowed,
+                            fetch_lock=fetch_lock,
                             fetcher_number=i,
                         )
                     )
