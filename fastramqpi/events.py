@@ -79,10 +79,12 @@ async def fetcher(
     listener: UUID,
     path: str,
     rate_limit_allowed: asyncio.Event,
+    work_available: asyncio.Event,
     fetcher_number: int,
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
+    is_primary = fetcher_number == 0
     while True:
         # Must be string so we don't log like:
         #
@@ -99,6 +101,10 @@ async def fetcher(
                 # another fetcher for the same listener received a Retry-After.
                 await rate_limit_allowed.wait()
 
+                # Secondary fetchers wait for work to be available
+                if not is_primary:
+                    await work_available.wait()
+
                 # Fetch GraphQL event from MO
                 try:
                     event = await graphql_client.fetch_event(listener)
@@ -108,8 +114,17 @@ async def fetcher(
                     continue
                 log.debug("Fetched event", graphql_event=event)
                 if event is None:
-                    await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                    if is_primary:
+                        # Primary found no event, clear work signal and sleep
+                        work_available.clear()
+                        await asyncio.sleep(NO_EVENT_SLEEP_DURATION)
+                    else:
+                        # Secondary found no event, go back to waiting
+                        work_available.clear()
                     continue
+
+                # Signal other fetchers that work is available
+                work_available.set()
 
                 # HTTP POST event to the integration
                 try:
@@ -208,6 +223,8 @@ async def lifespan(
                 # All fetchers for a listener share the same rate-limiting
                 rate_limit_allowed = asyncio.Event()
                 rate_limit_allowed.set()
+                # Secondary fetchers wait on this until work is available
+                work_available = asyncio.Event()
                 for i in range(listener.parallelism):
                     tg.create_task(
                         fetcher(
@@ -216,6 +233,7 @@ async def lifespan(
                             listener=graphql_listener.uuid,
                             path=listener.path,
                             rate_limit_allowed=rate_limit_allowed,
+                            work_available=work_available,
                             fetcher_number=i,
                         )
                     )
