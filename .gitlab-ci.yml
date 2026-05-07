@@ -68,6 +68,7 @@ workflow:
     - <<: *if-merge-request
 
 Integration-test:
+  needs: []
   extends:
     - .integration-test:mo
   rules:
