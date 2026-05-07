@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 from collections.abc import Awaitable
 from collections.abc import Callable
+from collections.abc import Coroutine
 from collections.abc import Hashable
 from contextlib import AsyncExitStack
 from contextlib import asynccontextmanager
@@ -257,7 +258,9 @@ def get_payload_as_type(type_: type[T]) -> Callable[..., T]:
 H = TypeVar("H", bound=Hashable)
 
 
-def handle_exclusively(key: Callable[..., H]) -> Callable:
+def handle_exclusively(
+    key: Callable[..., H],
+) -> Callable[..., AsyncGenerator[H, None]]:
     """Avoids race conditions in handlers by ensuring exclusivity based on key.
 
     This dependency is used to ensure that the "same" message cannot be handled by a
@@ -314,7 +317,9 @@ def handle_exclusively(key: Callable[..., H]) -> Callable:
     return wrapper
 
 
-def handle_exclusively_decorator(key: Callable[..., Hashable]) -> Callable:
+def handle_exclusively_decorator(
+    key: Callable[..., Hashable],
+) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Coroutine[Any, Any, T]]]:
     """Avoids race conditions in handlers by ensuring exclusivity based on key.
 
     Basic wrapper for handle_exclusively, allowing it to work as a function decorator.
@@ -339,7 +344,9 @@ def handle_exclusively_decorator(key: Callable[..., Hashable]) -> Callable:
 
     exclusive_context_manager = asynccontextmanager(handle_exclusively(key=key))
 
-    def wrapper(coro: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+    def wrapper(
+        coro: Callable[..., Awaitable[T]],
+    ) -> Callable[..., Coroutine[Any, Any, T]]:
         @wraps(coro)
         async def wrapped(*args: Any, **kwargs: Any) -> T:
             async with exclusive_context_manager(*args, **kwargs):
