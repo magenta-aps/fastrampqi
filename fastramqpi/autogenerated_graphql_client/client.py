@@ -4,6 +4,8 @@ from uuid import UUID
 
 from ._testing__create_employee import TestingCreateEmployee
 from ._testing__create_employee import TestingCreateEmployeeEmployeeCreate
+from ._testing__create_org import TestingCreateOrg
+from ._testing__create_org import TestingCreateOrgOrgCreate
 from ._testing__get_employee import TestingGetEmployee
 from ._testing__get_employee import TestingGetEmployeeEmployees
 from ._testing__send_event import TestingSendEvent
@@ -101,6 +103,21 @@ class GraphQLClient(AsyncBaseClient):
         response = await self.execute(query=query, variables=variables)
         data = self.get_data(response)
         return TestingSendEvent.parse_obj(data).event_send
+
+    async def _testing__create_org(self) -> TestingCreateOrgOrgCreate:
+        query = gql(
+            """
+            mutation _Testing_CreateOrg {
+              org_create(input: {municipality_code: null}) {
+                uuid
+              }
+            }
+            """
+        )
+        variables: dict[str, object] = {}
+        response = await self.execute(query=query, variables=variables)
+        data = self.get_data(response)
+        return TestingCreateOrg.parse_obj(data).org_create
 
     async def _testing__get_employee(
         self, cpr_number: Any

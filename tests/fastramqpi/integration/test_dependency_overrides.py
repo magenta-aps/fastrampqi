@@ -45,6 +45,7 @@ async def test_dependency_overrides() -> None:
     with TestClient(app):
         # Publish message
         graphql_client: GraphQLClient = app.state.context["graphql_client"]
+        await graphql_client._testing__create_org()
         await graphql_client._testing__create_employee(cpr_number="0605245013")
 
         @retry()

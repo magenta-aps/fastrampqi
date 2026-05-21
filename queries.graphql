@@ -29,6 +29,12 @@ mutation _Testing_SendEvent($input: EventSendInput!) {
   event_send(input: $input)
 }
 
+mutation _Testing_CreateOrg {
+  org_create(input: { municipality_code: null }) {
+    uuid
+  }
+}
+
 query _Testing_GetEmployee($cpr_number: CPR!) {
   employees(filter: {cpr_numbers: [$cpr_number]}) {
     objects {

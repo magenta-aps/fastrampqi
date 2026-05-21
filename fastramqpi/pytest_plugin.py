@@ -69,7 +69,7 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
                 "passthrough_backing_services",
                 "fastramqpi_database_setup",
                 "fastramqpi_database_isolation",
-                "os2mo_database_snapshot_and_restore",
+                "empty_db",
                 "amqp_queue_isolation",
                 "amqp_event_emitter",
                 "graphql_events_quick_fetch",
@@ -161,7 +161,7 @@ async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
 
     For use by the integration's fixtures and tests. May be closed by the
     integration's ariadne codegen client, and as such cannot be used for
-    post-test teardown (such as database restore).
+    post-test teardown.
     """
     from fastramqpi.main import construct_mo_client
 
@@ -407,18 +407,13 @@ async def graphql_events_quick_fetch(monkeypatch: MonkeyPatch) -> None:
 
 
 @pytest.fixture
-async def os2mo_database_snapshot_and_restore(
+async def empty_db(
     unauthenticated_mo_client: AsyncClient,
 ) -> AsyncIterator[None]:
-    """Ensure test isolation by resetting the OS2mo database between tests.
-
-    Automatically used on tests marked as integration_test.
-    """
-    r = await unauthenticated_mo_client.post("/testing/database/snapshot")
+    """Ensure tests are running on an empty OS2mo database."""
+    r = await unauthenticated_mo_client.post("/testing/database/purge")
     r.raise_for_status()
     yield
-    r = await unauthenticated_mo_client.post("/testing/database/restore")
-    r.raise_for_status()
 
 
 @pytest.fixture

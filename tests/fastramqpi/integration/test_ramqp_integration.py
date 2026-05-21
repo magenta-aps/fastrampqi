@@ -71,6 +71,7 @@ async def test_create_person(app: FastAPI) -> None:
     assert employee == {"objects": []}
 
     # Trigger integration to create the employee
+    await graphql_client._testing__create_org()
     await graphql_client._testing__create_employee(cpr_number)
 
     @retry()

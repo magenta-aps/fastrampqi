@@ -130,6 +130,7 @@ async def test_readme_integration_test_example(
 
     # The integration needs to be triggered to create the employee. How this is
     # done depends on the integration. We assume a /trigger/ endpoint here:
+    await graphql_client._testing__create_org()
     await graphql_client._testing__create_employee(cpr_number)
 
     @retry()
