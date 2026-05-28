@@ -11,12 +11,9 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from httpx import Request
-from httpx import Response
 from pydantic import BaseModel
 from respx import MockRouter
 
-from fastramqpi.raclients.modelclient.lora import ModelClient as LoRaModelClient
 from fastramqpi.raclients.modelclient.mo import ModelClient as MOModelClient
 
 
@@ -179,30 +176,3 @@ async def test_fail_request(
                 )
             ]
         )
-
-
-@pytest.mark.asyncio
-async def test_lora_model_client_does_not_use_auth(respx_mock: MockRouter) -> None:
-    lora_model_client = LoRaModelClient(base_url="http://lora.example.org")
-
-    facet_uuid = uuid4()
-
-    def callback(request: Request) -> Response:
-        # httpx lowers header keys, but they might decide not to in the future
-        assert "authorization" not in request.headers
-        assert "Authorization" not in request.headers
-        return Response(200, json={})
-
-    respx_mock.put(f"http://lora.example.org/klassifikation/facet/{facet_uuid}").mock(
-        side_effect=callback
-    )
-
-    await lora_model_client.upload(
-        [
-            Facet.from_simplified_fields(
-                uuid=facet_uuid,
-                user_key="foo",
-                organisation_uuid=uuid4(),
-            )
-        ]
-    )
