@@ -129,6 +129,8 @@ plugins = [
     "ariadne_codegen.contrib.shorter_results.ShorterResultsPlugin",
     # Add UNSET and UnsetType to generated input types
     "fastramqpi.ariadne.UnsetInputTypesPlugin",
+    # Forbid extra fields on the generated BaseModel so typos raise an exception
+    "fastramqpi.ariadne.ForbidExtraBaseModelPlugin",
 ]
 [tool.ariadne-codegen.scalars.DateTime]
 type = "datetime.datetime"

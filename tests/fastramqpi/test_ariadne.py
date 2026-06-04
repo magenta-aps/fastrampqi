@@ -11,6 +11,7 @@ import graphql as gql
 import pytest
 from more_itertools import one
 
+from fastramqpi.ariadne import ForbidExtraBaseModelPlugin
 from fastramqpi.ariadne import UnsetInputTypesPlugin
 from fastramqpi.ariadne import _is_ast_annotation_optional
 from fastramqpi.ariadne import parse_graphql_datetime
@@ -339,6 +340,46 @@ def test_plugin_commentor(graphql_schema: gql.GraphQLSchema) -> None:
     plugin = UnsetInputTypesPlugin(graphql_schema, {})
     result = plugin.generate_inputs_code("")
     assert result == "# This file has been modified by the UnsetInputTypesPlugin\n"
+
+
+def test_forbid_extra_plugin_skips_unrelated_files() -> None:
+    """Test that copy_code is a no-op for files that aren't `base_model.py`."""
+    plugin = ForbidExtraBaseModelPlugin(gql.GraphQLSchema(), {})
+    other_file = "from pydantic import BaseModel as PydanticBaseModel\n"
+    assert plugin.copy_code(other_file) == other_file
+
+
+def test_forbid_extra_plugin_transforms_base_model() -> None:
+    """Test that copy_code inserts `Extra.forbid` and its import."""
+    plugin = ForbidExtraBaseModelPlugin(gql.GraphQLSchema(), {})
+    base_model_py = dedent(
+        """\
+        from pydantic import BaseModel as PydanticBaseModel
+
+
+        class BaseModel(PydanticBaseModel):
+            class Config:
+                allow_population_by_field_name = True
+                validate_assignment = True
+                arbitrary_types_allowed = True
+        """
+    )
+    result = plugin.copy_code(base_model_py)
+    assert result == dedent(
+        """\
+        # This file has been modified by the ForbidExtraBaseModelPlugin
+        from pydantic import BaseModel as PydanticBaseModel
+        from pydantic import Extra
+
+
+        class BaseModel(PydanticBaseModel):
+            class Config:
+                allow_population_by_field_name = True
+                validate_assignment = True
+                arbitrary_types_allowed = True
+                extra = Extra.forbid
+        """
+    )
 
 
 @pytest.mark.parametrize(
