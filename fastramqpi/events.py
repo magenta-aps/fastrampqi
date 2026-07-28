@@ -74,6 +74,7 @@ class Event(GenericModel, Generic[T], frozen=True):
 
 
 async def fetcher(
+    stop: asyncio.Event,
     integration_client: AsyncClient,
     graphql_client: GraphQLClient,
     listener: UUID,
@@ -83,7 +84,7 @@ async def fetcher(
 ) -> None:
     log = logger.bind(listener=listener, n=fetcher_number)
     log.info("Starting fetcher")
-    while True:
+    while not stop.is_set():
         # Must be string so we don't log like:
         #
         #   {
@@ -184,6 +185,7 @@ async def lifespan(
         timeout=300,
     )
     logger.info("Starting GraphQL event fetchers")
+    stop = asyncio.Event()
     try:
         async with graphql_client, asyncio.TaskGroup() as tg:
             # Declare namespaces
@@ -211,6 +213,7 @@ async def lifespan(
                 for i in range(listener.parallelism):
                     tg.create_task(
                         fetcher(
+                            stop=stop,
                             integration_client=integration_client,
                             graphql_client=graphql_client,
                             listener=graphql_listener.uuid,
@@ -221,6 +224,7 @@ async def lifespan(
                     )
             yield
             logger.info("Stopping GraphQL event fetchers")
+            stop.set()
             tg.create_task(terminate_task_group())
     except* TerminateTaskGroup:
         pass
