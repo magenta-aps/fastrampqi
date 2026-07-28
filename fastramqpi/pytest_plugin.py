@@ -150,7 +150,12 @@ def _settings() -> Any:
 @pytest.fixture
 async def unauthenticated_mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL preconfigured."""
-    mo_client = AsyncClient(base_url=_settings.mo_url)
+    mo_client = AsyncClient(
+        base_url=_settings.mo_url,
+        # Database snapshot/restore/purge can take longer than the default
+        # timeout of five seconds.
+        timeout=15,
+    )
     async with mo_client as client:
         yield client
 
