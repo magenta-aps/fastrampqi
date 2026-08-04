@@ -69,7 +69,7 @@ def pytest_collection_modifyitems(items: list[Item]) -> None:
                 "passthrough_backing_services",
                 "fastramqpi_database_setup",
                 "fastramqpi_database_isolation",
-                "os2mo_database_snapshot_and_restore",
+                "os2mo_database_isolation",
                 "amqp_queue_isolation",
                 "amqp_event_emitter",
                 "graphql_events_quick_fetch",
@@ -152,8 +152,8 @@ async def unauthenticated_mo_client(_settings: Any) -> AsyncIterator[AsyncClient
     """HTTPX client with the OS2mo URL preconfigured."""
     mo_client = AsyncClient(
         base_url=_settings.mo_url,
-        # Database snapshot/restore/purge can take longer than the default
-        # timeout of five seconds.
+        # Resetting the database can take longer than the default timeout of
+        # five seconds.
         timeout=15,
     )
     async with mo_client as client:
@@ -165,8 +165,8 @@ async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL and auth preconfigured.
 
     For use by the integration's fixtures and tests. May be closed by the
-    integration's ariadne codegen client, and as such cannot be used for
-    post-test teardown (such as database restore).
+    integration's ariadne codegen client, and as such cannot be used by our own
+    fixtures (such as database reset).
     """
     from fastramqpi.main import construct_mo_client
 
@@ -402,18 +402,28 @@ async def graphql_events_quick_fetch(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr("fastramqpi.events.NO_EVENT_SLEEP_DURATION", 0.599)
 
 
-@pytest.fixture
-async def os2mo_database_snapshot_and_restore(
-    unauthenticated_mo_client: AsyncClient,
-) -> AsyncIterator[None]:
-    """Ensure test isolation by resetting the OS2mo database between tests.
+@pytest.fixture(scope="session")
+def os2mo_database_setup(_settings: Any) -> None:
+    """Set up the OS2mo database template used to reset the database between tests.
 
     Automatically used on tests marked as integration_test.
     """
-    r = await unauthenticated_mo_client.post("/testing/database/snapshot")
+    # We cannot use the (function-scoped) unauthenticated_mo_client fixture,
+    # since a session-scoped httpx client is bound to the wrong event loop.
+    r = httpx.post(f"{_settings.mo_url}/testing/database/setup", timeout=60)
     r.raise_for_status()
-    yield
-    r = await unauthenticated_mo_client.post("/testing/database/restore")
+
+
+@pytest.fixture
+async def os2mo_database_isolation(
+    os2mo_database_setup: None,
+    unauthenticated_mo_client: AsyncClient,
+) -> None:
+    """Ensure test isolation by resetting the OS2mo database before tests.
+
+    Automatically used on tests marked as integration_test.
+    """
+    r = await unauthenticated_mo_client.post("/testing/database/reset")
     r.raise_for_status()
 
 
