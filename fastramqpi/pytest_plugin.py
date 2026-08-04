@@ -307,7 +307,7 @@ def fastramqpi_database_setup(superuser: Connection) -> None:
     # Create separate testing template database. We will apply the database migrations
     # to this database once, and then use a copy of it for each test.
     template_db = "test_template"
-    superuser.execute(text(f"drop database if exists {template_db}"))
+    superuser.execute(text(f"drop database if exists {template_db} with (force)"))
     superuser.execute(text(f"create database {template_db}"))
     # Run migrations
     # TODO: alembic isn't implemented yet so we don't have to do anything here. Tables
@@ -326,16 +326,7 @@ def fastramqpi_database_isolation(
     # database for the test that's about to run.
     template_db = "test_template"
     test_db = "test"
-    superuser.execute(
-        text(
-            f"""
-            select pg_terminate_backend(pid)
-            from pg_stat_activity
-            where datname = '{test_db}' and pid <> pg_backend_pid()
-            """
-        )
-    )
-    superuser.execute(text(f"drop database if exists {test_db}"))
+    superuser.execute(text(f"drop database if exists {test_db} with (force)"))
     superuser.execute(text(f"create database {test_db} template {template_db}"))
     # Patch environment so the app under test will connect to this temporary database
     monkeypatch.setenv("FASTRAMQPI__DATABASE__NAME", test_db)
