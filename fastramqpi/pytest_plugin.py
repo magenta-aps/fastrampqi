@@ -36,6 +36,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from httpx import BasicAuth
 from more_itertools import one
+from pydantic import BaseSettings
 from pytest import Config
 from pytest import FixtureRequest
 from pytest import Item
@@ -138,11 +139,14 @@ def _settings() -> Any:
     """Access FastRAMQPI settings without coupling to the integration's settings."""
     # We must defer importing from the FastRAMQPI module till run-time.
     # https://github.com/pytest-dev/pytest-cov/issues/587
-    from fastramqpi.config import Settings
+    from fastramqpi.config import Settings as FastRAMQPISettings
 
-    class _Settings(Settings):
+    class _Settings(BaseSettings):
         class Config:
-            env_prefix = "FASTRAMQPI__"
+            frozen = True
+            env_nested_delimiter = "__"
+
+        fastramqpi: FastRAMQPISettings
 
     return _Settings()
 
@@ -151,7 +155,7 @@ def _settings() -> Any:
 async def unauthenticated_mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client with the OS2mo URL preconfigured."""
     mo_client = AsyncClient(
-        base_url=_settings.mo_url,
+        base_url=_settings.fastramqpi.mo_url,
         # Resetting the database can take longer than the default timeout of
         # five seconds.
         timeout=15,
@@ -170,7 +174,7 @@ async def mo_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """
     from fastramqpi.main import construct_mo_client
 
-    async with construct_mo_client(_settings) as client:
+    async with construct_mo_client(_settings.fastramqpi) as client:
         yield client
 
 
@@ -273,7 +277,7 @@ async def test_client(server: None) -> AsyncIterator[AsyncClient]:
 @pytest.fixture
 async def rabbitmq_management_client(_settings: Any) -> AsyncIterator[AsyncClient]:
     """HTTPX client for the RabbitMQ management API."""
-    amqp = _settings.amqp.get_url()
+    amqp = _settings.fastramqpi.amqp.get_url()
     async with httpx.AsyncClient(
         base_url=f"http://{amqp.host}:15672/api/",
         auth=BasicAuth(
@@ -292,7 +296,7 @@ def superuser(_settings: Any) -> Iterator[Connection]:
     # but pytest cannot properly share event-loops across session-scoped fixtures and
     # (function-scoped) tests. Therefore, we use sqlalchemy's *sync* engine instead.
     # https://github.com/pytest-dev/pytest-asyncio/issues/706#issuecomment-1838860535
-    db = _settings.database
+    db = _settings.fastramqpi.database
     url = f"postgresql+psycopg://{db.user}:{db.password}@{db.host}:{db.port}/postgres"
     engine = sqlalchemy.create_engine(url)
     # AUTOCOMMIT disables transactions to allow for create/drop database operations
@@ -410,7 +414,7 @@ def os2mo_database_setup(_settings: Any) -> None:
     """
     # We cannot use the (function-scoped) unauthenticated_mo_client fixture,
     # since a session-scoped httpx client is bound to the wrong event loop.
-    r = httpx.post(f"{_settings.mo_url}/testing/database/setup", timeout=60)
+    r = httpx.post(f"{_settings.fastramqpi.mo_url}/testing/database/setup", timeout=60)
     r.raise_for_status()
 
 
@@ -458,10 +462,12 @@ def passthrough_backing_services(_settings: Any, respx_mock: MockRouter) -> None
     # the integration itself, running in uvicorn
     respx_mock.route(host="127.0.0.1", port=8000).pass_through()
     # mo and keycloak are named to allow tests to revert the passthrough if needed
-    respx_mock.route(name="keycloak", host=_settings.auth_server.host).pass_through()
-    respx_mock.route(name="mo", host=_settings.mo_url.host).pass_through()
+    respx_mock.route(
+        name="keycloak", host=_settings.fastramqpi.auth_server.host
+    ).pass_through()
+    respx_mock.route(name="mo", host=_settings.fastramqpi.mo_url.host).pass_through()
     # rabbitmq management
-    respx_mock.route(host=_settings.amqp.get_url().host).pass_through()
+    respx_mock.route(host=_settings.fastramqpi.amqp.get_url().host).pass_through()
     respx_mock.route(host="localhost").pass_through()
 
 
