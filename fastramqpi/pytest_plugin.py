@@ -289,7 +289,7 @@ async def rabbitmq_management_client(_settings: Any) -> AsyncIterator[AsyncClien
 
 
 @pytest.fixture(scope="session")
-def superuser(_settings: Any) -> Iterator[Connection]:
+def superuser(_settings: Any) -> Iterator[Connection | None]:
     """Managing databases requires a superuser connection."""
     # Connect to "postgres" since we cannot drop a database while being connected to it.
     # TODO: it would be easier to use our own create_engine() from the database module,
@@ -297,6 +297,9 @@ def superuser(_settings: Any) -> Iterator[Connection]:
     # (function-scoped) tests. Therefore, we use sqlalchemy's *sync* engine instead.
     # https://github.com/pytest-dev/pytest-asyncio/issues/706#issuecomment-1838860535
     db = _settings.fastramqpi.database
+    if db is None:
+        yield None
+        return
     url = f"postgresql+psycopg://{db.user}:{db.password}@{db.host}:{db.port}/postgres"
     engine = sqlalchemy.create_engine(url)
     # AUTOCOMMIT disables transactions to allow for create/drop database operations
@@ -306,8 +309,11 @@ def superuser(_settings: Any) -> Iterator[Connection]:
 
 
 @pytest.fixture(scope="session")
-def fastramqpi_database_setup(superuser: Connection) -> None:
+def fastramqpi_database_setup(superuser: Connection | None) -> None:
     """Set up testing database template."""
+    if superuser is None:
+        return
+
     # Create separate testing template database. We will apply the database migrations
     # to this database once, and then use a copy of it for each test.
     template_db = "test_template"
@@ -320,12 +326,15 @@ def fastramqpi_database_setup(superuser: Connection) -> None:
 
 @pytest.fixture
 def fastramqpi_database_isolation(
-    superuser: Connection, monkeypatch: MonkeyPatch
+    superuser: Connection | None, monkeypatch: MonkeyPatch
 ) -> None:
     """Ensure test isolation by resetting the database between tests.
 
     Automatically used on tests marked as integration_test.
     """
+    if superuser is None:
+        return
+
     # Copy template testing database (with migrations applied) to a temporary testing
     # database for the test that's about to run.
     template_db = "test_template"
