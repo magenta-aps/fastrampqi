@@ -119,8 +119,6 @@ class JobSettings(BaseSettings):
         "%(levelname)s %(asctime)s %(filename)s:%(lineno)d:%(name)s: %(message)s"
     )
 
-    sentry_dsn: Optional[str] = None
-
     class Config:
         # Configuration attributes defined by the Pydantic `Config` class
         extra: Extra = Extra.allow
