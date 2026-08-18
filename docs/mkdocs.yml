@@ -44,7 +44,6 @@ nav:
       - job_settings: ra-utils/modules/job_settings.md
       - multiple_replace: ra-utils/modules/multiple_replace.md
       - semantic_version_type: ra-utils/modules/semantic_version_type.md
-      - sentry_init: ra-utils/modules/sentry_init.md
       - strategies: ra-utils/modules/strategies.md
       - structured_url: ra-utils/modules/structured_url.md
       - syncable: ra-utils/modules/syncable.md

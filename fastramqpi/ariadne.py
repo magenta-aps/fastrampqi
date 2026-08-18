@@ -78,6 +78,8 @@ def _is_ast_annotation_optional(annotation: ast.expr) -> bool:
         # This case handles the stringified `"Optional[A]"` syntax
         # This case handles the stringified `"A | None"` syntax
         case ast.Constant():
+            if not isinstance(annotation.value, str):  # pragma: no cover
+                return False
             return "Optional[" in annotation.value or "| None" in annotation.value
 
         case _:
