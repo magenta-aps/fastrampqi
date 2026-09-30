@@ -41,7 +41,7 @@ anyio = ">=3,<5"
 Jinja2 = "^3"
 requests = "^2"
 frozendict = "^2"
-sqlalchemy = "^2"
+sqlalchemy = {extras = ["asyncio"], version = "^2"}
 psycopg = "^3"
 debugpy = "^1"
 hypothesis = "^6"
