@@ -447,8 +447,11 @@ class AsyncDARClient:
                 payload = await self._cleanse_single(address_string, addrtype)
                 return payload
             except aiohttp.ClientResponseError as exc:
-                # If not found, try the next address type
-                if exc.status == 404:
+                # If not found, try the next address type.
+                # Not covered by tests, as it only happens if Adressevask returns an
+                # address that cannot be looked up by id (e.g. a retired address),
+                # which cannot be reliably triggered with the real Adressevælger API.
+                if exc.status == 404:  # pragma: no cover
                     continue
                 raise exc
             except RuntimeError:
