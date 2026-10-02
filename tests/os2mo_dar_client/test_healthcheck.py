@@ -1,20 +1,16 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from asyncio import sleep
-from unittest.mock import MagicMock
 from warnings import catch_warnings
 
 import pytest
-from aiohttp import ClientError
-from aiohttp import web
-from aiohttp.test_utils import TestClient
 from more_itertools import first
 
+from fastramqpi.os2mo_dar_client import AsyncDARClient
 from fastramqpi.os2mo_dar_client import DARClient
+from tests.os2mo_dar_client.conftest import invalid_token
 
-from .utils import darclient_mock
 
-
+@pytest.mark.integration_test
 def test_healthcheck_sync(darclient: DARClient) -> None:
     result = False
 
@@ -39,6 +35,7 @@ def test_healthcheck_sync(darclient: DARClient) -> None:
     assert darclient._session is None
 
 
+@pytest.mark.integration_test
 async def test_healthcheck_async(darclient: DARClient) -> None:
     result = False
 
@@ -91,58 +88,29 @@ async def test_multiple_call_warnings() -> None:
         assert "aclose called without session" in str(warning.message)
 
 
-async def test_healthcheck_non_200(aiohttp_client: TestClient) -> None:
-    # Non-200 status code
-    status = {"entered": False}
+@pytest.mark.integration_test
+async def test_healthcheck_non_200() -> None:
+    """Test that a non-200 reply (here a 400 due to an invalid token) fails."""
+    async with AsyncDARClient(token=invalid_token) as darclient:
+        result = await darclient.healthcheck()
+    assert result is False
 
-    async def autocomplete_fail(_: web.Request) -> web.Response:
-        status["entered"] = True
-        raise web.HTTPInternalServerError()
 
-    app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_fail)
-    darclient = await darclient_mock(aiohttp_client, app)
+@pytest.mark.integration_test
+async def test_healthcheck_timeout() -> None:
+    """Test that a timeout fails."""
+    async with AsyncDARClient() as darclient:
+        # No reply from Adressevælgeren arrives within a millisecond
+        result = await darclient.healthcheck(0.001)  # type: ignore[arg-type]
+    assert result is False
+
+
+@pytest.mark.integration_test
+async def test_healthcheck_client_error() -> None:
+    """Test that a connection error fails."""
+    darclient = AsyncDARClient()
+    # The .invalid top-level domain is guaranteed to never resolve (RFC 6761)
+    darclient._baseurl = "https://adressevaelger.invalid"
     async with darclient:
         result = await darclient.healthcheck()
     assert result is False
-    assert status["entered"] is True
-
-
-async def test_healthcheck_timeout(aiohttp_client: TestClient) -> None:
-    # Timeout
-    status = {"entered": False, "finished": False}
-
-    async def autocomplete_slow(_: web.Request) -> web.Response:
-        status["entered"] = True
-        await sleep(5)
-        status["finished"] = True
-        return web.Response(text="OK")
-
-    app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_slow)
-    darclient = await darclient_mock(aiohttp_client, app)
-    async with darclient:
-        result = await darclient.healthcheck(1)
-    assert result is False
-    assert status["entered"] is True
-    assert status["finished"] is False
-
-
-async def test_healthcheck_client_error(aiohttp_client: TestClient) -> None:
-    # ClientError
-    status = {"entered": False}
-
-    async def autocomplete_never(_: web.Request) -> web.Response:
-        status["entered"] = True
-        return web.Response(text="OK")
-
-    app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_never)
-    darclient = await darclient_mock(aiohttp_client, app)
-    async with darclient:
-        darclient._get_session().get = MagicMock(  # type: ignore
-            side_effect=ClientError("BOOM")
-        )
-        result = await darclient.healthcheck(1)
-    assert result is False
-    assert status["entered"] is False
