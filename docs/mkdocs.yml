@@ -53,9 +53,6 @@ nav:
   - RA Clients:
     - ra-clients/index.md
 
-  - OS2mo DAR Client:
-    - Address status codes: os2mo-dar-client/address-status.md
-
   - Release Notes:
     - changelog.md
     - Pre-Merge Release History:

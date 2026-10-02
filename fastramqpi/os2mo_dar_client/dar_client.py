@@ -459,6 +459,46 @@ class AsyncDARClient:
 
 # TODO: This is temporary. We will switch to the new Adressevælger status codes shortly
 def _status(status: str | int | None) -> Dict[str, int | None]:
+    """Convert a DAR status code to DAWA's `status` and `darstatus` fields.
+
+    Adressevælgeren returns the DAR status code itself, see
+    https://danmarksadresser.dk/adressedata/kodelister/livscyklus. For addresses
+    and husnumre these are:
+
+    | DAR code | Name                | Meaning                                     |
+    |----------|---------------------|---------------------------------------------|
+    | 1        | Intern forberedelse | Internal draft, never published             |
+    | 2        | Foreløbig           | Provisional, before it becomes current      |
+    | 3        | Gældende            | Current                                     |
+    | 4        | Nedlagt             | Retired, after having been current          |
+    | 5        | Henlagt             | Shelved, after only having been provisional |
+    | 6        | Slettet             | Deleted                                     |
+
+    Access points (`adgangspunkt`) use their own codes: 6 Slettet, 7 Ikke i brug,
+    8 I brug and 9 Udgået.
+
+    DAWA's `status` used its own scale, while its `darstatus` was the DAR code.
+    The mapping is the same as DAWA's own (its `dar1_status_til_dawa_status`):
+
+    | DAR code (`darstatus`) | DAWA code (`status`) | Meaning   |
+    |------------------------|----------------------|-----------|
+    | 2                      | 3                    | Foreløbig |
+    | 3                      | 1                    | Gældende  |
+    | 4                      | 2                    | Nedlagt   |
+    | 5                      | 4                    | Henlagt   |
+
+    DAR codes 1 and 6 have no DAWA equivalent and are mapped to `status: None`.
+    They should not appear in practice, as they are never published.
+
+    Lookups return the status as a string (`"3"`), while `/vask/` returns an
+    integer (`3`), so both are accepted.
+
+    Args:
+        status: The DAR status code, or `None` if unknown.
+
+    Returns:
+        A dict with DAWA's `status` and `darstatus` fields.
+    """
     # Mapping from DAR status codes to the (legacy) DAWA status codes
     # TODO: This is temporary. We will switch to the new Adressevælger responses
     #       shortly
