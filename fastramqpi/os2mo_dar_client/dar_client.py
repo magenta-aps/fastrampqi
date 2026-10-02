@@ -60,18 +60,6 @@ class AddressType(str, Enum):
 
 ALL_ADDRESS_TYPES = list(AddressType)
 
-# Keys of the single lookup replies from Adressevælgeren.
-# TODO: we can probably get rid of this later
-_ADRESSEVAELGER_KEY_MAP = {
-    AddressType.ADDRESS: "adresse",
-    AddressType.ACCESS_ADDRESS: "husnummer",
-}
-
-# Mapping from DAR status codes to the (legacy) DAWA status codes
-# TODO: This is temporary. We will switch to the new Adressevælger responses
-#       shortly
-_DAWA_STATUS = {2: 3, 3: 1, 4: 2, 5: 4}
-
 
 class AsyncDARClient:
     """Asynchronous DAR client.
@@ -252,13 +240,19 @@ class AsyncDARClient:
         """Lookup uuid in DAR, returning the unconverted Adressevælger reply."""
         url = f"{self._baseurl}/{addrtype.value}/{str(uuid)}"
         params: dict[str, str] = {"token": self._token}
+        # Keys of the single lookup replies from Adressevælgeren.
+        # TODO: we can probably get rid of this later
+        adressevaelger_key_map = {
+            AddressType.ADDRESS: "adresse",
+            AddressType.ACCESS_ADDRESS: "husnummer",
+        }
 
         async with self._get_session().get(
             url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             payload = await response.json()
-            return cast(Dict[str, Any], payload[_ADRESSEVAELGER_KEY_MAP[addrtype]])
+            return cast(Dict[str, Any], payload[adressevaelger_key_map[addrtype]])
 
     @retry(
         reraise=True,
@@ -465,10 +459,14 @@ class AsyncDARClient:
 
 # TODO: This is temporary. We will switch to the new Adressevælger status codes shortly
 def _status(status: str | int | None) -> Dict[str, int | None]:
+    # Mapping from DAR status codes to the (legacy) DAWA status codes
+    # TODO: This is temporary. We will switch to the new Adressevælger responses
+    #       shortly
+    dawa_status = {2: 3, 3: 1, 4: 2, 5: 4}
     if status is None:
         return {"status": None, "darstatus": None}
     darstatus = int(status)
-    return {"status": _DAWA_STATUS.get(darstatus), "darstatus": darstatus}
+    return {"status": dawa_status.get(darstatus), "darstatus": darstatus}
 
 
 # TODO: This is temporary. We will switch to the new Adressevælger responses
