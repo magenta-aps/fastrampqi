@@ -100,7 +100,7 @@ async def test_healthcheck_non_200(aiohttp_client: TestClient) -> None:
         raise web.HTTPInternalServerError()
 
     app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_fail)
+    app.router.add_get("/adresser/soeg", autocomplete_fail)
     darclient = await darclient_mock(aiohttp_client, app)
     async with darclient:
         result = await darclient.healthcheck()
@@ -119,7 +119,7 @@ async def test_healthcheck_timeout(aiohttp_client: TestClient) -> None:
         return web.Response(text="OK")
 
     app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_slow)
+    app.router.add_get("/adresser/soeg", autocomplete_slow)
     darclient = await darclient_mock(aiohttp_client, app)
     async with darclient:
         result = await darclient.healthcheck(1)
@@ -137,7 +137,7 @@ async def test_healthcheck_client_error(aiohttp_client: TestClient) -> None:
         return web.Response(text="OK")
 
     app = web.Application()
-    app.router.add_get("/autocomplete", autocomplete_never)
+    app.router.add_get("/adresser/soeg", autocomplete_never)
     darclient = await darclient_mock(aiohttp_client, app)
     async with darclient:
         darclient._get_session().get = MagicMock(  # type: ignore

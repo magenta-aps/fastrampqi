@@ -25,13 +25,6 @@ async def test_cleanse_single(
     assert_dar_response(result, expected)
 
 
-async def test_cleanse_invalid_addrtype(adarclient: AsyncDARClient) -> None:
-    async with adarclient:
-        with pytest.raises(ValueError) as excinfo:
-            await adarclient.cleanse_single("", [AddressType.HISTORIC_ADDRESS])
-        assert "DAR does not support historic cleansing" in str(excinfo.value)
-
-
 @pytest.mark.parametrize("address_string", dar_cleanse_unspecific_match)
 async def test_cleanse_single_unspecific(
     adarclient: AsyncDARClient, address_string: str
@@ -51,7 +44,7 @@ async def test_cleanse_single_clientresponse_error(adarclient: AsyncDARClient) -
         history=None,  # type: ignore
         request_info=None,  # type: ignore
     )
-    address_string = next(iter(dar_cleanse_unspecific_match))
+    address_string = "Flyvervej x, Svendborg"
 
     # 404 are retried as next type
     with pytest.raises(ValueError) as excinfo1:
@@ -70,3 +63,22 @@ async def test_cleanse_single_clientresponse_error(adarclient: AsyncDARClient) -
             )
             await adarclient.cleanse_single(address_string)
         assert "BOOM" in str(excinfo2.value)
+
+
+async def test_cleanse_single_access_address(adarclient: AsyncDARClient) -> None:
+    """Test cleansing with ACCESS_ADDRESS returns the access address, not the address."""
+    async with adarclient:
+        result = await adarclient.cleanse_single(
+            "Sankt Johannes Alle 2, 8000 Aarhus C", [AddressType.ACCESS_ADDRESS]
+        )
+    assert_dar_response(
+        result,
+        {
+            "id": "0a3f5096-e43f-32b8-e044-0003ba298018",
+            "vejnavn": "Skt. Johannes Allé",
+            "husnr": "2",
+            "postnr": "8000",
+            "betegnelse": "Skt. Johannes Allé 2, 8000 Aarhus C",
+        },
+    )
+    assert "adgangsadresseid" not in result

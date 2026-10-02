@@ -7,6 +7,8 @@ import pytest
 from fastramqpi.os2mo_dar_client import AsyncDARClient
 
 from .utils import assert_dar_response
+from .utils import dar_cleanse_parameterize
+from .utils import dar_cleanse_unspecific_match
 from .utils import dar_lookup
 from .utils import dar_non_existent
 from .utils import dar_parameterize
@@ -131,3 +133,24 @@ async def test_dar_fetch_multiple_mixed_existence() -> None:
     for uuid, expected in dar_lookup.items():
         result = results[uuid]
         assert_dar_response(result, expected)
+
+
+@pytest.mark.integration_test
+@pytest.mark.parametrize(*dar_cleanse_parameterize)
+async def test_cleanse_single(address_string: str, expected: dict[str, str]) -> None:
+    """Test cleansing of single address string passes."""
+    darclient = AsyncDARClient()
+    async with darclient:
+        result = await darclient.cleanse_single(address_string)
+    assert_dar_response(result, expected)
+
+
+@pytest.mark.integration_test
+@pytest.mark.parametrize("address_string", dar_cleanse_unspecific_match)
+async def test_cleanse_single_unspecific(address_string: str) -> None:
+    """Test cleansing of an unspecific address string fails."""
+    darclient = AsyncDARClient()
+    async with darclient:
+        with pytest.raises(ValueError) as excinfo:
+            await darclient.cleanse_single(address_string)
+        assert "No address match found from cleansing in DAR" in str(excinfo.value)
