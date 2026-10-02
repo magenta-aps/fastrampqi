@@ -22,7 +22,6 @@ from uuid import UUID
 
 import aiohttp
 from more_itertools import chunked
-from more_itertools import one
 from more_itertools import unzip
 from tenacity import retry
 from tenacity import stop_after_delay
@@ -45,7 +44,7 @@ class AddressType(str, Enum):
     A single address may have multiple `ACCESS_ADDRESS`es.
     """
 
-    ACCESS_ADDRESS = "adgangsadresser"
+    ACCESS_ADDRESS = "husnumre"
     """Access addresses are sub entries in DAR.
 
     Multiple access addresses may share a single `Address`, for instance:
@@ -58,18 +57,27 @@ class AddressType(str, Enum):
         * `ApartmentComplex 1, lf`
     """
 
-    HISTORIC_ADDRESS = "historik/adresser"
-    """Historic version of `ADDRESS`"""
-
-    HISTORIC_ACCESS_ADDRESS = "historik/adgangsadresser"
-    """Historic version of `ACCESS_ADDRESS`"""
-
 
 ALL_ADDRESS_TYPES = list(AddressType)
+
+# Keys of the single lookup replies from Adressevælgeren.
+# TODO: we can probably get rid of this later
+_ADRESSEVAELGER_KEY_MAP = {
+    AddressType.ADDRESS: "adresse",
+    AddressType.ACCESS_ADDRESS: "husnummer",
+}
+
+# Mapping from DAR status codes to the (legacy) DAWA status codes
+# TODO: This is temporary. We will switch to the new Adressevælger responses
+#       shortly
+_DAWA_STATUS = {2: 3, 3: 1, 4: 2, 5: 4}
 
 
 class AsyncDARClient:
     """Asynchronous DAR client.
+
+    Uses KDS' Adressevælger API (https://adressevaelger.dk), which replaced DAWA.
+    Replies are converted to the shape of DAWA's `struktur=mini` replies.
 
     Example:
         ```Python
@@ -85,16 +93,20 @@ class AsyncDARClient:
     # TODO: Autocomplete endpoints ala OS2mo: #45521
     # TODO: Caching: #45519
 
-    def __init__(self, timeout: int = 10) -> None:
+    def __init__(self, timeout: int = 10, token: str = "adressevaelger123") -> None:
         """Construct an async DAR client.
 
         Args:
             timeout: Maximum waiting time for response.
+            token: Adressevælger token. Until KDS introduces user management, any
+                string of at least 10 characters works, and KDS recommends
+                `adressevaelger123`.
         """
         self._timeout: int = timeout
+        self._token: str = token
 
         self._session: Optional[aiohttp.ClientSession] = None
-        self._baseurl: str = "https://api.dataforsyningen.dk"
+        self._baseurl: str = "https://adressevaelger.dk"
 
     async def __aenter__(self) -> "AsyncDARClient":
         await self.aopen()
@@ -137,10 +149,20 @@ class AsyncDARClient:
         Returns:
             `True` if reachable, `False` otherwise.
         """
-        url = f"{self._baseurl}/autocomplete"
+        url = f"{self._baseurl}/adresser/soeg"
+        # Perform a minimal address search to check that the API is reachable:
+        reachability_probe_params: dict[str, str | int] = {
+            # Free text search string, any non-empty string will do
+            "tekst": "test",
+            # Maximum number of results, 1 as we do not use them
+            "maksimum": 1,
+            "token": self._token,
+        }
         try:
             async with self._get_session().get(
-                url, timeout=aiohttp.ClientTimeout(timeout or self._timeout)
+                url,
+                params=reachability_probe_params,
+                timeout=aiohttp.ClientTimeout(timeout or self._timeout),
             ) as response:
                 if response.status == 200:
                     return True
@@ -164,34 +186,40 @@ class AsyncDARClient:
 
         Raises:
             aiohttp.ClientResponseError: If anything goes wrong.
-            ValueError: If passed a historic addrtype.
             RuntimeError: If one unique match could not be found.
 
         Returns:
             * dict: DAR Reply
         """
-        if addrtype in [
-            AddressType.HISTORIC_ADDRESS,
-            AddressType.HISTORIC_ACCESS_ADDRESS,
-        ]:
-            raise ValueError("DAR does not support historic cleansing")
+        # Adressevasken rejects empty input with a 400
+        if not address_string:
+            raise RuntimeError("DAR was unable to find a conclusive match")
 
-        url = f"{self._baseurl}/datavask/{addrtype.value}"
-        params: dict[str, str] = {"betegnelse": address_string}
+        url = f"{self._baseurl}/vask/"
+        params: dict[str, str] = {"adresse": address_string, "token": self._token}
 
         async with self._get_session().get(
             url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             payload = await response.json()
-            # Check match category:
-            # A is a near perfect match,
-            # B is a unique match,
-            # C is a non-unique match (which we do not accept)
-            if payload["kategori"] not in ["A", "B"]:
-                raise RuntimeError("DAR was unable to find a conclusive match")
-            address = one(payload["resultater"])["adresse"]
-            return cast(AddressReply, address)
+
+        # Positive codes are unique matches, negative codes are failures.
+        # Adressevasken never returns non-unique matches.
+        address_uuid = payload["vaskeresultat"]["adresse_id_lokalid"]
+        if payload["vaskestatus"]["kode"] <= 0 or address_uuid is None:
+            raise RuntimeError("DAR was unable to find a conclusive match")
+
+        # Adressevasken only returns the address id, so we need to look it up
+        address = await self._fetch_address_by_uuid(
+            UUID(address_uuid), AddressType.ADDRESS
+        )
+
+        # TODO: This is temporary. We will switch to the new Adressevælger responses
+        #       shortly
+        if addrtype == AddressType.ACCESS_ADDRESS:
+            return _convert_to_dawa_access_address(address["husnummer"])
+        return _convert_to_dawa_address(address)
 
     # TODO: Caching goes in here
     async def _address_fetched(self, uuid: UUID, reply: Dict[str, Any]) -> None:
@@ -215,16 +243,22 @@ class AsyncDARClient:
         Returns:
             * dict: DAR Reply
         """
+        payload = await self._fetch_address_by_uuid(uuid, addrtype)
+        return _convert_to_dawa(payload, addrtype)
 
+    async def _fetch_address_by_uuid(
+        self, uuid: UUID, addrtype: AddressType
+    ) -> Dict[str, Any]:
+        """Lookup uuid in DAR, returning the unconverted Adressevælger reply."""
         url = f"{self._baseurl}/{addrtype.value}/{str(uuid)}"
-        params: dict[str, str | int] = {"struktur": "mini", "noformat": 1}
+        params: dict[str, str] = {"token": self._token}
 
         async with self._get_session().get(
             url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
             response.raise_for_status()
             payload = await response.json()
-            return cast(AddressReply, payload)
+            return cast(Dict[str, Any], payload[_ADRESSEVAELGER_KEY_MAP[addrtype]])
 
     @retry(
         reraise=True,
@@ -245,25 +279,28 @@ class AsyncDARClient:
             * set: Set of UUIDs of entries which were not found.
         """
         url = f"{self._baseurl}/{addrtype.value}"
-        params: dict[str, str | int] = {
-            "id": "|".join(map(str, uuids)),
-            "struktur": "mini",
-            "noformat": 1,
+        params: dict[str, str] = {
+            "id_lokalids": ",".join(map(str, uuids)),
+            "token": self._token,
         }
 
         async with self._get_session().get(
             url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
         ) as response:
+            # Adressevælgeren replies 404 if none of the uuids were found
+            if response.status == 404:
+                return dict(), set(uuids)
             response.raise_for_status()
             body = await response.json()
 
-            result_uuids = map(UUID, map(itemgetter("id"), body))
-            result = dict(zip(result_uuids, body))
+        replies = [_convert_to_dawa(entry, addrtype) for entry in body[addrtype.value]]
+        result_uuids = map(UUID, map(itemgetter("id"), replies))
+        result = dict(zip(result_uuids, replies))
 
-            found_uuids = result.keys()
-            missing = set(uuids) - found_uuids
+        found_uuids = result.keys()
+        missing = set(uuids) - found_uuids
 
-            return result, missing
+        return result, missing
 
     async def _fetch_chunked(
         self, uuids: Set[UUID], addrtype: AddressType, chunk_size: int
@@ -324,9 +361,9 @@ class AsyncDARClient:
         self,
         uuids: Set[UUID],
         addrtypes: Optional[List[AddressType]] = None,
-        # WARNING: DAR does not support paths of more than 4096 characters on
-        # HTTP/1.1. aiohttp does not support HTTP/2. Do not increase the
-        # `chunk_size` without testing irl.
+        # WARNING: Adressevælgeren rejects requests with more than ~16 KB of headers
+        # (HTTP 431), which is about 437 UUIDs per request. Do not increase the
+        # `chunk_size` beyond that.
         chunk_size: int = 100,
     ) -> Tuple[Dict[UUID, AddressReply], Set[UUID]]:
         """Lookup uuids in DAR (chunked if necessary).
@@ -335,7 +372,7 @@ class AsyncDARClient:
 
         Args:
             uuids: List of DAR UUIDs.
-            addrtypes: The address type(s) to lookup. If `None` all 4 types are checked.
+            addrtypes: The address type(s) to lookup. If `None` all types are checked.
             chunk_size: Number of UUIDs per block, sent to DAR.
 
         Returns:
@@ -344,7 +381,6 @@ class AsyncDARClient:
         """
         addrtypes = addrtypes or ALL_ADDRESS_TYPES
         combined_result: tChainMap[UUID, AddressReply] = ChainMap({})
-        # TODO: Do all 4 in parallel?
         for addrtype in addrtypes:
             result, missing = await self._fetch(uuids, addrtype, chunk_size=chunk_size)
             combined_result = ChainMap(combined_result, result)
@@ -367,7 +403,7 @@ class AsyncDARClient:
 
         Args:
             uuid: DAR UUID.
-            addrtypes: The address type(s) to lookup. If `None` all 4 types are checked.
+            addrtypes: The address type(s) to lookup. If `None` all types are checked.
 
         Raises:
             ValueError: If no match could be found
@@ -376,7 +412,6 @@ class AsyncDARClient:
             * dict: DAR Reply
         """
         addrtypes = addrtypes or ALL_ADDRESS_TYPES
-        # TODO: Do all 4 in parallel?
         for addrtype in addrtypes:
             try:
                 payload: AddressReply = await self._fetch_single(uuid, addrtype)
@@ -402,17 +437,16 @@ class AsyncDARClient:
 
         Args:
             address_string: The address string we wish to cleanse.
-            addrtypes: The address type(s) to lookup. If `None` all 4 types are checked.
+            addrtypes: The address type(s) to lookup. If `None` all types are checked.
 
         Raises:
             aiohttp.ClientResponseError: If anything goes wrong.
-            ValueError: If passed a historic addrtype.
             RuntimeError: If one unique match could not be found.
 
         Returns:
             * dict: DAR Reply
         """
-        addrtypes = addrtypes or [AddressType.ADDRESS, AddressType.ACCESS_ADDRESS]
+        addrtypes = addrtypes or ALL_ADDRESS_TYPES
         # TODO: Do all in parallel?
         for addrtype in addrtypes:
             try:
@@ -427,6 +461,59 @@ class AsyncDARClient:
                 # If we did not find a conclusive match, try the next address type
                 continue
         raise ValueError("No address match found from cleansing in DAR")
+
+
+# TODO: This is temporary. We will switch to the new Adressevælger status codes shortly
+def _status(status: str | int | None) -> Dict[str, int | None]:
+    if status is None:
+        return {"status": None, "darstatus": None}
+    darstatus = int(status)
+    return {"status": _DAWA_STATUS.get(darstatus), "darstatus": darstatus}
+
+
+# TODO: This is temporary. We will switch to the new Adressevælger responses
+#       shortly
+def _convert_to_dawa_access_address(husnummer: Dict[str, Any]) -> AddressReply:
+    """Convert an Adressevælger `husnummer` to a DAWA mini `adgangsadresse`."""
+    postnummer = husnummer.get("postnummer") or {}
+    kommunedel = husnummer.get("navngivenvejkommunedel") or {}
+    supplerendebynavn = husnummer.get("supplerendebynavn") or {}
+    return {
+        "id": husnummer["id_lokalid"],
+        **_status(husnummer.get("status")),
+        "vejkode": kommunedel.get("vejkode"),
+        "vejnavn": husnummer.get("vejnavn"),
+        "husnr": husnummer.get("husnummertekst"),
+        "supplerendebynavn": supplerendebynavn.get("navn"),
+        "postnr": postnummer.get("postnr"),
+        "postnrnavn": postnummer.get("navn"),
+        "kommunekode": kommunedel.get("kommune"),
+        "betegnelse": husnummer.get("adgangsadressebetegnelse"),
+    }
+
+
+# TODO: This is temporary. We will switch to the new Adressevælger responses
+#       shortly
+def _convert_to_dawa_address(adresse: Dict[str, Any]) -> AddressReply:
+    """Convert an Adressevælger `adresse` to a DAWA mini `adresse`."""
+    access_address = _convert_to_dawa_access_address(adresse["husnummer"])
+    return {
+        **access_address,
+        "id": adresse["id_lokalid"],
+        **_status(adresse.get("status")),
+        "etage": adresse.get("etagebetegnelse"),
+        "dør": adresse.get("doerbetegnelse"),
+        "adgangsadresseid": access_address["id"],
+        "betegnelse": adresse.get("adressebetegnelse"),
+    }
+
+
+# TODO: This is temporary. We will switch to the new Adressevælger responses
+#       shortly
+def _convert_to_dawa(payload: Dict[str, Any], addrtype: AddressType) -> AddressReply:
+    if addrtype == AddressType.ADDRESS:
+        return _convert_to_dawa_address(payload)
+    return _convert_to_dawa_access_address(payload)
 
 
 class DARClient(Syncable, AsyncDARClient):
