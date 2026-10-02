@@ -1,18 +1,18 @@
 # SPDX-FileCopyrightText: Magenta ApS <https://magenta.dk>
 # SPDX-License-Identifier: MPL-2.0
-from functools import partial
-from unittest.mock import MagicMock
 from uuid import UUID
 
 import pytest
 from aiohttp import ClientResponseError
 
 from fastramqpi.os2mo_dar_client import AsyncDARClient
+from tests.os2mo_dar_client.conftest import assert_dar_response
+from tests.os2mo_dar_client.conftest import dar_lookup
+from tests.os2mo_dar_client.conftest import dar_non_existent
+from tests.os2mo_dar_client.conftest import dar_parameterize
+from tests.os2mo_dar_client.conftest import invalid_token
 
-from .utils import assert_dar_response
-from .utils import dar_lookup
-from .utils import dar_non_existent
-from .utils import dar_parameterize
+pytestmark = pytest.mark.integration_test
 
 
 @pytest.mark.parametrize(*dar_parameterize)
@@ -33,7 +33,7 @@ async def test_dar_fetch_single_non_existent(
     async with adarclient:
         with pytest.raises(ValueError) as excinfo:
             await adarclient.fetch_single(uuid)
-        assert "No address match found in DAR" in str(excinfo.value)
+    assert "No address match found in DAR" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(*dar_parameterize)
@@ -115,32 +115,18 @@ async def test_dar_fetch_multiple_mixed_existence(adarclient: AsyncDARClient) ->
         assert_dar_response(result, expected)
 
 
-async def test_dar_fetch_single_clientresponse_error(
-    adarclient: AsyncDARClient,
-) -> None:
-    """Test that ClientResponseErrors are propagated."""
-
-    SeededClientResponseError = partial(
-        ClientResponseError,
-        history=None,  # type: ignore
-        request_info=None,  # type: ignore
-    )
-    uuid = next(iter(dar_non_existent))
-
-    # 404 are retried as next type
-    with pytest.raises(ValueError) as excinfo1:
-        async with adarclient:
-            adarclient._get_session().get = MagicMock(  # type: ignore
-                side_effect=SeededClientResponseError(status=404)
-            )
+async def test_dar_fetch_single_clientresponse_error() -> None:
+    """Test that non-404 ClientResponseErrors are propagated."""
+    uuid = next(iter(dar_lookup))
+    async with AsyncDARClient(token=invalid_token) as adarclient:
+        with pytest.raises(ClientResponseError) as excinfo:
             await adarclient.fetch_single(uuid)
-        assert "No address match found in DAR" in str(excinfo1.value)
+    assert excinfo.value.status == 400
 
-    # All others are propagated as-is
-    with pytest.raises(ClientResponseError) as excinfo2:
-        async with adarclient:
-            adarclient._get_session().get = MagicMock(  # type: ignore
-                side_effect=SeededClientResponseError()
-            )
-            await adarclient.fetch_single(uuid)
-        assert "BOOM" in str(excinfo2.value)
+
+async def test_dar_fetch_clientresponse_error() -> None:
+    """Test that non-404 ClientResponseErrors are propagated."""
+    async with AsyncDARClient(token=invalid_token) as adarclient:
+        with pytest.raises(ClientResponseError) as excinfo:
+            await adarclient.fetch(set(dar_lookup.keys()))
+    assert excinfo.value.status == 400
