@@ -526,6 +526,9 @@ def _convert_to_dawa_access_address(husnummer: Dict[str, Any]) -> AddressReply:
         "postnr": postnummer.get("postnr"),
         "postnrnavn": postnummer.get("navn"),
         "kommunekode": kommunedel.get("kommune"),
+        # Coordinates are not supported, but kept to preserve the reply format
+        "x": 0.0,
+        "y": 0.0,
         "betegnelse": husnummer.get("adgangsadressebetegnelse"),
     }
 

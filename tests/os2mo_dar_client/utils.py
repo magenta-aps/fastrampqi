@@ -95,6 +95,8 @@ dar_lookup: dict[UUID, dict[str, Any]] = {
         "kommunekode": "0751",
         "betegnelse": "Skt. Johannes All\u00e9 2, 8000 Aarhus C",
         "adgangsadresseid": "0a3f5096-e43f-32b8-e044-0003ba298018",
+        "x": 0.0,
+        "y": 0.0,
     },
     UUID("03c59320-1edd-40f4-9bbe-af135475205e"): {
         "id": "03c59320-1edd-40f4-9bbe-af135475205e",
