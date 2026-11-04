@@ -459,6 +459,33 @@ class AsyncDARClient:
                 continue
         raise ValueError("No address match found from cleansing in DAR")
 
+    async def search(self, address: str) -> UUID | None:
+        """Search "adressevaelger.dk" for an address with an exact title match.
+
+        Args:
+            address: The address to search for, e.g. "Silkeborgvej 260, 8230 Åbyhøj"
+
+        Raises:
+            aiohttp.ClientResponseError: If anything goes wrong.
+
+        Returns:
+            The UUID of the address whose title matches `address`, or
+            `None` if there is no match.
+        """
+        url = f"{self._baseurl}/adresser/soeg"
+        params: dict[str, str] = {"tekst": address, "token": self._token}
+
+        async with self._get_session().get(
+            url, params=params, timeout=aiohttp.ClientTimeout(self._timeout)
+        ) as response:
+            response.raise_for_status()
+            payload = await response.json()
+
+        for result in payload.get("fund", []):
+            if result["titel"] == address:
+                return UUID(result["id"])
+        return None
+
 
 # TODO: This is temporary. We will switch to the new Adressevælger status codes shortly
 def _status(status: str | int | None) -> Dict[str, int | None]:
